@@ -2542,9 +2542,11 @@ body,.lp-page,.de-page{font-family:var(--font)!important;}
 .tracker-hero h1{margin:0;font-size:clamp(44px,7vw,92px);line-height:.9;letter-spacing:-.07em;}
 .tracker-hero p{margin:14px 0 0;max-width:600px;color:rgba(255,255,255,.62);font-size:15px;}
 .tracker-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
-.tracker-actions select,.tracker-actions button,.tracker-actions a,.tracker-tabs button,.tracker-row-actions button,.tracker-primary{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.055);color:#fff;border-radius:999px;padding:11px 14px;font-weight:750;text-decoration:none;cursor:pointer;}
-.tracker-actions button:hover,.tracker-actions a:hover,.tracker-tabs button.active,.tracker-primary{background:#e23744;border-color:#e23744;}
+.tracker-actions select,.tracker-actions button,.tracker-actions a,.tracker-actions .tracker-upload-label,.tracker-tabs button,.tracker-row-actions button,.tracker-primary{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.055);color:#fff;border-radius:999px;padding:11px 14px;font-weight:750;text-decoration:none;cursor:pointer;}
+.tracker-actions button:hover,.tracker-actions a:hover,.tracker-actions .tracker-upload-label:hover,.tracker-tabs button.active,.tracker-primary{background:#e23744;border-color:#e23744;}
 .tracker-actions button:disabled{opacity:.5;cursor:not-allowed;}
+.tracker-upload-label{position:relative;display:inline-flex;align-items:center;gap:8px;}
+.tracker-upload-label input{position:absolute;inset:0;opacity:0;cursor:pointer;}
 .tracker-stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin:0 0 18px;}
 .tracker-stat{padding:18px;border:1px solid rgba(255,255,255,.08);border-radius:24px;background:rgba(255,255,255,.045);}
 .tracker-stat strong{display:block;font-size:28px;letter-spacing:-.04em;}
@@ -3573,6 +3575,8 @@ body,.lp-page,.de-page{font-family:var(--font)!important;}
 .contact-variable-box,.contact-import-box{border:1px solid rgba(255,255,255,.08);border-radius:18px;background:rgba(255,255,255,.04);padding:12px 14px;margin:12px 0;color:rgba(255,255,255,.62);font-size:12px;line-height:1.5;}
 .contact-import-box{display:flex;align-items:center;justify-content:space-between;gap:12px;}
 .contact-import-box input{max-width:320px;border:none;background:transparent;padding:0;color:rgba(255,255,255,.74);}
+.contact-import-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.contact-import-actions a{color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:8px 12px;background:rgba(255,255,255,.06);font-weight:800;}
 .contact-gear-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:14px;}
 .contact-gear-actions button{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;border-radius:999px;padding:10px 14px;font-weight:800;cursor:pointer;}
 @media(max-width:900px){.contact-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.contact-grid-four,.contact-editor-grid,.contact-gear-grid{grid-template-columns:1fr!important}.contact-details-head{flex-direction:column}.contact-gear-overlay{padding:12px}.contact-gear-panel{width:100%;max-height:calc(100vh - 24px)}}

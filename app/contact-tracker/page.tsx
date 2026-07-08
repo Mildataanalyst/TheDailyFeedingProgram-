@@ -217,8 +217,11 @@ function AdminGear({ settings, setSettings, queryMode, setQueryMode, onImport, i
           Variables: [ngo_name], [contact_name_or_team], [sender_name], [website_detail], [reviewer_line], [category], [rating], [program_name], [feeding_india_website], [annual_report_link], [social_links]
         </div>
         <div className="contact-import-box">
-          <span>Edit via CSV</span>
-          <input type="file" accept=".csv,text/csv" disabled={importing} onChange={e => { const file = e.target.files?.[0]; if (file) onImport(file); e.currentTarget.value = ''; }} />
+          <span>Upload NGO input or edited CSV</span>
+          <div className="contact-import-actions">
+            <a href={BACKEND ? `${BACKEND}/contact-tracker/sample-input.csv` : '#'}>Sample CSV</a>
+            <input type="file" accept=".csv,text/csv" disabled={importing} onChange={e => { const file = e.target.files?.[0]; if (file) onImport(file); e.currentTarget.value = ''; }} />
+          </div>
         </div>
         <div className="contact-gear-actions"><button onClick={() => setDraft(defaultSettings)}>Reset</button><button className="tracker-primary" onClick={save}>Save settings</button></div>
       </div>
@@ -310,11 +313,11 @@ export default function ContactTrackerPage() {
     if (!BACKEND) return;
     const fd = new FormData();
     fd.append('file', file);
-    setImporting(true); setMessage('Importing edited CSV…');
+    setImporting(true); setMessage('Importing NGO/contact CSV…');
     const r = await safeJSON(`${BACKEND}/contact-tracker/import-csv?region=${encodeURIComponent(region)}`, { method: 'POST', body: fd });
     setImporting(false);
     if (!r.ok) { setMessage(r.error || 'Could not import CSV.'); return; }
-    setMessage(`${r.data.updated_count || 0} rows imported · ${r.data.appended_count || 0} appended.`);
+    setMessage(`${r.data.updated_count || 0} rows imported · ${r.data.appended_count || 0} new NGOs added.`);
     await load();
   }
 
@@ -342,6 +345,11 @@ export default function ContactTrackerPage() {
         <div className="tracker-actions">
           <select value={region} onChange={e => setRegion(e.target.value)}>{states.map(s => <option key={s}>{s}</option>)}</select>
           <select value={queryMode} onChange={e => setQueryMode(e.target.value)}><option value="cheap">Cheap</option><option value="balanced">Balanced</option><option value="deep">Deep</option></select>
+          <label className="tracker-upload-label">
+            Upload NGO CSV
+            <input type="file" accept=".csv,text/csv" disabled={importing} onChange={e => { const file = e.target.files?.[0]; if (file) importCsv(file); e.currentTarget.value = ''; }} />
+          </label>
+          <a href={BACKEND ? `${BACKEND}/contact-tracker/sample-input.csv` : '#'}>Sample CSV</a>
           <button disabled={busy} onClick={() => sendBuckets(['final_shortlist'])}>Send Final Shortlist</button>
           <button disabled={busy} onClick={() => sendBuckets(['strong_maybe'])}>Send Strong Maybe</button>
           <button disabled={!!generating || visible.length === 0} onClick={() => generateRows()}>{generating === 'visible' ? 'Generating…' : 'Generate Visible'}</button>
@@ -383,7 +391,7 @@ export default function ContactTrackerPage() {
               <td>{row.outreach_owner || '—'}</td>
               <td className="tracker-row-actions"><button disabled={generating === row.tracker_id} onClick={() => generateRows(row)}>{generating === row.tracker_id ? 'Wait…' : 'Generate'}</button><button onClick={() => setExpanded(expanded === row.tracker_id ? '' : row.tracker_id)}>{expanded === row.tracker_id ? 'Close' : 'Open'}</button><button onClick={() => removeRow(row)}>Remove</button></td>
             </tr>;
-          }) : <tr><td colSpan={8}>No tracker rows yet. Send NGOs from Final Output using the buttons above.</td></tr>}
+          }) : <tr><td colSpan={8}>No tracker rows yet. Upload an NGO CSV, or send NGOs from Final Output using the buttons above. <a href={BACKEND ? `${BACKEND}/contact-tracker/sample-input.csv` : '#'}>Download sample CSV</a></td></tr>}
           </tbody></table>
         </div>
         {visible.map(row => expanded === row.tracker_id ? <RowDetails key={`details-${row.tracker_id}`} row={row} saving={saving === row.tracker_id} generating={generating === row.tracker_id} onGenerate={() => generateRows(row)} onSave={patch => updateRow(row, patch)} /> : null)}
