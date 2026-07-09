@@ -1,5 +1,10 @@
 'use client';
 
+// DFP 2.0 — "How it works" story, v84 choreography build.
+// Drop-in replacement for app/how-it-works/page.tsx.
+// All visible text is byte-identical to v83. All motion lives in the
+// story-v84 CSS block appended to globals.css.
+
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -82,18 +87,19 @@ const slides: StorySlide[] = [
   }
 ];
 
+// v84 choreographed durations — each slide performs its beats, then rests.
 const DEFAULT_AUTO_MS = 3200;
 const SLIDE_DURATIONS_MS: Record<StorySlide['visual'], number> = {
-  question: 2600,
-  twoWays: 3000,
-  internetDiscovery: 5200,
-  humanLeads: 3400,
-  leadPool: 3600,
-  curation: 4600,
-  review: 4200,
-  ai: 4400,
-  combined: 3600,
-  finalShortlist: 3800
+  question: 3400,
+  twoWays: 5200,
+  internetDiscovery: 7000,
+  humanLeads: 6200,
+  leadPool: 6000,
+  curation: 7200,
+  review: 6800,
+  ai: 6400,
+  combined: 5400,
+  finalShortlist: 7000
 };
 
 function StoryVisual({ visual }: { visual: StorySlide['visual'] }) {
@@ -101,7 +107,7 @@ function StoryVisual({ visual }: { visual: StorySlide['visual'] }) {
 
   if (visual === 'twoWays') {
     return (
-      <div className="story-two-options story-two-options-clean">
+      <div className="story-two-options story-two-options-clean sv-stage">
         <div className="story-option story-option-red">
           <span>01</span>
           <b>Part 1 · Searching the internet</b>
@@ -110,13 +116,14 @@ function StoryVisual({ visual }: { visual: StorySlide['visual'] }) {
           <span>02</span>
           <b>Part 2 · Add human leads</b>
         </div>
+        <span className="sv-cursor sv-cursor-two" aria-hidden="true" />
       </div>
     );
   }
 
   if (visual === 'internetDiscovery') {
     return (
-      <div className="story-internet-visual">
+      <div className="story-internet-visual sv-stage">
         <div className="story-internet-card primary">
           <div className="story-mini-label">General Search</div>
           <h3>Find educational models</h3>
@@ -140,13 +147,14 @@ function StoryVisual({ visual }: { visual: StorySlide['visual'] }) {
             <strong>Selected leads</strong>
           </div>
         </div>
+        <span className="sv-cursor sv-cursor-net" aria-hidden="true" />
       </div>
     );
   }
 
   if (visual === 'humanLeads') {
     return (
-      <div className="story-human-clean">
+      <div className="story-human-clean sv-stage">
         <div className="story-referral-form">
           <b>Human lead</b>
           <span>NGO name</span>
@@ -165,7 +173,7 @@ function StoryVisual({ visual }: { visual: StorySlide['visual'] }) {
 
   if (visual === 'leadPool') {
     return (
-      <div className="story-pool-clean">
+      <div className="story-pool-clean sv-stage">
         <div className="story-source-block red">Internet leads</div>
         <div className="story-source-block white">Human leads</div>
         <div className="story-merge-line" />
@@ -176,7 +184,7 @@ function StoryVisual({ visual }: { visual: StorySlide['visual'] }) {
 
   if (visual === 'curation') {
     return (
-      <div className="story-curation-clean">
+      <div className="story-curation-clean sv-stage">
         <div className="story-curation-column">
           <b>Collective pool</b>
           <span>Residential school</span>
@@ -200,7 +208,7 @@ function StoryVisual({ visual }: { visual: StorySlide['visual'] }) {
 
   if (visual === 'review') {
     return (
-      <div className="story-review-visual story-review-clean">
+      <div className="story-review-visual story-review-clean sv-stage">
         <div className="story-review-top"><span>One NGO at a time</span><button>Next →</button></div>
         <h3>Shanti Bhavan Educational Trust</h3>
         <p>Residential education model with a long-term pathway.</p>
@@ -208,25 +216,27 @@ function StoryVisual({ visual }: { visual: StorySlide['visual'] }) {
         <div className="story-slider story-slider-red"><i /><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
         <label>Reason</label>
         <div className="story-response">Strong child focus and clear transformation potential.</div>
+        <span className="sv-cursor sv-cursor-review" aria-hidden="true" />
       </div>
     );
   }
 
   if (visual === 'ai') {
     return (
-      <div className="story-ai-clean">
+      <div className="story-ai-clean sv-stage">
         <b>AI suggestion</b>
         <p>The rating is clear, but the reasoning can explain the long-term impact more fully.</p>
         <div className="story-suggestion-neutral">Keep: clear child-focus explanation</div>
         <div className="story-suggestion-red">Improve: explain why this rating is justified</div>
         <button>Edit response</button>
+        <span className="sv-cursor sv-cursor-ai" aria-hidden="true" />
       </div>
     );
   }
 
   if (visual === 'combined') {
     return (
-      <div className="story-combined-clean">
+      <div className="story-combined-clean sv-stage">
         <div><b>Rating 5</b><span>Shanti Bhavan</span><em>Clear transformation pathway.</em></div>
         <div><b>Rating 4</b><span>Kalkeri Sangeet Vidyalaya</span><em>Strong child-development model.</em></div>
         <div><b>Rating 4</b><span>Parikrma Humanity Foundation</span><em>Strong education pathway.</em></div>
@@ -235,7 +245,7 @@ function StoryVisual({ visual }: { visual: StorySlide['visual'] }) {
   }
 
   return (
-    <div className="story-final-clean">
+    <div className="story-final-clean sv-stage">
       <div className="story-final-tier high">
         <b>Highest Transformation Potential</b>
         <span>Institutions most capable of changing long-term life outcomes.</span>
@@ -256,8 +266,12 @@ export default function HowItWorksPage() {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const active = slides[index];
-  const progress = useMemo(() => ((index + 1) / slides.length) * 100, [index]);
   const slideDuration = SLIDE_DURATIONS_MS[active.visual] ?? DEFAULT_AUTO_MS;
+
+  // Continuous per-slide progress fill (film timecode). The bar animates
+  // from (index/n) to ((index+1)/n) over exactly this slide's duration.
+  const progressFrom = useMemo(() => (index / slides.length) * 100, [index]);
+  const progressTo = useMemo(() => ((index + 1) / slides.length) * 100, [index]);
 
   useEffect(() => {
     if (paused) return;
@@ -280,9 +294,31 @@ export default function HowItWorksPage() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
+  const isQuestion = active.visual === 'question';
+
   return (
-    <main className={active.visual === 'question' ? 'story-page story-page-question story-v72' : 'story-page story-v72'}>
-      <div className="story-progress"><i style={{ width: `${progress}%` }} /></div>
+    <main
+      className={isQuestion ? 'story-page story-page-question story-v72 story-v84' : 'story-page story-v72 story-v84'}
+      data-visual={active.visual}
+      data-autoplay={paused ? 'paused' : 'playing'}
+    >
+      {/* Ambient continuity layer: the same "leads" drift through every slide. */}
+      <div className="sv-ambient" aria-hidden="true">
+        <span className="sv-p" /><span className="sv-p" /><span className="sv-p" />
+        <span className="sv-p" /><span className="sv-p" /><span className="sv-p" />
+      </div>
+
+      <div className="story-progress">
+        <i
+          key={index}
+          style={{
+            ['--sv-from' as string]: `${progressFrom}%`,
+            ['--sv-to' as string]: `${progressTo}%`,
+            animationDuration: `${slideDuration}ms`,
+            animationPlayState: paused ? 'paused' : 'running'
+          } as React.CSSProperties}
+        />
+      </div>
 
       <header className="story-shell-header">
         <Link href="/" className="story-back">← Back</Link>
@@ -293,7 +329,21 @@ export default function HowItWorksPage() {
       <section className="story-slide" key={active.title + index} data-autoplay={paused ? 'paused' : 'playing'}>
         <article className="story-copy">
           {active.eyebrow ? <p className="story-eyebrow">{active.eyebrow}</p> : null}
-          <h1>{active.title}</h1>
+          {isQuestion ? (
+            <h1>
+              {active.title.split(' ').map((word, wordIndex) => (
+                <span
+                  key={word + wordIndex}
+                  className="sv-word"
+                  style={{ animationDelay: `${0.3 + wordIndex * 0.09}s` }}
+                >
+                  {word}
+                </span>
+              ))}
+            </h1>
+          ) : (
+            <h1>{active.title}</h1>
+          )}
           {active.body ? <p>{active.body}</p> : null}
         </article>
         <div className="story-visual-wrap">
