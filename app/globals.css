@@ -3582,46 +3582,59 @@ body,.lp-page,.de-page{font-family:var(--font)!important;}
 @media(max-width:900px){.contact-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.contact-grid-four,.contact-editor-grid,.contact-gear-grid{grid-template-columns:1fr!important}.contact-details-head{flex-direction:column}.contact-gear-overlay{padding:12px}.contact-gear-panel{width:100%;max-height:calc(100vh - 24px)}}
 .tracker-detail-grid select{width:100%;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.28);color:#fff;border-radius:14px;padding:10px;outline:none;}
 
-
 /* ============================================================
-   STORY v84 — CHOREOGRAPHY LAYER
+   STORY v85 — DIRECTOR'S CUT CHOREOGRAPHY
    Append this entire block to the END of app/globals.css.
    Purely additive on top of story-v72. No v72 rules are edited.
+   Structure: 8 slides. Full-bleed on question / poolMerge /
+   finalShortlist. Protagonist thread + funnel counter + ending.
    Notes:
    - v72 uses !important on some borders/backgrounds, so all
-     "flash"/"fill" moments here use box-shadow, transform,
-     filter, and pseudo-element overlays instead.
+     "flash"/"fill" moments use box-shadow, transform, filter,
+     and pseudo-element overlays instead.
    - Slides remount per index (key={}), so every animation
-     replays automatically. Delays below are absolute from
-     slide mount.
+     replays automatically. Delays are absolute from mount.
    ============================================================ */
 
-.story-v84{
+.story-v85{
   --sv-red:#E23744;
   --sv-ease-out:cubic-bezier(.16,.84,.28,1);
   --sv-ease-snap:cubic-bezier(.7,0,.2,1.4);
 }
 
 /* ---------- pause freezes every beat mid-frame ---------- */
-.story-v84 .story-slide[data-autoplay="paused"] *,
-.story-v84 .story-slide[data-autoplay="paused"] *::before,
-.story-v84 .story-slide[data-autoplay="paused"] *::after{
+.story-v85 .story-slide[data-autoplay="paused"] *,
+.story-v85 .story-slide[data-autoplay="paused"] *::before,
+.story-v85 .story-slide[data-autoplay="paused"] *::after{
   animation-play-state:paused!important;
 }
-.story-v84[data-autoplay="paused"] .sv-ambient span{animation-play-state:paused!important;}
+.story-v85[data-autoplay="paused"] .sv-ambient span{animation-play-state:paused!important;}
 
 /* ---------- continuous progress fill (film timecode) ---------- */
 @keyframes svProgress{from{width:var(--sv-from)}to{width:var(--sv-to)}}
-.story-v84 .story-progress i{
+.story-v85 .story-progress i{
   animation-name:svProgress;
   animation-timing-function:linear;
   animation-fill-mode:both;
   transition:none!important;
 }
 
-/* ---------- ambient "leads" particle layer ---------- */
-.story-v84 .sv-ambient{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
-.story-v84 .sv-ambient .sv-p{
+/* ---------- full-bleed slide layout (slides 1, 4, 8) ---------- */
+.story-v85 .story-slide.sv-full{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;gap:42px;position:relative;
+}
+.story-v85 .story-slide.sv-full .story-copy{max-width:980px;}
+.story-v85 .story-slide.sv-full .story-copy h1{margin-left:auto;margin-right:auto;}
+.story-v85 .story-slide.sv-full .story-visual-wrap{width:min(1040px,92vw);}
+
+/* ============================================================
+   THE FUNNEL, PHYSICALLY ENCODED
+   Ambient "leads" thin out as the film progresses:
+   6 → 6 → 6 → converge → 4 → 3 → 3 → 2 (settled)
+   ============================================================ */
+.story-v85 .sv-ambient{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+.story-v85 .sv-ambient .sv-p{
   position:absolute;width:3px;height:3px;border-radius:50%;
   background:var(--sv-red);
   box-shadow:0 0 10px rgba(226,55,68,.85),0 0 26px rgba(226,55,68,.4);
@@ -3635,18 +3648,34 @@ body,.lp-page,.de-page{font-family:var(--font)!important;}
   92%{opacity:.1}
   100%{transform:translate3d(90px,-46vh,0);opacity:0}
 }
-.story-v84 .sv-ambient .sv-p:nth-child(1){left:8%;top:82%;animation-duration:15s;animation-delay:-2s;}
-.story-v84 .sv-ambient .sv-p:nth-child(2){left:22%;top:64%;animation-duration:19s;animation-delay:-9s;}
-.story-v84 .sv-ambient .sv-p:nth-child(3){left:38%;top:88%;animation-duration:14s;animation-delay:-5s;}
-.story-v84 .sv-ambient .sv-p:nth-child(4){left:61%;top:72%;animation-duration:20s;animation-delay:-13s;}
-.story-v84 .sv-ambient .sv-p:nth-child(5){left:77%;top:86%;animation-duration:17s;animation-delay:-7s;}
-.story-v84 .sv-ambient .sv-p:nth-child(6){left:90%;top:60%;animation-duration:18s;animation-delay:-11s;}
-/* pool slide: particles brighten — the leads are arriving */
-.story-v84[data-visual="leadPool"] .sv-ambient .sv-p{opacity:.34;}
-/* final slide: particles settle */
-.story-v84[data-visual="finalShortlist"] .sv-ambient .sv-p{animation-play-state:paused;opacity:.2;}
-.story-v84 .story-progress,.story-v84 .story-shell-header,
-.story-v84 .story-slide,.story-v84 .story-footer{position:relative;z-index:1;}
+.story-v85 .sv-ambient .sv-p:nth-child(1){left:8%;top:82%;animation-duration:15s;animation-delay:-2s;}
+.story-v85 .sv-ambient .sv-p:nth-child(2){left:22%;top:64%;animation-duration:19s;animation-delay:-9s;}
+.story-v85 .sv-ambient .sv-p:nth-child(3){left:38%;top:88%;animation-duration:14s;animation-delay:-5s;}
+.story-v85 .sv-ambient .sv-p:nth-child(4){left:61%;top:72%;animation-duration:20s;animation-delay:-13s;}
+.story-v85 .sv-ambient .sv-p:nth-child(5){left:77%;top:86%;animation-duration:17s;animation-delay:-7s;}
+.story-v85 .sv-ambient .sv-p:nth-child(6){left:90%;top:60%;animation-duration:18s;animation-delay:-11s;}
+/* pool slide: everything arrives — particles brighten */
+.story-v85[data-visual="poolMerge"] .sv-ambient .sv-p{opacity:.34;}
+/* after curation: the pool is thinner */
+.story-v85[data-visual="curation"] .sv-ambient .sv-p:nth-child(5),
+.story-v85[data-visual="curation"] .sv-ambient .sv-p:nth-child(6){display:none;}
+/* during review + AI: only the strongest remain */
+.story-v85[data-visual="review"] .sv-ambient .sv-p:nth-child(4),
+.story-v85[data-visual="review"] .sv-ambient .sv-p:nth-child(5),
+.story-v85[data-visual="review"] .sv-ambient .sv-p:nth-child(6),
+.story-v85[data-visual="ai"] .sv-ambient .sv-p:nth-child(4),
+.story-v85[data-visual="ai"] .sv-ambient .sv-p:nth-child(5),
+.story-v85[data-visual="ai"] .sv-ambient .sv-p:nth-child(6){display:none;}
+/* finale: two survivors settle near the top and stop */
+.story-v85[data-visual="finalShortlist"] .sv-ambient .sv-p{display:none;}
+.story-v85[data-visual="finalShortlist"] .sv-ambient .sv-p:nth-child(1),
+.story-v85[data-visual="finalShortlist"] .sv-ambient .sv-p:nth-child(2){
+  display:block;animation-play-state:paused;opacity:.22;top:22%;
+}
+.story-v85[data-visual="finalShortlist"] .sv-ambient .sv-p:nth-child(1){left:16%;}
+.story-v85[data-visual="finalShortlist"] .sv-ambient .sv-p:nth-child(2){left:84%;}
+.story-v85 .story-progress,.story-v85 .story-shell-header,
+.story-v85 .story-slide,.story-v85 .story-footer{position:relative;z-index:1;}
 
 /* ---------- universal copy entrance: eyebrow → headline → body ---------- */
 @keyframes svCopyIn{
@@ -3657,9 +3686,15 @@ body,.lp-page,.de-page{font-family:var(--font)!important;}
   from{opacity:0;transform:translateY(26px) scale(.985);filter:blur(6px)}
   to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
 }
-.story-v84 .story-copy .story-eyebrow{animation:svCopyIn .95s var(--sv-ease-out) 0s both;}
-.story-v84 .story-copy h1{animation:svHeadIn .95s var(--sv-ease-out) .12s both;}
-.story-v84 .story-copy>p:not(.story-eyebrow){animation:svCopyIn .95s var(--sv-ease-out) .28s both;}
+.story-v85 .story-copy .story-eyebrow{animation:svCopyIn .95s var(--sv-ease-out) 0s both;}
+.story-v85 .story-copy h1{animation:svHeadIn .95s var(--sv-ease-out) .12s both;}
+.story-v85 .story-copy>p:not(.story-eyebrow){animation:svCopyIn .95s var(--sv-ease-out) .28s both;}
+
+/* VISUAL-FIRST override (curation slide): the kills play first,
+   the headline lands afterwards as the caption to what you saw. */
+.story-v85.sv-visual-first .story-copy .story-eyebrow{animation-delay:2.5s;}
+.story-v85.sv-visual-first .story-copy h1{animation-delay:2.65s;}
+.story-v85.sv-visual-first .story-copy>p:not(.story-eyebrow){animation-delay:2.85s;}
 
 /* ---------- universal visual container entrance + glow bloom ---------- */
 @keyframes svStageIn{
@@ -3667,17 +3702,18 @@ body,.lp-page,.de-page{font-family:var(--font)!important;}
   70%{box-shadow:0 30px 90px rgba(226,55,68,.16)}
   100%{opacity:1;transform:translateY(0);filter:blur(0);box-shadow:0 24px 70px rgba(226,55,68,.08)}
 }
-.story-v84 .sv-stage{position:relative;animation:svStageIn .95s var(--sv-ease-out) .45s both;}
+.story-v85 .sv-stage{position:relative;animation:svStageIn .95s var(--sv-ease-out) .45s both;}
+.story-v85.sv-visual-first .sv-stage{animation-delay:.1s;}
 
 /* ---------- simulated cursor ---------- */
-.story-v84 .sv-cursor{
+.story-v85 .sv-cursor{
   position:absolute;z-index:6;width:14px;height:14px;border-radius:50%;
   background:rgba(255,255,255,.92);border:1px solid rgba(255,255,255,.9);
   box-shadow:0 2px 10px rgba(0,0,0,.55),0 0 0 1px rgba(0,0,0,.2);
   pointer-events:none;opacity:0;left:50%;top:110%;
 }
-.story-v84 .sv-cursor::before,
-.story-v84 .sv-cursor::after{
+.story-v85 .sv-cursor::before,
+.story-v85 .sv-cursor::after{
   content:"";position:absolute;inset:-7px;border-radius:50%;
   border:2px solid var(--sv-red);opacity:0;transform:scale(.4);
 }
@@ -3685,23 +3721,35 @@ body,.lp-page,.de-page{font-family:var(--font)!important;}
   0%{opacity:.9;transform:scale(.4)}
   100%{opacity:0;transform:scale(2.1)}
 }
-@media(max-width:700px){.story-v84 .sv-cursor{display:none;}}
+@media(max-width:700px){.story-v85 .sv-cursor{display:none;}}
+
+/* shared primitives */
+@keyframes svChipIn{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:scale(1)}}
+@keyframes svStamp{
+  0%{opacity:0;transform:scale(.7)}
+  55%{opacity:1;transform:scale(1.12);filter:brightness(1.5)}
+  100%{opacity:1;transform:scale(1);filter:brightness(1)}
+}
+@keyframes svDrawX{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes svShockwave{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(1.18)}}
+@keyframes svType{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes svBtnHit{
+  0%{box-shadow:0 0 0 0 rgba(226,55,68,0);transform:translateY(0)}
+  40%{box-shadow:0 0 0 2px rgba(226,55,68,.85),0 0 26px rgba(226,55,68,.4);transform:translateY(-1px)}
+  100%{box-shadow:0 0 0 1px rgba(226,55,68,.4);transform:translateY(0)}
+}
 
 /* ============================================================
-   SLIDE 01 — question (3400ms): word-by-word cold open
+   SLIDE 1 — question (3400ms): word-by-word cold open
    ============================================================ */
 @keyframes svWordIn{
   from{opacity:0;transform:translateY(14px);filter:blur(8px)}
   to{opacity:1;transform:translateY(0);filter:blur(0)}
 }
-.story-v84.story-page-question .story-copy h1{animation:none;}
-.story-v84 .sv-word{display:inline-block;margin-right:.24em;animation:svWordIn .6s var(--sv-ease-out) both;}
-/* first breath of red as the question lands */
-@keyframes svQuestionGlow{
-  0%,45%{opacity:0}
-  100%{opacity:.1}
-}
-.story-v84.story-page-question .story-slide::after{
+.story-v85.story-page-question .story-copy h1{animation:none;}
+.story-v85 .sv-word{display:inline-block;margin-right:.24em;animation:svWordIn .6s var(--sv-ease-out) both;}
+@keyframes svQuestionGlow{0%,45%{opacity:0}100%{opacity:.1}}
+.story-v85.story-page-question .story-slide::after{
   content:"";position:absolute;left:50%;bottom:-10%;width:70vw;height:44vh;
   transform:translateX(-50%);pointer-events:none;
   background:radial-gradient(ellipse at center,rgba(226,55,68,.55),transparent 65%);
@@ -3710,74 +3758,21 @@ body,.lp-page,.de-page{font-family:var(--font)!important;}
 }
 
 /* ============================================================
-   SLIDE 02 — twoWays (5200ms): the fork; cursor clicks both paths
+   SLIDE 2 — internetDiscovery (7200ms): chips pop, cursor
+   configures a search, the PROTAGONIST appears as a result,
+   bulk pipeline draws itself
    ============================================================ */
-@keyframes svDealLeft{
-  from{opacity:0;transform:perspective(900px) rotateX(6deg) translateY(34px)}
-  to{opacity:1;transform:perspective(900px) rotateX(0) translateY(0)}
-}
-.story-v84[data-visual="twoWays"] .story-option-red{animation:svDealLeft .8s var(--sv-ease-out) .55s both,svHitRed .55s var(--sv-ease-snap) 1.75s forwards;}
-.story-v84[data-visual="twoWays"] .story-option-white{animation:svDealLeft .8s var(--sv-ease-out) .69s both,svHitWhite .55s var(--sv-ease-snap) 3.15s forwards;}
-/* click responses (box-shadow only — v72 owns border/background) */
-@keyframes svHitRed{
-  0%{transform:translateY(0) scale(1);box-shadow:0 0 0 0 rgba(226,55,68,0)}
-  40%{box-shadow:0 0 0 2px rgba(226,55,68,.85),0 22px 60px rgba(226,55,68,.3)}
-  100%{transform:translateY(-6px) scale(1.02);box-shadow:0 0 0 1px rgba(226,55,68,.55),0 20px 54px rgba(226,55,68,.2)}
-}
-@keyframes svHitWhite{
-  0%{transform:translateY(0) scale(1);box-shadow:0 0 0 0 rgba(255,255,255,0)}
-  40%{box-shadow:0 0 0 2px rgba(255,255,255,.75),0 22px 60px rgba(255,255,255,.14)}
-  100%{transform:translateY(-6px) scale(1.02);box-shadow:0 0 0 1px rgba(255,255,255,.42),0 20px 54px rgba(255,255,255,.08)}
-}
-/* red underline sweep on the clicked card */
-.story-v84[data-visual="twoWays"] .story-option{position:relative;overflow:hidden;}
-.story-v84[data-visual="twoWays"] .story-option::after{
-  content:"";position:absolute;left:6%;right:6%;bottom:0;height:2px;border-radius:99px;
-  background:linear-gradient(90deg,transparent,var(--sv-red),transparent);
-  transform:scaleX(0);opacity:0;
-}
-@keyframes svUnderline{from{transform:scaleX(0);opacity:0}to{transform:scaleX(1);opacity:1}}
-.story-v84[data-visual="twoWays"] .story-option-red::after{animation:svUnderline .5s var(--sv-ease-out) 1.85s forwards;}
-.story-v84[data-visual="twoWays"] .story-option-white::after{
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.85),transparent);
-  animation:svUnderline .5s var(--sv-ease-out) 3.25s forwards;
-}
-/* cursor path: bottom → left card (click) → right card (click) → out */
-@keyframes svCurTwo{
-  0%{left:50%;top:108%;opacity:0;transform:scale(1)}
-  12%{left:26%;top:50%;opacity:.92;transform:scale(1)}
-  15%{transform:scale(.72)}
-  18%{transform:scale(1)}
-  46%{left:74%;top:50%;opacity:.92}
-  49%{transform:scale(.72)}
-  52%{transform:scale(1)}
-  74%{left:74%;top:50%;opacity:.92}
-  88%,100%{left:74%;top:62%;opacity:0}
-}
-.story-v84 .sv-cursor-two{animation:svCurTwo 4s var(--sv-ease-out) 1.2s both;}
-.story-v84 .sv-cursor-two::before{animation:svRing .5s ease-out 1.78s both;}
-.story-v84 .sv-cursor-two::after{animation:svRing .5s ease-out 3.16s both;}
-
-/* ============================================================
-   SLIDE 03 — internetDiscovery (7000ms): chips pop, cursor
-   configures a search, bulk pipeline draws itself
-   ============================================================ */
-.story-v84[data-visual="internetDiscovery"] .story-internet-card.primary{animation:svCopyIn .8s var(--sv-ease-out) .55s both;}
-.story-v84[data-visual="internetDiscovery"] .story-internet-card.secondary{animation:svCopyIn .8s var(--sv-ease-out) 3.6s both;}
-/* chip pop-in, one by one */
-@keyframes svChipIn{
-  from{opacity:0;transform:scale(.86)}
-  to{opacity:1;transform:scale(1)}
-}
-.story-v84[data-visual="internetDiscovery"] .story-model-grid span{position:relative;animation:svChipIn .4s var(--sv-ease-snap) both;}
-.story-v84[data-visual="internetDiscovery"] .story-model-grid span:nth-child(1){animation-delay:1.05s;}
-.story-v84[data-visual="internetDiscovery"] .story-model-grid span:nth-child(2){animation-delay:1.16s;}
-.story-v84[data-visual="internetDiscovery"] .story-model-grid span:nth-child(3){animation-delay:1.27s;}
-.story-v84[data-visual="internetDiscovery"] .story-model-grid span:nth-child(4){animation-delay:1.38s;}
-.story-v84[data-visual="internetDiscovery"] .story-model-grid span:nth-child(5){animation-delay:1.49s;}
-.story-v84[data-visual="internetDiscovery"] .story-model-grid span:nth-child(6){animation-delay:1.6s;}
+.story-v85[data-visual="internetDiscovery"] .story-internet-card.primary{animation:svCopyIn .8s var(--sv-ease-out) .55s both;}
+.story-v85[data-visual="internetDiscovery"] .story-internet-card.secondary{animation:svCopyIn .8s var(--sv-ease-out) 4.6s both;}
+.story-v85[data-visual="internetDiscovery"] .story-model-grid span{position:relative;animation:svChipIn .4s var(--sv-ease-snap) both;}
+.story-v85[data-visual="internetDiscovery"] .story-model-grid span:nth-child(1){animation-delay:1.05s;}
+.story-v85[data-visual="internetDiscovery"] .story-model-grid span:nth-child(2){animation-delay:1.16s;}
+.story-v85[data-visual="internetDiscovery"] .story-model-grid span:nth-child(3){animation-delay:1.27s;}
+.story-v85[data-visual="internetDiscovery"] .story-model-grid span:nth-child(4){animation-delay:1.38s;}
+.story-v85[data-visual="internetDiscovery"] .story-model-grid span:nth-child(5){animation-delay:1.49s;}
+.story-v85[data-visual="internetDiscovery"] .story-model-grid span:nth-child(6){animation-delay:1.6s;}
 /* "selected" fill = red overlay pseudo (avoids v72 !important) */
-.story-v84[data-visual="internetDiscovery"] .story-model-grid span::before{
+.story-v85[data-visual="internetDiscovery"] .story-model-grid span::before{
   content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
   background:rgba(226,55,68,.30);box-shadow:inset 0 0 0 1px rgba(226,55,68,.75),0 0 20px rgba(226,55,68,.25);
   opacity:0;
@@ -3787,32 +3782,47 @@ body,.lp-page,.de-page{font-family:var(--font)!important;}
   35%{opacity:1;transform:scale(1.05)}
   100%{opacity:1;transform:scale(1)}
 }
-.story-v84[data-visual="internetDiscovery"] .story-model-grid span:nth-child(1)::before{animation:svChipSelect .4s var(--sv-ease-snap) 2.25s forwards;}
-.story-v84[data-visual="internetDiscovery"] .story-model-grid span:nth-child(2)::before{animation:svChipSelect .4s var(--sv-ease-snap) 2.85s forwards;}
-/* bulk pipeline: csv pulses → connector draws → result stamps → data shimmer */
-@keyframes svPulseOnce{
-  0%,100%{transform:scale(1)}
-  45%{transform:scale(1.06);filter:brightness(1.4)}
+.story-v85[data-visual="internetDiscovery"] .story-model-grid span:nth-child(1)::before{animation:svChipSelect .4s var(--sv-ease-snap) 2.25s forwards;}
+/* the protagonist enters: result row materialises */
+.story-v85 .sv-result{
+  display:flex;align-items:center;gap:10px;margin-top:16px;padding:12px 16px;
+  border-radius:12px;
+  background:rgba(226,55,68,.08);
+  box-shadow:inset 0 0 0 1px rgba(226,55,68,.4);
+  opacity:0;
+  animation:svResultIn .7s var(--sv-ease-snap) 3.2s forwards;
 }
-.story-v84[data-visual="internetDiscovery"] .story-bulk-mini span{animation:svPulseOnce .55s ease-out 4.2s both;}
-.story-v84[data-visual="internetDiscovery"] .story-bulk-mini i{
+@keyframes svResultIn{
+  0%{opacity:0;transform:translateY(12px) scale(.97)}
+  60%{opacity:1;transform:translateY(0) scale(1.02);box-shadow:inset 0 0 0 1px rgba(226,55,68,.8),0 0 30px rgba(226,55,68,.28)}
+  100%{opacity:1;transform:translateY(0) scale(1);box-shadow:inset 0 0 0 1px rgba(226,55,68,.4),0 0 18px rgba(226,55,68,.12)}
+}
+.story-v85 .sv-result i{
+  width:8px;height:8px;border-radius:50%;flex:none;
+  background:var(--sv-red);box-shadow:0 0 12px rgba(226,55,68,.9);
+  animation:svBlip 1.6s ease-in-out 3.9s infinite;
+}
+@keyframes svBlip{0%,100%{opacity:1}50%{opacity:.4}}
+.story-v85 .sv-result em{
+  font-style:normal;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(255,255,255,.45);flex:none;
+}
+.story-v85 .sv-result b{font-size:15px;color:#fff;font-weight:700;}
+/* bulk pipeline: csv pulses → connector draws → result stamps → shimmer */
+@keyframes svPulseOnce{0%,100%{transform:scale(1)}45%{transform:scale(1.06);filter:brightness(1.4)}}
+.story-v85[data-visual="internetDiscovery"] .story-bulk-mini span{animation:svPulseOnce .55s ease-out 5.3s both;}
+.story-v85[data-visual="internetDiscovery"] .story-bulk-mini i{
   position:relative;transform:scaleX(0);transform-origin:left center;overflow:visible;
-  animation:svDrawX .7s var(--sv-ease-out) 4.25s forwards;
+  animation:svDrawX .7s var(--sv-ease-out) 5.35s forwards;
   box-shadow:0 0 14px rgba(226,55,68,.5);
 }
-@keyframes svDrawX{from{transform:scaleX(0)}to{transform:scaleX(1)}}
-@keyframes svStamp{
-  0%{opacity:0;transform:scale(.7)}
-  55%{opacity:1;transform:scale(1.12);filter:brightness(1.5)}
-  100%{opacity:1;transform:scale(1);filter:brightness(1)}
-}
-.story-v84[data-visual="internetDiscovery"] .story-bulk-mini strong{animation:svStamp .5s var(--sv-ease-snap) 4.95s both;}
-.story-v84[data-visual="internetDiscovery"] .story-bulk-mini i::after{
+.story-v85[data-visual="internetDiscovery"] .story-bulk-mini strong{animation:svStamp .5s var(--sv-ease-snap) 6.05s both;}
+.story-v85[data-visual="internetDiscovery"] .story-bulk-mini i::after{
   content:"";position:absolute;top:50%;left:0;width:8px;height:3px;border-radius:99px;
   transform:translateY(-50%);
   background:#fff;box-shadow:0 0 12px rgba(226,55,68,.9);
   opacity:0;
-  animation:svFlow 1.2s linear 5.6s infinite;
+  animation:svFlow 1.2s linear 6.6s infinite;
 }
 @keyframes svFlow{
   0%{left:0;opacity:0}
@@ -3820,145 +3830,154 @@ body,.lp-page,.de-page{font-family:var(--font)!important;}
   85%{opacity:.9}
   100%{left:calc(100% - 8px);opacity:0}
 }
-/* cursor: clicks two chips in the primary card */
+/* cursor: clicks one chip, then hovers the found result */
 @keyframes svCurNet{
-  0%{left:20%;top:110%;opacity:0;transform:scale(1)}
-  16%{left:16%;top:44%;opacity:.92}
-  19%{transform:scale(.72)}
-  22%{transform:scale(1)}
-  38%{left:34%;top:44%}
-  41%{transform:scale(.72)}
-  44%{transform:scale(1)}
-  62%{left:34%;top:44%;opacity:.92}
-  78%,100%{left:40%;top:60%;opacity:0}
+  0%{left:20%;top:112%;opacity:0;transform:scale(1)}
+  14%{left:15%;top:38%;opacity:.92}
+  17%{transform:scale(.72)}
+  20%{transform:scale(1)}
+  46%{left:26%;top:66%}
+  70%{left:26%;top:66%;opacity:.92}
+  86%,100%{left:32%;top:76%;opacity:0}
 }
-.story-v84 .sv-cursor-net{animation:svCurNet 4.4s var(--sv-ease-out) 1.6s both;}
-.story-v84 .sv-cursor-net::before{animation:svRing .5s ease-out 2.28s both;}
-.story-v84 .sv-cursor-net::after{animation:svRing .5s ease-out 3.28s both;}
+.story-v85 .sv-cursor-net{animation:svCurNet 3.4s var(--sv-ease-out) 1.6s both;}
+.story-v85 .sv-cursor-net::before{animation:svRing .5s ease-out 2.1s both;}
 
 /* ============================================================
-   SLIDE 04 — humanLeads (6200ms): the form fills itself,
-   a pulse travels the arrow, the right card confirms
+   SLIDE 3 — humanLeads (6200ms): the form fills itself, the
+   named lead (Kalkeri) stamps into "Ready to add"
    ============================================================ */
-.story-v84[data-visual="humanLeads"] .story-referral-form span{position:relative;overflow:hidden;}
-.story-v84[data-visual="humanLeads"] .story-referral-form:not(.selected) span::after{
+.story-v85[data-visual="humanLeads"] .story-referral-form span{position:relative;overflow:hidden;}
+.story-v85[data-visual="humanLeads"] .story-referral-form:not(.selected) span::after{
   content:"";position:absolute;inset:0;pointer-events:none;
   background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent);
   transform:translateX(-110%);
 }
-@keyframes svFieldFill{
-  0%{transform:translateX(-110%)}
-  70%{transform:translateX(110%)}
-  100%{transform:translateX(110%)}
-}
-@keyframes svFieldDone{
-  0%{box-shadow:inset 0 0 0 0 rgba(255,255,255,0)}
-  100%{box-shadow:inset 0 0 0 1px rgba(255,255,255,.28)}
-}
-.story-v84[data-visual="humanLeads"] .story-referral-form:not(.selected) span:nth-of-type(1)::after{animation:svFieldFill .9s ease-in-out 1s both;}
-.story-v84[data-visual="humanLeads"] .story-referral-form:not(.selected) span:nth-of-type(2)::after{animation:svFieldFill .9s ease-in-out 1.5s both;}
-.story-v84[data-visual="humanLeads"] .story-referral-form:not(.selected) span:nth-of-type(3)::after{animation:svFieldFill .9s ease-in-out 2s both;}
-.story-v84[data-visual="humanLeads"] .story-referral-form:not(.selected) span:nth-of-type(1){animation:svFieldDone .3s ease-out 1.9s forwards;}
-.story-v84[data-visual="humanLeads"] .story-referral-form:not(.selected) span:nth-of-type(2){animation:svFieldDone .3s ease-out 2.4s forwards;}
-.story-v84[data-visual="humanLeads"] .story-referral-form:not(.selected) span:nth-of-type(3){animation:svFieldDone .3s ease-out 2.9s forwards;}
+@keyframes svFieldFill{0%{transform:translateX(-110%)}70%,100%{transform:translateX(110%)}}
+@keyframes svFieldDone{to{box-shadow:inset 0 0 0 1px rgba(255,255,255,.28)}}
+.story-v85[data-visual="humanLeads"] .story-referral-form:not(.selected) span:nth-of-type(1)::after{animation:svFieldFill .9s ease-in-out 1s both;}
+.story-v85[data-visual="humanLeads"] .story-referral-form:not(.selected) span:nth-of-type(2)::after{animation:svFieldFill .9s ease-in-out 1.5s both;}
+.story-v85[data-visual="humanLeads"] .story-referral-form:not(.selected) span:nth-of-type(3)::after{animation:svFieldFill .9s ease-in-out 2s both;}
+.story-v85[data-visual="humanLeads"] .story-referral-form:not(.selected) span:nth-of-type(1){animation:svFieldDone .3s ease-out 1.9s forwards;}
+.story-v85[data-visual="humanLeads"] .story-referral-form:not(.selected) span:nth-of-type(2){animation:svFieldDone .3s ease-out 2.4s forwards;}
+.story-v85[data-visual="humanLeads"] .story-referral-form:not(.selected) span:nth-of-type(3){animation:svFieldDone .3s ease-out 2.9s forwards;}
 /* arrow draws in and fires a traveling pulse */
-@keyframes svArrowIn{
-  from{opacity:0;transform:translateX(-10px)}
-  to{opacity:1;transform:translateX(0)}
-}
-.story-v84[data-visual="humanLeads"] .story-arrow-red{position:relative;animation:svArrowIn .5s var(--sv-ease-out) 3.2s both;}
-.story-v84[data-visual="humanLeads"] .story-arrow-red::after{
+@keyframes svArrowIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+.story-v85[data-visual="humanLeads"] .story-arrow-red{position:relative;animation:svArrowIn .5s var(--sv-ease-out) 3.2s both;}
+.story-v85[data-visual="humanLeads"] .story-arrow-red::after{
   content:"";position:absolute;top:50%;left:-40px;width:9px;height:9px;border-radius:50%;
   transform:translateY(-50%);
   background:var(--sv-red);box-shadow:0 0 16px rgba(226,55,68,.9);
   opacity:0;
   animation:svTravel .6s ease-in 3.5s both;
 }
-@keyframes svTravel{
-  0%{left:-40px;opacity:0}
-  20%{opacity:1}
-  100%{left:calc(100% + 40px);opacity:0}
-}
-/* right card confirms: flash + checks pop in */
+@keyframes svTravel{0%{left:-40px;opacity:0}20%{opacity:1}100%{left:calc(100% + 40px);opacity:0}}
+/* right card confirms; the lead's NAME lands first */
 @keyframes svConfirm{
   0%{box-shadow:0 0 0 0 rgba(226,55,68,0);transform:translateY(0)}
   40%{box-shadow:0 0 0 2px rgba(226,55,68,.8),0 20px 56px rgba(226,55,68,.28)}
   100%{box-shadow:0 0 0 1px rgba(226,55,68,.5),0 18px 48px rgba(226,55,68,.16);transform:translateY(-4px)}
 }
-.story-v84[data-visual="humanLeads"] .story-referral-form.selected{animation:svConfirm .6s var(--sv-ease-snap) 3.8s forwards;}
-.story-v84[data-visual="humanLeads"] .story-referral-form.selected span{opacity:0;animation:svStamp .45s var(--sv-ease-snap) both;}
-.story-v84[data-visual="humanLeads"] .story-referral-form.selected span:nth-of-type(1){animation-delay:3.95s;}
-.story-v84[data-visual="humanLeads"] .story-referral-form.selected span:nth-of-type(2){animation-delay:4.25s;}
+.story-v85[data-visual="humanLeads"] .story-referral-form.selected{animation:svConfirm .6s var(--sv-ease-snap) 3.8s forwards;}
+.story-v85[data-visual="humanLeads"] .story-referral-form.selected span{opacity:0;animation:svStamp .45s var(--sv-ease-snap) both;}
+.story-v85[data-visual="humanLeads"] .story-referral-form.selected .sv-lead-name{
+  animation-delay:3.95s;color:#fff;font-weight:700;
+}
+.story-v85[data-visual="humanLeads"] .story-referral-form.selected span:nth-of-type(2){animation-delay:4.3s;}
+.story-v85[data-visual="humanLeads"] .story-referral-form.selected span:nth-of-type(3){animation-delay:4.55s;}
 
 /* ============================================================
-   SLIDE 05 — leadPool (6000ms): two streams physically merge
+   SLIDE 4 — poolMerge (7800ms, FULL-BLEED MIDPOINT CLIMAX):
+   two streams converge on black; the named leads fly into the
+   pool; then THE FUNNEL NUMBER — 37,930 collapses to 496
    ============================================================ */
-@keyframes svFlyFromLeft{
-  from{opacity:0;transform:translate(-60px,-40px)}
-  to{opacity:1;transform:translate(0,0)}
+.story-v85 .sv-pool-stage{display:flex;flex-direction:column;align-items:center;gap:44px;}
+.story-v85 .sv-pool-row{
+  display:flex;align-items:center;justify-content:center;gap:40px;width:100%;
 }
-@keyframes svFlyFromRight{
-  from{opacity:0;transform:translate(60px,-40px)}
-  to{opacity:1;transform:translate(0,0)}
-}
-.story-v84[data-visual="leadPool"] .story-source-block.red{animation:svFlyFromLeft .95s var(--sv-ease-out) .6s both;}
-.story-v84[data-visual="leadPool"] .story-source-block.white{animation:svFlyFromRight .95s var(--sv-ease-out) .6s both;}
-/* the seam grows downward, with a droplet running its length */
-.story-v84[data-visual="leadPool"] .story-merge-line{
-  position:relative;transform:scaleY(0);transform-origin:top center;
-  animation:svMergeGrow .8s var(--sv-ease-out) 1.8s forwards;
-  box-shadow:0 0 18px rgba(226,55,68,.6);
-}
-@keyframes svMergeGrow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
-.story-v84[data-visual="leadPool"] .story-merge-line::before{
-  content:"";position:absolute;left:50%;top:0;width:6px;height:6px;border-radius:50%;
-  transform:translateX(-50%);
-  background:#fff;box-shadow:0 0 14px rgba(226,55,68,1);
+@keyframes svFlyFromLeft{from{opacity:0;transform:translateX(-90px)}to{opacity:1;transform:translateX(0)}}
+@keyframes svFlyFromRight{from{opacity:0;transform:translateX(90px)}to{opacity:1;transform:translateX(0)}}
+.story-v85[data-visual="poolMerge"] .story-source-block{position:relative;}
+.story-v85[data-visual="poolMerge"] .story-source-block.red{animation:svFlyFromLeft 1s var(--sv-ease-out) .6s both;}
+.story-v85[data-visual="poolMerge"] .story-source-block.white{animation:svFlyFromRight 1s var(--sv-ease-out) .6s both;}
+/* named chips: the protagonists physically travel into the pool */
+.story-v85 .sv-chip{
+  position:absolute;top:calc(100% + 14px);left:50%;transform:translateX(-50%);
+  white-space:nowrap;font-style:normal;font-size:12px;font-weight:600;
+  padding:7px 14px;border-radius:99px;color:#fff;
+  background:rgba(226,55,68,.14);
+  box-shadow:inset 0 0 0 1px rgba(226,55,68,.5),0 0 18px rgba(226,55,68,.2);
   opacity:0;
-  animation:svDroplet 1s ease-in 2.6s infinite;
 }
-@keyframes svDroplet{
-  0%{top:0;opacity:0}
-  15%{opacity:1}
-  85%{opacity:1}
-  100%{top:100%;opacity:0}
+.story-v85 .sv-chip-left{animation:svChipIn .5s var(--sv-ease-snap) 1.5s both,svChipToPoolL 1s var(--sv-ease-out) 2.4s forwards;}
+.story-v85 .sv-chip-right{animation:svChipIn .5s var(--sv-ease-snap) 1.7s both,svChipToPoolR 1s var(--sv-ease-out) 2.5s forwards;}
+@keyframes svChipToPoolL{
+  0%{transform:translateX(-50%);opacity:1}
+  100%{transform:translate(calc(-50% + 150px),-10px) scale(.6);opacity:0}
 }
-/* the pool ignites with a snap and one shockwave */
+@keyframes svChipToPoolR{
+  0%{transform:translateX(-50%);opacity:1}
+  100%{transform:translate(calc(-50% - 150px),-10px) scale(.6);opacity:0}
+}
+/* the pool ignites as the chips land */
 @keyframes svPoolIgnite{
   0%{opacity:0;transform:scale(.92)}
   55%{opacity:1;transform:scale(1.03);filter:brightness(1.35)}
   100%{opacity:1;transform:scale(1);filter:brightness(1)}
 }
-.story-v84[data-visual="leadPool"] .story-pool-core{position:relative;animation:svPoolIgnite .7s var(--sv-ease-snap) 2.9s both;}
-.story-v84[data-visual="leadPool"] .story-pool-core::after{
+.story-v85[data-visual="poolMerge"] .story-pool-core{position:relative;animation:svPoolIgnite .7s var(--sv-ease-snap) 1s both,svPoolPulse .6s var(--sv-ease-snap) 3.2s;}
+@keyframes svPoolPulse{50%{transform:scale(1.04);filter:brightness(1.4)}}
+.story-v85[data-visual="poolMerge"] .story-pool-core::after{
   content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-  box-shadow:0 0 0 2px rgba(226,55,68,.7);
+  box-shadow:0 0 0 2px rgba(226,55,68,.7);opacity:0;
+  animation:svShockwave 1s ease-out 3.3s both;
+}
+/* THE NUMBER — the single most important frame in the film */
+.story-v85 .sv-funnel{
+  display:flex;flex-direction:column;align-items:center;gap:10px;
   opacity:0;
-  animation:svShockwave 1s ease-out 3.35s both;
+  animation:svCopyIn .8s var(--sv-ease-out) 2.4s forwards;
 }
-@keyframes svShockwave{
-  0%{opacity:.9;transform:scale(1)}
-  100%{opacity:0;transform:scale(1.18)}
+.story-v85 .sv-count{
+  font-size:clamp(64px,9vw,128px);font-weight:800;line-height:1;
+  letter-spacing:-.03em;color:#fff;font-variant-numeric:tabular-nums;
+  text-shadow:0 0 60px rgba(226,55,68,.25);
 }
+.story-v85 .sv-count-label{
+  font-size:13px;letter-spacing:.22em;text-transform:uppercase;
+  color:rgba(255,255,255,.5);
+}
+/* when the collapse lands on 496, the number turns red-hot */
+.story-v85 .sv-funnel[data-phase="shortlist"] .sv-count{
+  color:var(--sv-red);
+  text-shadow:0 0 70px rgba(226,55,68,.55);
+  animation:svCountLand .5s var(--sv-ease-snap) 1s both;
+}
+@keyframes svCountLand{
+  0%{transform:scale(1)}
+  55%{transform:scale(1.06)}
+  100%{transform:scale(1)}
+}
+.story-v85 .sv-funnel[data-phase="shortlist"] .sv-count-label{color:rgba(226,55,68,.85);}
 
 /* ============================================================
-   SLIDE 06 — curation (7200ms): checklist runs, bad leads
-   get struck, the survivor is stamped forward
+   SLIDE 5 — curation (7200ms, VISUAL FIRST): the kills play
+   before the headline lands. The protagonist survives, gets a
+   survivor's glow, and is stamped forward BY NAME
    ============================================================ */
-.story-v84[data-visual="curation"] .story-curation-column:nth-child(1){animation:svCopyIn .7s var(--sv-ease-out) .55s both;}
-.story-v84[data-visual="curation"] .story-curation-column.center{animation:svCopyIn .7s var(--sv-ease-out) 2.4s both;}
-.story-v84[data-visual="curation"] .story-curation-column.result{animation:svCopyIn .7s var(--sv-ease-out) 5.2s both;}
-/* column 1 rows cascade in */
-.story-v84[data-visual="curation"] .story-curation-column:nth-child(1) span{animation:svChipIn .45s var(--sv-ease-out) both;}
-.story-v84[data-visual="curation"] .story-curation-column:nth-child(1) span:nth-of-type(1){animation-delay:.95s;}
-.story-v84[data-visual="curation"] .story-curation-column:nth-child(1) span:nth-of-type(2){animation-delay:1.08s;}
-.story-v84[data-visual="curation"] .story-curation-column:nth-child(1) span:nth-of-type(3){animation-delay:1.21s;animation-name:svChipIn,svStrike,svShake;animation-duration:.45s,.55s,.4s;animation-delay:1.21s,3.8s,3.8s;animation-timing-function:var(--sv-ease-out),var(--sv-ease-snap),ease-in-out;animation-fill-mode:both,forwards,none;}
-.story-v84[data-visual="curation"] .story-curation-column:nth-child(1) span:nth-of-type(4){animation-delay:1.34s;animation-name:svChipIn,svStrike,svShake;animation-duration:.45s,.55s,.4s;animation-delay:1.34s,4.4s,4.4s;animation-timing-function:var(--sv-ease-out),var(--sv-ease-snap),ease-in-out;animation-fill-mode:both,forwards,none;}
-/* the kill moment */
+.story-v85[data-visual="curation"] .story-curation-column:nth-child(1){animation:svCopyIn .7s var(--sv-ease-out) .2s both;}
+.story-v85[data-visual="curation"] .story-curation-column.center{animation:svCopyIn .7s var(--sv-ease-out) .55s both;}
+.story-v85[data-visual="curation"] .story-curation-column.result{animation:svCopyIn .7s var(--sv-ease-out) 4.4s both;}
+/* column 1 rows cascade in fast — kills start at 1.4s */
+.story-v85[data-visual="curation"] .story-curation-column:nth-child(1) span{animation:svChipIn .4s var(--sv-ease-out) both;}
+.story-v85[data-visual="curation"] .story-curation-column:nth-child(1) span:nth-of-type(1){animation-delay:.5s;}
+.story-v85[data-visual="curation"] .story-curation-column:nth-child(1) span:nth-of-type(2){animation-delay:.62s;}
+.story-v85[data-visual="curation"] .story-curation-column:nth-child(1) span:nth-of-type(3){animation-name:svChipIn,svStrike,svShake;animation-duration:.4s,.55s,.4s;animation-delay:.74s,1.4s,1.4s;animation-timing-function:var(--sv-ease-out),var(--sv-ease-snap),ease-in-out;animation-fill-mode:both,forwards,none;}
+.story-v85[data-visual="curation"] .story-curation-column:nth-child(1) span:nth-of-type(4){animation-name:svChipIn,svStrike,svShake;animation-duration:.4s,.55s,.4s;animation-delay:.86s,2s,2s;animation-timing-function:var(--sv-ease-out),var(--sv-ease-snap),ease-in-out;animation-fill-mode:both,forwards,none;}
 @keyframes svStrike{
   0%{opacity:1;transform:scale(1);box-shadow:0 0 0 0 rgba(226,55,68,0)}
   30%{box-shadow:0 0 0 2px rgba(226,55,68,.9),0 0 24px rgba(226,55,68,.4)}
-  100%{opacity:.45;transform:scale(.97);box-shadow:0 0 0 1px rgba(226,55,68,.45)}
+  100%{opacity:.4;transform:scale(.97);box-shadow:0 0 0 1px rgba(226,55,68,.45)}
 }
 @keyframes svShake{
   0%,100%{translate:0 0}
@@ -3966,7 +3985,20 @@ body,.lp-page,.de-page{font-family:var(--font)!important;}
   50%{translate:3px 0}
   75%{translate:-2px 0}
 }
-/* column 2 checklist lights up top-to-bottom */
+/* the survivor's glow: after the kills, the protagonist brightens */
+.story-v85[data-visual="curation"] .story-curation-column:nth-child(1) .sv-hero{
+  animation-name:svChipIn,svSurvive;
+  animation-duration:.4s,.7s;
+  animation-delay:.5s,2.7s;
+  animation-timing-function:var(--sv-ease-out),ease-out;
+  animation-fill-mode:both,forwards;
+}
+@keyframes svSurvive{
+  0%{box-shadow:0 0 0 0 rgba(255,255,255,0);filter:brightness(1)}
+  50%{filter:brightness(1.5)}
+  100%{box-shadow:0 0 0 1px rgba(255,255,255,.35),0 0 20px rgba(255,255,255,.08);filter:brightness(1.2)}
+}
+/* column 2 checklist runs during the kills */
 @keyframes svCheckRun{
   0%{filter:brightness(1);box-shadow:0 0 0 0 rgba(255,255,255,0)}
   45%{filter:brightness(1.6);box-shadow:0 0 0 1px rgba(255,255,255,.4),0 0 20px rgba(255,255,255,.14)}
@@ -3977,122 +4009,101 @@ body,.lp-page,.de-page{font-family:var(--font)!important;}
   45%{filter:brightness(1.5);box-shadow:0 0 0 1px rgba(226,55,68,.8),0 0 24px rgba(226,55,68,.35)}
   100%{filter:brightness(1);box-shadow:0 0 0 1px rgba(226,55,68,.35)}
 }
-.story-v84[data-visual="curation"] .story-curation-column.center span:nth-of-type(1){animation:svCheckRun .55s ease-out 2.9s both;}
-.story-v84[data-visual="curation"] .story-curation-column.center span:nth-of-type(2){animation:svCheckRun .55s ease-out 3.25s both;}
-.story-v84[data-visual="curation"] .story-curation-column.center span:nth-of-type(3){animation:svCheckRunRed .6s ease-out 3.6s both;}
-/* the survivor is stamped */
-.story-v84[data-visual="curation"] .story-curation-column.result span{position:relative;animation:svStamp .55s var(--sv-ease-snap) 5.6s both;}
-.story-v84[data-visual="curation"] .story-curation-column.result span::after{
+.story-v85[data-visual="curation"] .story-curation-column.center span:nth-of-type(1){animation:svCheckRun .55s ease-out 1s both;}
+.story-v85[data-visual="curation"] .story-curation-column.center span:nth-of-type(2){animation:svCheckRun .55s ease-out 1.25s both;}
+.story-v85[data-visual="curation"] .story-curation-column.center span:nth-of-type(3){animation:svCheckRunRed .6s ease-out 1.5s both;}
+/* the protagonist is stamped forward by name */
+.story-v85[data-visual="curation"] .story-curation-column.result span{position:relative;animation:svStamp .55s var(--sv-ease-snap) 4.8s both;}
+.story-v85[data-visual="curation"] .story-curation-column.result span::after{
   content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
   box-shadow:0 0 0 2px rgba(226,55,68,.7);opacity:0;
-  animation:svShockwave .8s ease-out 6s both;
+  animation:svShockwave .8s ease-out 5.2s both;
 }
 
 /* ============================================================
-   SLIDE 07 — review (6800ms): a live session — slider drags
-   to 4, the reason types itself, cursor hits Next
+   SLIDE 6 — review (6800ms): a live session — slider drags to
+   5 (the protagonist earns it), reason types itself, Next
    ============================================================ */
-/* slider fill drags right with a slight overshoot (v72 owns the
-   background/right, so we animate scaleX from the left) */
-.story-v84[data-visual="review"] .story-slider i{
+/* fill drags past the v72 resting point (right:21% ≈ 4) to 5 */
+.story-v85[data-visual="review"] .story-slider i{
   transform:scaleX(.06);transform-origin:left center;
-  animation:svSlideDrag 1.1s var(--sv-ease-snap) 2s forwards;
+  animation:svSlideDrag 1.3s var(--sv-ease-snap) 2s forwards;
 }
 @keyframes svSlideDrag{
   0%{transform:scaleX(.06)}
-  80%{transform:scaleX(1.05)}
-  100%{transform:scaleX(1)}
+  78%{transform:scaleX(1.3)}
+  100%{transform:scaleX(1.266)}
 }
-/* numbers brighten as the fill passes them */
 @keyframes svNumOn{
   0%{filter:brightness(1)}
   50%{filter:brightness(2);text-shadow:0 0 14px rgba(255,255,255,.5)}
   100%{filter:brightness(1.35)}
 }
-.story-v84[data-visual="review"] .story-slider span:nth-of-type(1){animation:svNumOn .3s ease-out 2.1s forwards;}
-.story-v84[data-visual="review"] .story-slider span:nth-of-type(2){animation:svNumOn .3s ease-out 2.35s forwards;}
-.story-v84[data-visual="review"] .story-slider span:nth-of-type(3){animation:svNumOn .3s ease-out 2.6s forwards;}
-.story-v84[data-visual="review"] .story-slider span:nth-of-type(4){animation:svNumOn .4s ease-out 2.85s forwards;}
-/* the reason types itself (clip-path mask; text is untouched) */
-.story-v84[data-visual="review"] .story-response{
+.story-v85[data-visual="review"] .story-slider span:nth-of-type(1){animation:svNumOn .3s ease-out 2.1s forwards;}
+.story-v85[data-visual="review"] .story-slider span:nth-of-type(2){animation:svNumOn .3s ease-out 2.32s forwards;}
+.story-v85[data-visual="review"] .story-slider span:nth-of-type(3){animation:svNumOn .3s ease-out 2.54s forwards;}
+.story-v85[data-visual="review"] .story-slider span:nth-of-type(4){animation:svNumOn .3s ease-out 2.76s forwards;}
+.story-v85[data-visual="review"] .story-slider span:nth-of-type(5){animation:svNumOn .45s ease-out 3s forwards;}
+/* the reason types itself (clip-path mask; text untouched) */
+.story-v85[data-visual="review"] .story-response{
   position:relative;
   clip-path:inset(0 100% 0 0);
-  animation:svType 1.4s steps(28,end) 3.4s forwards;
+  animation:svType 1.4s steps(28,end) 3.6s forwards;
 }
-@keyframes svType{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
-/* blinking caret rides the reveal, then disappears */
-.story-v84[data-visual="review"] .story-review-clean{position:relative;}
-.story-v84[data-visual="review"] .story-slider{position:relative;z-index:1;}
-.story-v84[data-visual="review"] .story-response::after{
+.story-v85[data-visual="review"] .story-response::after{
   content:"";position:absolute;top:20%;bottom:20%;left:0;width:2px;
   background:var(--sv-red);box-shadow:0 0 10px rgba(226,55,68,.8);
   opacity:0;
-  animation:svCaretRide 1.4s steps(28,end) 3.4s both,svCaretBlink .5s step-end 3.4s 4;
+  animation:svCaretRide 1.4s steps(28,end) 3.6s both;
 }
 @keyframes svCaretRide{from{left:0;opacity:1}95%{opacity:1}to{left:100%;opacity:0}}
-@keyframes svCaretBlink{50%{opacity:.2}}
-/* Next button flash on click */
-@keyframes svBtnHit{
-  0%{box-shadow:0 0 0 0 rgba(226,55,68,0);transform:translateY(0)}
-  40%{box-shadow:0 0 0 2px rgba(226,55,68,.85),0 0 26px rgba(226,55,68,.4);transform:translateY(-1px)}
-  100%{box-shadow:0 0 0 1px rgba(226,55,68,.4);transform:translateY(0)}
-}
-.story-v84[data-visual="review"] .story-review-top button{animation:svBtnHit .5s var(--sv-ease-snap) 5.6s both;}
-/* cursor: press slider at 1, drag to 4, glide to Next, click */
+.story-v85[data-visual="review"] .story-review-top button{animation:svBtnHit .5s var(--sv-ease-snap) 5.7s both;}
+/* cursor: press slider at 1, drag all the way to 5, hit Next */
 @keyframes svCurReview{
   0%{left:20%;top:112%;opacity:0;transform:scale(1)}
-  8%{left:14%;top:48%;opacity:.92}
+  8%{left:12%;top:48%;opacity:.92}
   10%{transform:scale(.72)}
-  36%{left:62%;top:48%;transform:scale(.72)}
-  40%{transform:scale(1)}
-  62%{left:62%;top:48%}
+  38%{left:76%;top:48%;transform:scale(.72)}
+  42%{transform:scale(1)}
+  62%{left:76%;top:48%}
   78%{left:88%;top:8%}
   80%{transform:scale(.72)}
   83%{transform:scale(1)}
   92%,100%{left:88%;top:14%;opacity:0}
 }
-.story-v84 .sv-cursor-review{animation:svCurReview 4.6s var(--sv-ease-out) 1.4s both;}
-.story-v84 .sv-cursor-review::before{animation:svRing .5s ease-out 1.85s both;}
-.story-v84 .sv-cursor-review::after{animation:svRing .5s ease-out 5.05s both;}
+.story-v85 .sv-cursor-review{animation:svCurReview 4.7s var(--sv-ease-out) 1.4s both;}
+.story-v85 .sv-cursor-review::before{animation:svRing .5s ease-out 1.85s both;}
+.story-v85 .sv-cursor-review::after{animation:svRing .5s ease-out 5.15s both;}
 
 /* ============================================================
-   SLIDE 08 — ai (6400ms): the machine breathes, writes its
-   assessment, and the human clicks Edit — staying in control
+   SLIDE 7 — ai (6400ms): the machine breathes, writes its
+   assessment, the human clicks Edit — staying in control
    ============================================================ */
-.story-v84[data-visual="ai"] .story-ai-clean{position:relative;}
-.story-v84[data-visual="ai"] .story-ai-clean::before{
+.story-v85[data-visual="ai"] .story-ai-clean{position:relative;}
+.story-v85[data-visual="ai"] .story-ai-clean::before{
   content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
   box-shadow:0 0 0 1px rgba(226,55,68,.3),0 0 40px rgba(226,55,68,.12);
   animation:svBreathe 3s ease-in-out 1s infinite;
 }
-@keyframes svBreathe{
-  0%,100%{opacity:.5}
-  50%{opacity:1}
-}
-/* AI writes its assessment */
-.story-v84[data-visual="ai"] .story-ai-clean>p{
+@keyframes svBreathe{0%,100%{opacity:.5}50%{opacity:1}}
+.story-v85[data-visual="ai"] .story-ai-clean>p{
   clip-path:inset(0 100% 0 0);
   animation:svType 1.6s steps(32,end) 1.1s forwards;
 }
-/* suggestions slide in; the red one demands attention */
-@keyframes svSlideInLeft{
-  from{opacity:0;transform:translateX(-24px)}
-  to{opacity:1;transform:translateX(0)}
-}
-.story-v84[data-visual="ai"] .story-suggestion-neutral{position:relative;animation:svSlideInLeft .55s var(--sv-ease-out) 2.8s both;overflow:hidden;}
-.story-v84[data-visual="ai"] .story-suggestion-neutral::before{
+@keyframes svSlideInLeft{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:translateX(0)}}
+.story-v85[data-visual="ai"] .story-suggestion-neutral{position:relative;animation:svSlideInLeft .55s var(--sv-ease-out) 2.8s both;overflow:hidden;}
+.story-v85[data-visual="ai"] .story-suggestion-neutral::before{
   content:"";position:absolute;left:0;top:15%;bottom:15%;width:2px;border-radius:99px;
   background:rgba(255,255,255,.8);transform:scaleY(0);transform-origin:top;
   animation:svDrawY .4s ease-out 3.15s forwards;
 }
 @keyframes svDrawY{from{transform:scaleY(0)}to{transform:scaleY(1)}}
-.story-v84[data-visual="ai"] .story-suggestion-red{animation:svSlideInLeft .55s var(--sv-ease-out) 3.5s both,svAlertPulse .6s ease-in-out 4.1s 2;}
+.story-v85[data-visual="ai"] .story-suggestion-red{animation:svSlideInLeft .55s var(--sv-ease-out) 3.5s both,svAlertPulse .6s ease-in-out 4.1s 2;}
 @keyframes svAlertPulse{
   0%,100%{box-shadow:0 0 0 0 rgba(226,55,68,0)}
   50%{box-shadow:0 0 0 2px rgba(226,55,68,.75),0 0 24px rgba(226,55,68,.3)}
 }
-.story-v84[data-visual="ai"] .story-ai-clean button{animation:svBtnHit .5s var(--sv-ease-snap) 5.3s both;}
-/* cursor: hover + click Edit response */
+.story-v85[data-visual="ai"] .story-ai-clean button{animation:svBtnHit .5s var(--sv-ease-snap) 5.3s both;}
 @keyframes svCurAi{
   0%{left:50%;top:112%;opacity:0;transform:scale(1)}
   30%{left:50%;top:86%;opacity:.92}
@@ -4100,97 +4111,125 @@ body,.lp-page,.de-page{font-family:var(--font)!important;}
   52%{transform:scale(1)}
   78%,100%{left:56%;top:92%;opacity:0}
 }
-.story-v84 .sv-cursor-ai{animation:svCurAi 1.8s var(--sv-ease-out) 4.6s both;}
-.story-v84 .sv-cursor-ai::before{animation:svRing .5s ease-out 5.35s both;}
+.story-v85 .sv-cursor-ai{animation:svCurAi 1.8s var(--sv-ease-out) 4.6s both;}
+.story-v85 .sv-cursor-ai::before{animation:svRing .5s ease-out 5.35s both;}
 
 /* ============================================================
-   SLIDE 09 — combined (5400ms): cascade, counter flicker,
-   one system scan-line reads everything
+   SLIDE 8 — finalShortlist (10000ms, FULL-BLEED FINALE):
+   Phase A (0–3.2s): the three reviews collect + counter flicker
+   Phase B (3.2–5.6s): rows dissolve upward; tiers build bottom-up
+   Phase C (5.6–7.2s): coronation — the protagonist is named
+   Phase D (7.5s+): the stage dims to black — "Like this."
    ============================================================ */
-.story-v84[data-visual="combined"] .story-combined-clean>div{animation:svCopyIn .7s var(--sv-ease-out) both;}
-.story-v84[data-visual="combined"] .story-combined-clean>div:nth-child(1){animation-delay:.7s;}
-.story-v84[data-visual="combined"] .story-combined-clean>div:nth-child(2){animation-delay:.92s;}
-.story-v84[data-visual="combined"] .story-combined-clean>div:nth-child(3){animation-delay:1.14s;}
-/* mechanical counter settle on each rating */
+.story-v85 .sv-final-stage{position:relative;width:100%;}
+/* Phase A: review rows, absolutely stacked over the tier area */
+.story-v85 .sv-final-rows{
+  position:absolute;inset:0;z-index:2;
+  display:flex;flex-direction:column;justify-content:center;gap:14px;
+  animation:svRowsOut .7s var(--sv-ease-out) 3.2s forwards;
+}
+@keyframes svRowsOut{to{opacity:0;transform:translateY(-24px);visibility:hidden}}
+.story-v85 .sv-final-rows>div{
+  display:flex;align-items:center;gap:18px;text-align:left;
+  padding:16px 22px;border-radius:14px;
+  background:rgba(255,255,255,.04);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);
+  animation:svCopyIn .6s var(--sv-ease-out) both;
+}
+.story-v85 .sv-final-rows>div:nth-child(1){animation-name:svCopyIn,svTopRow;animation-duration:.6s,.6s;animation-delay:.6s,2s;animation-timing-function:var(--sv-ease-out),var(--sv-ease-snap);animation-fill-mode:both,forwards;}
+.story-v85 .sv-final-rows>div:nth-child(2){animation-delay:.8s;}
+.story-v85 .sv-final-rows>div:nth-child(3){animation-delay:1s;}
+.story-v85 .sv-final-rows b{color:var(--sv-red);font-size:13px;letter-spacing:.06em;text-transform:uppercase;flex:none;animation:svCounter .5s steps(3,end) both;}
+.story-v85 .sv-final-rows>div:nth-child(1) b{animation-delay:1.15s;}
+.story-v85 .sv-final-rows>div:nth-child(2) b{animation-delay:1.35s;}
+.story-v85 .sv-final-rows>div:nth-child(3) b{animation-delay:1.55s;}
+.story-v85 .sv-final-rows span{color:#fff;font-weight:700;font-size:16px;flex:none;}
+.story-v85 .sv-final-rows em{color:rgba(255,255,255,.45);font-style:normal;font-size:14px;margin-left:auto;}
 @keyframes svCounter{
   0%{opacity:0;transform:translateY(-8px)}
   33%{opacity:.5;transform:translateY(4px)}
   66%{opacity:.8;transform:translateY(-2px)}
   100%{opacity:1;transform:translateY(0)}
 }
-.story-v84[data-visual="combined"] .story-combined-clean b{animation:svCounter .5s steps(3,end) both;}
-.story-v84[data-visual="combined"] .story-combined-clean>div:nth-child(1) b{animation-delay:1.3s;}
-.story-v84[data-visual="combined"] .story-combined-clean>div:nth-child(2) b{animation-delay:1.52s;}
-.story-v84[data-visual="combined"] .story-combined-clean>div:nth-child(3) b{animation-delay:1.74s;}
-/* top row (Rating 5) flashes red and keeps a stronger glow */
 @keyframes svTopRow{
-  0%{box-shadow:0 0 0 0 rgba(226,55,68,0)}
-  40%{box-shadow:0 0 0 2px rgba(226,55,68,.8),0 0 26px rgba(226,55,68,.32)}
-  100%{box-shadow:-2px 0 0 0 rgba(226,55,68,.85),0 0 18px rgba(226,55,68,.14)}
+  0%{box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+  40%{box-shadow:inset 0 0 0 1px rgba(226,55,68,.8),0 0 26px rgba(226,55,68,.32)}
+  100%{box-shadow:inset 0 0 0 1px rgba(226,55,68,.5),-2px 0 0 0 rgba(226,55,68,.85),0 0 18px rgba(226,55,68,.14)}
 }
-.story-v84[data-visual="combined"] .story-combined-clean>div:nth-child(1){animation-name:svCopyIn,svTopRow;animation-duration:.7s,.6s;animation-delay:.7s,2.1s;animation-timing-function:var(--sv-ease-out),var(--sv-ease-snap);animation-fill-mode:both,forwards;}
-/* the scan-line: system reads all reviews at once */
-.story-v84[data-visual="combined"] .story-combined-clean{position:relative;overflow:hidden;}
-.story-v84[data-visual="combined"] .story-combined-clean::after{
-  content:"";position:absolute;left:0;right:0;top:-4px;height:2px;
-  background:linear-gradient(90deg,transparent,rgba(226,55,68,.85),transparent);
-  box-shadow:0 0 20px rgba(226,55,68,.5);
-  opacity:0;
-  animation:svScan .8s ease-in-out 3.4s both;
+/* Phase B: tiers build bottom-up beneath the dissolving rows */
+.story-v85 .sv-final-tiers{
+  position:relative;z-index:1;
+  display:flex;flex-direction:column;gap:16px;
 }
-@keyframes svScan{
-  0%{top:-4px;opacity:0}
-  15%{opacity:.85}
-  85%{opacity:.85}
-  100%{top:100%;opacity:0}
-}
-
-/* ============================================================
-   SLIDE 10 — finalShortlist (7000ms): the podium builds
-   bottom-up; the top tier is crowned
-   ============================================================ */
-@keyframes svTierIn{
-  from{opacity:0;transform:translateY(36px)}
-  to{opacity:1;transform:translateY(0)}
-}
-.story-v84[data-visual="finalShortlist"] .story-final-tier.quiet{animation:svTierIn .8s var(--sv-ease-out) .7s both;}
-.story-v84[data-visual="finalShortlist"] .story-final-tier:not(.high):not(.quiet){animation:svTierIn .8s var(--sv-ease-out) 1.1s both;}
-.story-v84[data-visual="finalShortlist"] .story-final-tier.high{
+@keyframes svTierIn{from{opacity:0;transform:translateY(36px)}to{opacity:1;transform:translateY(0)}}
+.story-v85[data-visual="finalShortlist"] .story-final-tier{text-align:left;}
+.story-v85[data-visual="finalShortlist"] .story-final-tier.quiet{animation:svTierIn .8s var(--sv-ease-out) 3.6s both;}
+.story-v85[data-visual="finalShortlist"] .story-final-tier:not(.high):not(.quiet){animation:svTierIn .8s var(--sv-ease-out) 4.1s both;}
+/* Phase C: coronation */
+.story-v85[data-visual="finalShortlist"] .story-final-tier.high{
   position:relative;overflow:hidden;
-  animation:svTierIn .8s var(--sv-ease-out) 1.5s both,svCrown .9s var(--sv-ease-snap) 2.6s forwards;
+  animation:svTierIn .8s var(--sv-ease-out) 4.6s both,svCrown .9s var(--sv-ease-snap) 5.7s forwards;
 }
 @keyframes svCrown{
   0%{transform:translateY(0);box-shadow:0 0 0 0 rgba(226,55,68,0)}
   40%{box-shadow:0 0 0 2px rgba(226,55,68,.9),0 26px 70px rgba(226,55,68,.32)}
   100%{transform:translateY(-4px);box-shadow:0 0 0 1px rgba(226,55,68,.6),0 22px 60px rgba(226,55,68,.2)}
 }
-/* one diagonal light shimmer sweeps the crowned tier */
-.story-v84[data-visual="finalShortlist"] .story-final-tier.high::after{
+/* the protagonist's name appears inside the crowned tier */
+.story-v85 .sv-crowned-name{
+  display:inline-block;margin-top:12px;font-style:normal;
+  font-size:13px;font-weight:700;color:#fff;
+  padding:7px 14px;border-radius:99px;
+  background:rgba(226,55,68,.16);
+  box-shadow:inset 0 0 0 1px rgba(226,55,68,.6),0 0 20px rgba(226,55,68,.2);
+  opacity:0;
+  animation:svStamp .55s var(--sv-ease-snap) 6.2s both;
+}
+/* one diagonal light shimmer across the crowned tier */
+.story-v85[data-visual="finalShortlist"] .story-final-tier.high::after{
   content:"";position:absolute;top:-60%;bottom:-60%;left:-30%;width:34%;
   transform:rotate(18deg) translateX(-140%);
   background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);
-  animation:svShimmer 1.2s ease-in-out 3s both;
+  animation:svShimmer 1.2s ease-in-out 6.5s both;
 }
 @keyframes svShimmer{
   from{transform:rotate(18deg) translateX(-140%)}
   to{transform:rotate(18deg) translateX(520%)}
 }
+/* Phase D: the answer. The stage dims to the black we opened on. */
+.story-v85 .sv-ending{
+  position:absolute;inset:0;z-index:8;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.82);
+  opacity:0;pointer-events:none;
+  animation:svEndIn 1.1s var(--sv-ease-out) 7.6s forwards;
+}
+@keyframes svEndIn{to{opacity:1}}
+.story-v85 .sv-ending span{
+  font-size:clamp(40px,6vw,84px);font-weight:800;letter-spacing:-.02em;
+  color:#fff;
+  opacity:0;filter:blur(8px);transform:translateY(16px);
+  animation:svEndWord .9s var(--sv-ease-out) 8s forwards;
+}
+@keyframes svEndWord{to{opacity:1;filter:blur(0);transform:translateY(0)}}
 
 /* ============================================================
    ACCESSIBILITY — reduced motion sees the finished film frame
    ============================================================ */
 @media (prefers-reduced-motion: reduce){
-  .story-v84 *,
-  .story-v84 *::before,
-  .story-v84 *::after{
+  .story-v85 *,
+  .story-v85 *::before,
+  .story-v85 *::after{
     animation:none!important;
     transition:none!important;
     opacity:1!important;
     clip-path:none!important;
   }
-  .story-v84 .sv-cursor,
-  .story-v84 .sv-ambient{display:none!important;}
-  .story-v84 .story-progress i{width:var(--sv-to)!important;}
-  .story-v84[data-visual="review"] .story-slider i{transform:scaleX(1)!important;}
-  .story-v84[data-visual="leadPool"] .story-merge-line{transform:scaleY(1)!important;}
+  .story-v85 .sv-cursor,
+  .story-v85 .sv-ambient,
+  .story-v85 .sv-ending,
+  .story-v85 .sv-final-rows{display:none!important;}
+  .story-v85 .story-progress i{width:var(--sv-to)!important;}
+  .story-v85[data-visual="review"] .story-slider i{transform:scaleX(1.266)!important;}
+  .story-v85 .sv-chip{display:none!important;}
 }
