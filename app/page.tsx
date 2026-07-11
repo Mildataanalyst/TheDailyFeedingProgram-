@@ -313,75 +313,66 @@ export default function Home() {
   }
 
   return (
-    <main className="lp-page" onPointerMove={movePageGlow}>
-      <div className="lp-ambient-layers" aria-hidden="true">
-        <span className="lp-cursor-glow" />
-        <span className="lp-bg-noise" />
-      </div>
+    <main className="lp-v91-page">
+      <section className="lp-v91-hero" id="top">
+        <div className="lp-v91-internal">For internal use only</div>
 
-      <section className="lp-hero" id="top">
-        <div className="lp-internal-note">For internal use only</div>
-
-        <div
-          className="lp-orb-shell"
-          onPointerMove={moveOrb}
-          onPointerLeave={resetOrb}
-        >
-          <span className="lp-orb-red-haze" aria-hidden="true" />
-          <span className="lp-orb-ring" aria-hidden="true">
-            <span className="lp-orb-glint" />
-          </span>
-          <div className="lp-orb-core">
-            <h1 className="lp-hero-title">
-              <span className="lp-dfp-word">DFP</span>
-              <span className="lp-version">
-                <span className="lp-version-two">2</span>
-                <span className="lp-version-dot">.</span>
-                <span className="lp-version-zero">0</span>
-              </span>
-            </h1>
-            <p className="lp-hero-subtitle">Find the best NGOs</p>
-          </div>
+        <div className="lp-v91-ambient" aria-hidden="true">
+          <span className="lp-v91-ambient-ring lp-v91-ring-one" />
+          <span className="lp-v91-ambient-ring lp-v91-ring-two" />
+          <span className="lp-v91-blush" />
         </div>
 
-        <a className="lp-scroll-cue" href="#how" aria-label="Scroll down to How it works">
+        <div className="lp-v91-hero-core">
+          <h1 className="lp-v91-title">
+            <span className="lp-v91-dfp">DFP</span>
+            <span className="lp-v91-version">
+              <span>2</span><span className="lp-v91-dot">.</span><span>0</span>
+            </span>
+          </h1>
+          <p className="lp-v91-subtitle">Find the best NGOs</p>
+        </div>
+
+        <a className="lp-v91-scroll" href="#how" aria-label="Scroll down to How it works">
           <span>Scroll down</span>
           <i><b /></i>
         </a>
       </section>
 
-      <section className="lp-how" id="how">
-        <div className="lp-how-inner">
-          <h2 className={revealed ? 'lp-how-title is-visible' : 'lp-how-title'}>How it works</h2>
+      <section className="lp-v91-how" id="how">
+        <div className="lp-v91-how-inner">
+          <h2 className={revealed ? 'lp-v91-how-title is-visible' : 'lp-v91-how-title'}>How it works</h2>
           <Link
             href="/how-it-works"
-            className={revealed ? 'lp-video-preview lp-click-preview is-visible' : 'lp-video-preview lp-click-preview'}
+            className={revealed ? 'lp-v91-preview is-visible' : 'lp-v91-preview'}
           >
             Preview
           </Link>
-          <div className="lp-process-grid">
+
+          <div className="lp-v91-grid">
             {steps.map((item, index) => (
               <article
-                className={revealed ? 'lp-process-unit is-visible' : 'lp-process-unit'}
-                style={{ transitionDelay: revealed ? `${index * 150}ms` : '0ms' } as CSSProperties}
+                className={revealed ? 'lp-v91-unit is-visible' : 'lp-v91-unit'}
+                style={{ transitionDelay: revealed ? `${index * 130}ms` : '0ms' } as CSSProperties}
                 key={item.step}
-                onPointerMove={setPointerVars}
-                onPointerLeave={resetPointerVars}
               >
-                <div className="lp-process-frame">
-                  <div className="lp-process-card">
-                    <div className="lp-process-top">
-                      <span className="lp-step-label"><i />{item.step}</span>
+                <Link
+                  className="lp-v91-card-link"
+                  href={item.href}
+                  aria-label={`${item.title} — ${item.cta}`}
+                >
+                  <div className="lp-v91-card">
+                    <div className="lp-v91-card-body">
+                      <span className="lp-v91-card-gloss" aria-hidden="true" />
+                      <span className="lp-v91-step"><i />{item.step}</span>
+                      <h3>{item.title}</h3>
                     </div>
-                    <h3>{item.title}</h3>
-                  </div>
-                  <div className="lp-external-action">
-                    <Link className="lp-external-cta" href={item.href}>
+                    <div className="lp-v91-cta" aria-hidden="true">
                       {item.cta}
-                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.2 4.8a1 1 0 0 1 1.4 0l6 6a1 1 0 0 1 0 1.4l-6 6a1 1 0 1 1-1.4-1.4l4.3-4.3H4a1 1 0 1 1 0-2h13.5l-4.3-4.3a1 1 0 0 1 0-1.4z" /></svg>
-                    </Link>
+                      <svg viewBox="0 0 24 24"><path d="M13.2 4.8a1 1 0 0 1 1.4 0l6 6a1 1 0 0 1 0 1.4l-6 6a1 1 0 1 1-1.4-1.4l4.3-4.3H4a1 1 0 1 1 0-2h13.5l-4.3-4.3a1 1 0 0 1 0-1.4z" /></svg>
+                    </div>
                   </div>
-                </div>
+                </Link>
               </article>
             ))}
           </div>
