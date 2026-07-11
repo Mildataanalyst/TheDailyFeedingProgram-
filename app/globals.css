@@ -7113,3 +7113,435 @@ body.dfp-v98-theme .page-foot{
   .lp-v98-fi-arrow{animation:none !important;}
   .lp-v98-fi-heart{opacity:.85;top:-1px;}
 }
+
+/* ==================================================================
+   V99 — Optical decimal, Feeding India scroll lockup, and Rankings
+   contrast repair. This block intentionally sits last so it wins over
+   earlier generic acrylic-card selectors.
+================================================================== */
+
+/* --- Landing: make 2♥0 read as a real decimal lock-up --- */
+body.dfp-v99-theme .lp-v91-version{
+  display:inline-flex !important;
+  align-items:baseline !important;
+  gap:.026em !important;
+  letter-spacing:0 !important;
+}
+body.dfp-v99-theme .lp-v91-version > span:first-child,
+body.dfp-v99-theme .lp-v91-version > span:last-child{
+  display:inline-block;
+  margin:0 !important;
+  padding:0 !important;
+  letter-spacing:-.068em;
+}
+body.dfp-v99-theme .lp-v98-heart-dot{
+  flex:0 0 .066em;
+  width:.066em !important;
+  height:.062em !important;
+  margin:0 0 .098em 0 !important;
+  align-self:flex-end;
+  opacity:.90;
+  transform:translateY(.004em);
+  filter:drop-shadow(0 .012em .028em rgba(177,25,49,.10));
+  animation:v99HeartBeat 5.8s cubic-bezier(.22,.72,.2,1) infinite !important;
+}
+body.dfp-v99-theme .lp-v98-heart-dot + span{
+  margin-left:0 !important;
+}
+body.dfp-v99-theme .lp-v98-heart-dot::before{
+  inset:-26% !important;
+  opacity:.06 !important;
+  animation:v99HeartAura 5.8s ease-in-out infinite !important;
+}
+body.dfp-v99-theme .lp-v98-heart-dot::after{
+  width:16% !important;
+  height:8% !important;
+  opacity:.28 !important;
+}
+
+/* Prevent descenders, especially the g in "Ranking them", from being
+   cut by the reveal mask. */
+body.dfp-v99-theme .lp-v95-card-link .lp-v91-card h3{
+  line-height:.98 !important;
+  padding-bottom:.12em;
+  clip-path:inset(100% -8% -24% -8%);
+}
+body.dfp-v99-theme .lp-v95-how .lp-v91-unit.is-visible .lp-v91-card h3{
+  clip-path:inset(-10% -8% -24% -8%) !important;
+}
+
+/* --- Landing scroll cue: one horizontal FI wordmark, then a clear
+   animated downward gesture. --- */
+.lp-v99-scroll{
+  bottom:max(17px,env(safe-area-inset-bottom)) !important;
+  gap:5px !important;
+}
+.lp-v99-scroll-text{
+  margin:0 0 1px !important;
+  color:rgba(21,18,16,.48) !important;
+  font-size:9px !important;
+  font-weight:700 !important;
+  letter-spacing:.31em !important;
+}
+.lp-v99-fi-lockup{
+  position:relative;
+  display:inline-flex;
+  align-items:baseline;
+  justify-content:center;
+  gap:.015em;
+  min-width:34px;
+  color:#171311;
+  font-family:var(--font,'Lexend',system-ui,sans-serif);
+  font-weight:800;
+  line-height:.76;
+  filter:drop-shadow(0 8px 16px rgba(31,24,21,.07));
+}
+.lp-v99-fi-f,
+.lp-v99-fi-i > b{
+  display:block;
+  margin:0;
+  color:#171311;
+  font-size:22px;
+  font-weight:800;
+  font-style:normal;
+  letter-spacing:-.13em;
+  line-height:.76;
+}
+.lp-v99-fi-f{
+  transform:translateX(1px);
+}
+.lp-v99-fi-i{
+  position:relative;
+  display:inline-flex;
+  align-items:baseline;
+  justify-content:center;
+  width:10px;
+  height:22px;
+}
+.lp-v99-fi-i > b{
+  position:relative;
+  z-index:2;
+}
+.lp-v99-fi-heart{
+  position:absolute;
+  left:50%;
+  top:-7px;
+  z-index:4;
+  transform:translateX(-50%);
+  color:var(--v98-red);
+  font-family:Arial,sans-serif;
+  font-size:6px;
+  font-weight:400;
+  font-style:normal;
+  line-height:1;
+  text-shadow:0 0 7px rgba(231,42,67,.22);
+  animation:v99HeartTravel 3.3s cubic-bezier(.42,0,.22,1) infinite;
+}
+.lp-v99-scroll-arrow{
+  position:relative;
+  display:block;
+  width:28px;
+  height:30px;
+  margin-top:-1px;
+}
+.lp-v99-scroll-arrow::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:0;
+  width:1px;
+  height:17px;
+  transform:translateX(-50%) scaleY(.34);
+  transform-origin:top;
+  border-radius:999px;
+  background:linear-gradient(180deg,rgba(231,42,67,.08),rgba(231,42,67,.62));
+  animation:v99ScrollStem 2.2s cubic-bezier(.42,0,.2,1) infinite;
+}
+.lp-v99-scroll-arrow i{
+  position:absolute;
+  left:50%;
+  bottom:3px;
+  width:9px;
+  height:9px;
+  border-right:1.8px solid var(--v98-red);
+  border-bottom:1.8px solid var(--v98-red);
+  transform:translateX(-50%) rotate(45deg);
+  animation:v99ScrollChevron 2.2s cubic-bezier(.42,0,.2,1) infinite;
+}
+.lp-v99-scroll:hover .lp-v99-fi-lockup{
+  color:#000;
+}
+
+/* --- Rankings now uses the same stable product shell as Discovery and
+   Tracker rather than a floating back arrow. --- */
+body.dfp-v99-theme .progress-final{
+  min-height:100vh;
+  padding-top:84px !important;
+  color:var(--v98-ink);
+}
+body.dfp-v99-theme .progress-stack{
+  padding-top:34px !important;
+  padding-bottom:72px;
+}
+body.dfp-v99-theme .progress-final > .back-button{
+  display:none !important;
+}
+
+/* The generic state-gate card rule previously overrode the intended dark
+   hero and left white text on a pale panel. Reinstate the dark anchor. */
+body.dfp-v99-theme .ranking-state-gate{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.11) !important;
+  background:
+    radial-gradient(circle at 86% 18%,rgba(231,42,67,.28),transparent 28%),
+    radial-gradient(circle at 10% 110%,rgba(255,255,255,.055),transparent 38%),
+    linear-gradient(145deg,#2b221f 0%,#181412 64%,#100d0c 100%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    0 28px 80px rgba(42,29,24,.20) !important;
+}
+body.dfp-v99-theme .ranking-state-gate::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  opacity:.20;
+  background-image:radial-gradient(rgba(255,255,255,.32) .45px,transparent .45px);
+  background-size:8px 8px;
+  -webkit-mask-image:linear-gradient(110deg,transparent 22%,#000 72%,transparent 100%);
+  mask-image:linear-gradient(110deg,transparent 22%,#000 72%,transparent 100%);
+}
+body.dfp-v99-theme .ranking-state-gate > *{
+  position:relative;
+  z-index:2;
+}
+body.dfp-v99-theme .ranking-state-gate h2{
+  color:#fff !important;
+  text-shadow:0 16px 42px rgba(0,0,0,.22) !important;
+}
+body.dfp-v99-theme .ranking-state-gate small{
+  color:rgba(255,255,255,.62) !important;
+}
+body.dfp-v99-theme .ranking-state-gate .compact-kicker{
+  color:#ff5369 !important;
+}
+body.dfp-v99-theme .ranking-state-gate label > span{
+  color:rgba(255,255,255,.54) !important;
+}
+body.dfp-v99-theme .ranking-state-gate select{
+  border-color:rgba(255,255,255,.13) !important;
+  background:rgba(255,255,255,.095) !important;
+  color:#fff !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08) !important;
+}
+body.dfp-v99-theme .ranking-state-gate select option{
+  background:#231d1a !important;
+  color:#fff !important;
+}
+
+/* Empty state must be readable before a state is chosen. */
+body.dfp-v99-theme .empty-progress{
+  color:rgba(21,18,16,.66) !important;
+  background:
+    radial-gradient(circle at 76% 12%,rgba(231,42,67,.06),transparent 26%),
+    linear-gradient(145deg,rgba(250,246,240,.92),rgba(232,222,212,.72)) !important;
+}
+body.dfp-v99-theme .empty-progress p{
+  color:rgba(21,18,16,.62) !important;
+  font-weight:650;
+}
+body.dfp-v99-theme .empty-progress .empty-icon{
+  color:rgba(184,25,48,.52) !important;
+  border-color:rgba(184,25,48,.18) !important;
+  background:rgba(255,255,255,.42);
+}
+
+/* Journey cards: preserve the intentional dark / ivory / blush sequence,
+   but guarantee readable body copy. */
+body.dfp-v99-theme .ranking-journey-grid .source-choice-card{
+  overflow:visible !important;
+}
+body.dfp-v99-theme .ranking-journey-grid .source-choice-card b{
+  line-height:1.02 !important;
+  padding-bottom:.07em;
+  overflow:visible !important;
+}
+body.dfp-v99-theme .ranking-journey-grid .source-choice-card:nth-child(1) small{
+  color:rgba(255,255,255,.70) !important;
+}
+body.dfp-v99-theme .ranking-journey-grid .source-choice-card:nth-child(2) :is(b,small){
+  color:rgba(21,18,16,.82) !important;
+}
+body.dfp-v99-theme .ranking-journey-grid .source-choice-card:nth-child(2) small{
+  color:rgba(21,18,16,.56) !important;
+}
+body.dfp-v99-theme .ranking-journey-grid .source-choice-card:nth-child(3) small{
+  color:rgba(91,21,33,.62) !important;
+}
+
+/* Secondary ranking bars and recovery controls were white-on-white. */
+body.dfp-v99-theme .ranking-subtop{
+  border:1px solid rgba(53,40,34,.09) !important;
+  background:linear-gradient(145deg,rgba(251,247,241,.88),rgba(231,221,211,.70)) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.94),0 18px 44px rgba(48,35,29,.08) !important;
+}
+body.dfp-v99-theme .ranking-subtop span{
+  color:rgba(21,18,16,.66) !important;
+}
+body.dfp-v99-theme .admin-undo-redo{
+  border-color:rgba(53,40,34,.08) !important;
+  background:rgba(246,240,233,.70) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.88),0 14px 38px rgba(48,35,29,.06) !important;
+}
+body.dfp-v99-theme .admin-undo-redo :is(b,small,span){
+  color:rgba(21,18,16,.68) !important;
+}
+body.dfp-v99-theme .admin-undo-redo b{
+  color:var(--v98-ink) !important;
+}
+body.dfp-v99-theme .admin-undo-redo input{
+  color:var(--v98-ink) !important;
+}
+body.dfp-v99-theme .admin-undo-redo input::placeholder{
+  color:rgba(21,18,16,.40) !important;
+}
+
+/* PM shortlist view: a real dark section header followed by legible ivory
+   cards, not white copy on pale acrylic. */
+body.dfp-v99-theme .pmu-board-head{
+  border:1px solid rgba(255,255,255,.10) !important;
+  background:
+    radial-gradient(circle at 86% 10%,rgba(231,42,67,.24),transparent 28%),
+    linear-gradient(145deg,#2b221f,#171311) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 28px 76px rgba(43,30,25,.18) !important;
+}
+body.dfp-v99-theme .pmu-board-head :is(h1,h2,h3,b){
+  color:#fff !important;
+}
+body.dfp-v99-theme .pmu-board-head :is(p,span,small){
+  color:rgba(255,255,255,.62) !important;
+}
+body.dfp-v99-theme .pmu-card,
+body.dfp-v99-theme .workstream-main-card,
+body.dfp-v99-theme .workstream-task-card,
+body.dfp-v99-theme .workstream-side .mini-panel,
+body.dfp-v99-theme .end-summary-card{
+  color:var(--v98-ink) !important;
+}
+body.dfp-v99-theme .pmu-card :is(h2,h3,h4,b,strong),
+body.dfp-v99-theme .workstream-main-card :is(h2,h3,h4,b,strong),
+body.dfp-v99-theme .workstream-task-card :is(h2,h3,h4,b,strong),
+body.dfp-v99-theme .workstream-side .mini-panel :is(h2,h3,h4,b,strong),
+body.dfp-v99-theme .end-summary-card :is(h2,h3,h4,b,strong){
+  color:var(--v98-ink) !important;
+}
+body.dfp-v99-theme .pmu-card :is(p,small,span),
+body.dfp-v99-theme .workstream-main-card :is(p,small,span),
+body.dfp-v99-theme .workstream-task-card :is(p,small,span),
+body.dfp-v99-theme .workstream-side .mini-panel :is(p,small,span),
+body.dfp-v99-theme .end-summary-card :is(p,small,span){
+  color:rgba(21,18,16,.61) !important;
+}
+body.dfp-v99-theme .pmu-card-count,
+body.dfp-v99-theme .workstream-kicker{
+  color:var(--v98-red-deep) !important;
+}
+body.dfp-v99-theme .pmu-primary-action,
+body.dfp-v99-theme .primary-red{
+  color:#fff !important;
+}
+
+/* Combined review and final ranking: enforce contrast across headers,
+   metrics, bands, buckets and empty states. */
+body.dfp-v99-theme .review-board,
+body.dfp-v99-theme .final-ranking-board,
+body.dfp-v99-theme .final-ranking-editorial{
+  color:var(--v98-ink) !important;
+}
+body.dfp-v99-theme :is(.review-summary-card,.review-band,.final-ranking-tools-strip,.final-rank-bucket,.final-rank-card){
+  color:var(--v98-ink) !important;
+}
+body.dfp-v99-theme :is(.review-summary-card,.review-band,.final-ranking-tools-strip,.final-rank-bucket,.final-rank-card) :is(h2,h3,h4,b,strong){
+  color:var(--v98-ink) !important;
+}
+body.dfp-v99-theme :is(.review-summary-card,.review-band,.final-ranking-tools-strip,.final-rank-bucket,.final-rank-card) :is(p,small,span,em){
+  color:rgba(21,18,16,.61) !important;
+}
+body.dfp-v99-theme .review-summary-card > b{
+  color:#0f0d0c !important;
+}
+body.dfp-v99-theme .empty-review,
+body.dfp-v99-theme .final-rank-empty{
+  color:rgba(21,18,16,.56) !important;
+}
+body.dfp-v99-theme .final-rank-bucket .final-rank-tier-head,
+body.dfp-v99-theme .final-rank-bucket > header{
+  color:var(--v98-ink) !important;
+}
+
+/* Stronger keyboard/hover states on ranking navigation cards. */
+body.dfp-v99-theme .ranking-journey-grid .source-choice-card:focus-visible{
+  outline:3px solid rgba(231,42,67,.22);
+  outline-offset:4px;
+}
+
+@keyframes v99HeartBeat{
+  0%,78%,100%{transform:translateY(.004em) scale(1)}
+  84%{transform:translateY(.004em) scale(1.055)}
+  90%{transform:translateY(.004em) scale(.992)}
+  94%{transform:translateY(.004em) scale(1.02)}
+}
+@keyframes v99HeartAura{
+  0%,78%,100%{opacity:.035;transform:scale(.84)}
+  86%{opacity:.09;transform:scale(1.08)}
+}
+@keyframes v99HeartTravel{
+  0%,16%{opacity:.84;transform:translate(-50%,0) scale(1)}
+  54%{opacity:.82;transform:translate(-50%,12px) scale(.94)}
+  75%{opacity:.26;transform:translate(-50%,20px) scale(.78)}
+  82%,100%{opacity:0;transform:translate(-50%,22px) scale(.72)}
+}
+@keyframes v99ScrollStem{
+  0%,100%{opacity:.18;transform:translateX(-50%) scaleY(.26)}
+  48%{opacity:.75;transform:translateX(-50%) scaleY(1)}
+  76%{opacity:.28;transform:translateX(-50%) scaleY(.72)}
+}
+@keyframes v99ScrollChevron{
+  0%,100%{opacity:.50;transform:translate(-50%,-3px) rotate(45deg)}
+  50%{opacity:1;transform:translate(-50%,3px) rotate(45deg)}
+  76%{opacity:.28;transform:translate(-50%,5px) rotate(45deg)}
+}
+
+@media(max-width:900px){
+  body.dfp-v99-theme .progress-final{padding-top:76px !important;}
+  body.dfp-v99-theme .progress-stack{padding-top:28px !important;}
+}
+@media(max-width:640px){
+  body.dfp-v99-theme .lp-v91-version{gap:.022em !important;}
+  body.dfp-v99-theme .lp-v98-heart-dot{
+    flex-basis:.071em;
+    width:.071em !important;
+    height:.067em !important;
+    margin-bottom:.092em !important;
+  }
+  .lp-v99-scroll{bottom:max(11px,env(safe-area-inset-bottom)) !important;}
+  .lp-v99-scroll-text{font-size:8px !important;letter-spacing:.28em !important;}
+  .lp-v99-fi-f,.lp-v99-fi-i > b{font-size:19px;}
+  .lp-v99-fi-i{height:19px;width:9px;}
+  .lp-v99-scroll-arrow{height:27px;}
+  body.dfp-v99-theme .ranking-state-gate{
+    padding:28px 22px !important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  body.dfp-v99-theme .lp-v98-heart-dot,
+  body.dfp-v99-theme .lp-v98-heart-dot::before,
+  .lp-v99-fi-heart,
+  .lp-v99-scroll-arrow::before,
+  .lp-v99-scroll-arrow i{
+    animation:none !important;
+  }
+  .lp-v99-fi-heart{opacity:.88;transform:translateX(-50%);}
+}

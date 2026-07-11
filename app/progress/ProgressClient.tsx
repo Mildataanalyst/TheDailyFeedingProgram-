@@ -507,11 +507,10 @@ export default function ProgressClient({ initialData }: { initialData: AnyObj })
         : 'Select a state, review PM shortlists, combine ratings, and finalise the best NGOs.';
 
   return <div className="progress-final">
-    <Link href="/" className="back-button" aria-label="Back to home">←</Link>
     <main className="dfp-wrap page-stack progress-stack">
       <section className="state-gate-card ranking-state-gate">
         <div>
-          <p className="tracker-kicker compact-kicker">Ranking Center</p>
+          <p className="tracker-kicker compact-kicker">Part 02 · Rankings</p>
           <h2>{rankingHeaderTitle}</h2>
           <small>{rankingHeaderSubtitle}</small>
         </div>

@@ -321,16 +321,16 @@ export default function Home() {
           <p className="lp-v91-subtitle">Find the best NGOs</p>
         </div>
 
-        <a className="lp-v98-scroll" href="#how" aria-label="Scroll down to How it works">
-          <span className="lp-v98-scroll-text">Scroll down</span>
-          <span className="lp-v98-fi-stack" aria-hidden="true">
-            <b className="lp-v98-fi-f">F</b>
-            <span className="lp-v98-fi-i">
-              <b>I</b>
-              <em className="lp-v98-fi-heart">♥</em>
-              <i className="lp-v98-fi-arrow" />
+        <a className="lp-v98-scroll lp-v99-scroll" href="#how" aria-label="Scroll down to How it works">
+          <span className="lp-v98-scroll-text lp-v99-scroll-text">Scroll down</span>
+          <span className="lp-v99-fi-lockup" aria-hidden="true">
+            <b className="lp-v99-fi-f">f</b>
+            <span className="lp-v99-fi-i">
+              <b>i</b>
+              <em className="lp-v99-fi-heart">♥</em>
             </span>
           </span>
+          <span className="lp-v99-scroll-arrow" aria-hidden="true"><i /></span>
         </a>
       </section>
 
