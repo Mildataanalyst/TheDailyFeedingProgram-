@@ -4989,11 +4989,13 @@ body,.lp-page,.de-page{font-family:var(--font)!important;}
   mix-blend-mode:multiply;
   filter:blur(.12px);
 }
-.lp-v91-hero-core,
-.lp-v91-scroll,
-.lp-v91-internal{
+.lp-v91-hero-core{
   position:relative;
   z-index:2;
+}
+.lp-v91-scroll,
+.lp-v91-internal{
+  z-index:4;
 }
 .lp-v91-scroll i{
   overflow:hidden;
@@ -5026,4 +5028,646 @@ body,.lp-page,.de-page{font-family:var(--font)!important;}
 }
 @media(prefers-reduced-motion:reduce){
   .lp-v91-scroll .lp-v93-heart{animation:none!important;}
+}
+
+/* ------------------------------------------------------------------
+   V94 — Heart decimal + kinetic scroll cue
+   Removes the hero circles, restores the utility label to top-right,
+   and adds precise, premium motion without changing landing copy.
+------------------------------------------------------------------- */
+
+/* No geometric circle behind the hero lock-up. Keep only ambient light. */
+.lp-v91-ambient-ring,
+.lp-v91-ring-one,
+.lp-v91-ring-two{
+  display:none !important;
+}
+.lp-v91-blush{
+  left:58%;
+  top:49%;
+  width:min(610px,61vw);
+  background:radial-gradient(circle,rgba(229,50,73,.105),rgba(229,50,73,.028) 40%,transparent 72%);
+  filter:blur(76px);
+  opacity:.46;
+}
+
+/* Utility label remains independently anchored to the viewport corner. */
+.lp-v91-internal{
+  position:absolute !important;
+  top:max(34px,env(safe-area-inset-top)) !important;
+  right:clamp(28px,5vw,78px) !important;
+  left:auto !important;
+  transform:none !important;
+  z-index:8 !important;
+}
+
+/* Heart becomes the decimal mark. It stays small enough to read as 2.0. */
+.lp-v91-version{
+  align-items:baseline;
+  gap:0;
+}
+.lp-v91-dot{
+  display:none !important;
+}
+.lp-v94-heart-dot{
+  position:relative;
+  align-self:flex-end;
+  width:.175em;
+  height:.165em;
+  margin:0 .055em .085em .065em;
+  flex:0 0 auto;
+  display:inline-grid;
+  place-items:center;
+  filter:drop-shadow(0 .035em .08em rgba(204,38,61,.16));
+  transform-origin:50% 68%;
+  animation:v94HeartBeat 4.2s cubic-bezier(.22,.72,.2,1) infinite;
+}
+.lp-v94-heart-dot svg{
+  position:relative;
+  z-index:2;
+  display:block;
+  width:100%;
+  height:100%;
+  overflow:visible;
+}
+.lp-v94-heart-dot::before{
+  content:"";
+  position:absolute;
+  z-index:0;
+  inset:-48%;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(229,50,73,.24),rgba(229,50,73,.06) 38%,transparent 70%);
+  opacity:.30;
+  transform:scale(.72);
+  animation:v94HeartAura 4.2s cubic-bezier(.22,.72,.2,1) infinite;
+}
+.lp-v94-heart-dot::after{
+  content:"";
+  position:absolute;
+  z-index:3;
+  left:18%;
+  top:14%;
+  width:25%;
+  height:13%;
+  border-radius:999px;
+  background:rgba(255,255,255,.78);
+  filter:blur(.35px);
+  transform:rotate(-24deg);
+  opacity:.58;
+  animation:v94HeartGlint 4.2s ease-in-out infinite;
+}
+
+/* Bottom-centred kinetic scroll control. */
+.lp-v91-scroll.lp-v94-scroll{
+  position:absolute !important;
+  left:50% !important;
+  right:auto !important;
+  top:auto !important;
+  bottom:max(30px,env(safe-area-inset-bottom)) !important;
+  transform:translateX(-50%) !important;
+  z-index:9 !important;
+  gap:14px;
+  color:rgba(17,16,15,.48);
+}
+.lp-v91-scroll.lp-v94-scroll:hover{
+  color:rgba(17,16,15,.82);
+  transform:translateX(-50%) translateY(-3px) !important;
+}
+.lp-v91-scroll.lp-v94-scroll span{
+  font-size:11px;
+  font-weight:650;
+  letter-spacing:.32em;
+}
+.lp-v91-scroll.lp-v94-scroll i{
+  position:relative;
+  width:46px;
+  height:46px;
+  display:grid;
+  place-items:center;
+  overflow:visible;
+  border:0;
+  border-radius:50%;
+  background:rgba(255,255,255,.74);
+  box-shadow:
+    0 15px 38px rgba(53,42,34,.085),
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 0 0 1px rgba(31,27,23,.10);
+  isolation:isolate;
+  transition:box-shadow .25s ease,background .25s ease;
+}
+.lp-v91-scroll.lp-v94-scroll i::before{
+  content:"";
+  position:absolute;
+  inset:-3px;
+  z-index:-2;
+  border-radius:50%;
+  background:conic-gradient(from 0deg,transparent 0 62%,rgba(229,50,73,.12) 72%,rgba(229,50,73,.78) 84%,rgba(255,255,255,.20) 90%,transparent 98%);
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 1.5px),#000 calc(100% - 1px));
+  mask:radial-gradient(farthest-side,transparent calc(100% - 1.5px),#000 calc(100% - 1px));
+  animation:v94ScrollRing 4.8s linear infinite;
+}
+.lp-v91-scroll.lp-v94-scroll i::after{
+  content:"";
+  position:absolute;
+  inset:7px;
+  z-index:-1;
+  border-radius:50%;
+  background:radial-gradient(circle at 50% 36%,rgba(255,255,255,.96),rgba(255,255,255,.48) 48%,rgba(229,50,73,.055) 100%);
+  box-shadow:0 0 24px rgba(229,50,73,.08);
+  animation:v94ScrollCore 3.2s ease-in-out infinite;
+}
+.lp-v94-scroll-arrow{
+  position:relative;
+  z-index:3;
+  width:9px !important;
+  height:9px !important;
+  border:0 !important;
+  border-right:1.7px solid var(--v91-red) !important;
+  border-bottom:1.7px solid var(--v91-red) !important;
+  background:none !important;
+  transform:rotate(45deg) translate(-2px,-2px);
+  animation:v94ScrollArrow 2.1s cubic-bezier(.45,0,.25,1) infinite !important;
+}
+.lp-v94-scroll-comet{
+  position:absolute;
+  inset:0;
+  z-index:4;
+  border-radius:50%;
+  animation:v94ScrollComet 4.8s linear infinite;
+  pointer-events:none;
+}
+.lp-v94-scroll-comet::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:-3px;
+  width:5px;
+  height:5px;
+  transform:translateX(-50%);
+  border-radius:50%;
+  background:#e53249;
+  box-shadow:0 0 9px rgba(229,50,73,.62),0 0 18px rgba(229,50,73,.20);
+}
+.lp-v91-scroll.lp-v94-scroll:hover i{
+  background:rgba(255,255,255,.92);
+  box-shadow:
+    0 20px 48px rgba(53,42,34,.12),
+    0 0 32px rgba(229,50,73,.08),
+    inset 0 1px 0 #fff,
+    inset 0 0 0 1px rgba(229,50,73,.13);
+}
+
+@keyframes v94HeartBeat{
+  0%,58%,100%{transform:scale(1) rotate(0deg)}
+  64%{transform:scale(1.13) rotate(-2deg)}
+  70%{transform:scale(.98) rotate(0deg)}
+  76%{transform:scale(1.075) rotate(1deg)}
+  84%{transform:scale(1) rotate(0deg)}
+}
+@keyframes v94HeartAura{
+  0%,58%,100%{opacity:.16;transform:scale(.70)}
+  66%{opacity:.48;transform:scale(1.10)}
+  82%{opacity:.12;transform:scale(1.34)}
+}
+@keyframes v94HeartGlint{
+  0%,55%,100%{opacity:.28;transform:translate(-4%,5%) rotate(-24deg)}
+  68%{opacity:.90;transform:translate(10%,-7%) rotate(-24deg)}
+  82%{opacity:.34;transform:translate(15%,-9%) rotate(-24deg)}
+}
+@keyframes v94ScrollRing{to{transform:rotate(360deg)}}
+@keyframes v94ScrollComet{to{transform:rotate(360deg)}}
+@keyframes v94ScrollCore{
+  0%,100%{opacity:.75;transform:scale(.94)}
+  50%{opacity:1;transform:scale(1)}
+}
+@keyframes v94ScrollArrow{
+  0%,100%{opacity:.58;transform:rotate(45deg) translate(-3px,-3px)}
+  46%{opacity:1;transform:rotate(45deg) translate(1px,1px)}
+  72%{opacity:.25;transform:rotate(45deg) translate(3px,3px)}
+}
+
+@media(max-width:640px){
+  .lp-v91-internal{
+    top:max(24px,env(safe-area-inset-top)) !important;
+    right:20px !important;
+  }
+  .lp-v94-heart-dot{
+    width:.18em;
+    height:.17em;
+    margin-left:.06em;
+    margin-right:.05em;
+  }
+  .lp-v91-scroll.lp-v94-scroll{
+    bottom:max(24px,env(safe-area-inset-bottom)) !important;
+  }
+  .lp-v91-scroll.lp-v94-scroll i{
+    width:43px;
+    height:43px;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .lp-v94-heart-dot,
+  .lp-v94-heart-dot::before,
+  .lp-v94-heart-dot::after,
+  .lp-v91-scroll.lp-v94-scroll i::before,
+  .lp-v91-scroll.lp-v94-scroll i::after,
+  .lp-v94-scroll-arrow,
+  .lp-v94-scroll-comet{
+    animation:none !important;
+  }
+}
+
+/* ------------------------------------------------------------------
+   V95 — Subtle FI hero object + tactile glass landing
+   Keeps all landing copy/routes and the V94 heart decimal. Adds a
+   near-subliminal separated "f  i" object, grain, acrylic cards,
+   pointer spotlight, clip reveals, and a seamless ivory canvas.
+------------------------------------------------------------------- */
+.lp-v95-page{
+  --v95-paper:#f6f1eb;
+  --v95-paper-deep:#f1ebe4;
+  --v95-ink:#121110;
+  --v95-red:#e72a43;
+  position:relative;
+  isolation:isolate;
+  background:
+    radial-gradient(ellipse at 55% 21%,rgba(231,42,67,.058),transparent 31%),
+    radial-gradient(ellipse at 16% 72%,rgba(112,83,72,.022),transparent 34%),
+    linear-gradient(180deg,#faf7f2 0%,var(--v95-paper) 52%,var(--v95-paper-deep) 100%) !important;
+}
+.lp-v95-page::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:60;
+  pointer-events:none;
+  opacity:.013;
+  mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='170' height='170' viewBox='0 0 170 170'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.88' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='170' height='170' filter='url(%23n)' opacity='.88'/%3E%3C/svg%3E");
+}
+.lp-v95-hero,
+.lp-v95-how{
+  background:transparent !important;
+  border:0 !important;
+}
+.lp-v95-hero{
+  --fi-x:0px;
+  --fi-y:0px;
+  --fi-rx:0deg;
+  --fi-ry:0deg;
+  isolation:isolate;
+  overflow:hidden;
+}
+.lp-v95-hero::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 52% 46%,rgba(255,255,255,.38),transparent 25rem),
+    radial-gradient(circle at 58% 49%,rgba(231,42,67,.040),transparent 31rem);
+}
+.lp-v95-ambient{z-index:0 !important;}
+.lp-v95-blush-one{
+  left:57% !important;
+  top:47% !important;
+  width:min(640px,62vw) !important;
+  background:radial-gradient(circle,rgba(231,42,67,.088),rgba(195,74,91,.030) 42%,transparent 72%) !important;
+  filter:blur(78px) !important;
+  opacity:.48 !important;
+  animation:v95GlowOrbitOne 22s ease-in-out infinite !important;
+}
+.lp-v95-blush-two{
+  position:absolute;
+  left:41%;
+  top:57%;
+  width:min(520px,51vw);
+  aspect-ratio:1;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(157,91,99,.050),rgba(255,255,255,.12) 35%,transparent 72%);
+  filter:blur(84px);
+  opacity:.42;
+  animation:v95GlowOrbitTwo 26s ease-in-out infinite;
+}
+
+/* Quiet glass utility pill. */
+.lp-v95-hero .lp-v91-internal{
+  top:max(24px,env(safe-area-inset-top)) !important;
+  right:clamp(18px,3.2vw,50px) !important;
+  padding:11px 15px;
+  border:1px solid rgba(255,255,255,.64);
+  border-radius:999px;
+  background:rgba(255,255,255,.32);
+  backdrop-filter:blur(18px) saturate(118%);
+  -webkit-backdrop-filter:blur(18px) saturate(118%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.88),
+    0 13px 34px rgba(35,27,23,.055);
+  color:rgba(18,17,16,.45) !important;
+  font-size:9px !important;
+  font-weight:700 !important;
+  letter-spacing:.29em !important;
+}
+
+/* Feeding India-derived hero object: only separated f + i, no heart. */
+.lp-v95-fi-object{
+  position:absolute;
+  left:50%;
+  top:50%;
+  z-index:1;
+  width:min(78vw,980px);
+  height:min(52vw,500px);
+  transform:translate(-50%,-49%);
+  display:grid;
+  place-items:center;
+  pointer-events:none;
+  perspective:1100px;
+  mix-blend-mode:multiply;
+}
+.lp-v95-fi-object-inner{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:clamp(44px,8vw,118px);
+  transform:
+    translate3d(var(--fi-x),var(--fi-y),0)
+    rotateX(var(--fi-rx))
+    rotateY(var(--fi-ry));
+  transform-style:preserve-3d;
+  transition:transform 180ms ease-out;
+  animation:v95FiFloat 13s ease-in-out infinite;
+}
+.lp-v95-fi-object-inner span{
+  position:relative;
+  display:block;
+  color:rgba(78,62,57,.028);
+  -webkit-text-stroke:1px rgba(87,69,63,.060);
+  text-shadow:
+    0 1px 0 rgba(255,255,255,.42),
+    0 0 38px rgba(231,42,67,.032);
+  font-family:var(--font,'Lexend',system-ui,sans-serif);
+  font-size:clamp(180px,27vw,390px);
+  font-weight:720;
+  line-height:.72;
+  letter-spacing:-.10em;
+  user-select:none;
+}
+.lp-v95-fi-object-inner span::before,
+.lp-v95-fi-object-inner span::after{
+  content:attr(data-letter);
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  color:transparent;
+  -webkit-text-stroke:1px rgba(231,42,67,.024);
+}
+.lp-v95-fi-object-inner span::before{transform:translate3d(-5px,3px,-24px);opacity:.58;}
+.lp-v95-fi-object-inner span::after{transform:translate3d(5px,-3px,24px);opacity:.38;}
+
+.lp-v95-hero-core{
+  z-index:3 !important;
+  transform:translateY(-1vh) !important;
+}
+.lp-v95-eyebrow{
+  margin:0 0 clamp(18px,2.1vw,30px);
+  color:rgba(18,17,16,.36);
+  font-size:clamp(10px,.82vw,13px);
+  font-weight:750;
+  letter-spacing:.36em;
+  text-transform:uppercase;
+  animation:v91Enter .72s cubic-bezier(.2,.72,.18,1) both;
+}
+.lp-v95-hero .lp-v91-title{
+  gap:clamp(13px,1.8vw,28px) !important;
+  position:relative;
+  z-index:2;
+}
+.lp-v95-hero .lp-v91-subtitle{
+  position:relative;
+  z-index:2;
+}
+
+/* Seamless breathing room before the process area. */
+.lp-v95-how{
+  min-height:100svh;
+  padding:132px 44px 122px !important;
+  overflow:hidden;
+}
+.lp-v95-how::before{
+  display:block !important;
+  top:12% !important;
+  width:min(900px,86vw) !important;
+  height:310px !important;
+  background:radial-gradient(ellipse,rgba(255,255,255,.52),rgba(231,42,67,.038) 42%,transparent 72%) !important;
+  filter:blur(34px) !important;
+  opacity:.70 !important;
+}
+
+/* Curtain-style entrance reveal. */
+.lp-v95-how .lp-v91-how-title,
+.lp-v95-how .lp-v91-preview,
+.lp-v95-how .lp-v91-unit{
+  clip-path:inset(100% 0 0 0);
+  opacity:0;
+  transform:translateY(30px);
+  transition:
+    clip-path .68s cubic-bezier(.2,.76,.18,1),
+    opacity .54s ease,
+    transform .68s cubic-bezier(.2,.76,.18,1),
+    box-shadow .24s ease,
+    border-color .24s ease,
+    background .24s ease;
+}
+.lp-v95-how .lp-v91-how-title.is-visible,
+.lp-v95-how .lp-v91-preview.is-visible,
+.lp-v95-how .lp-v91-unit.is-visible{
+  clip-path:inset(0 0 0 0);
+  opacity:1;
+  transform:translateY(0);
+}
+.lp-v95-how .lp-v91-how-title{
+  margin-bottom:34px;
+  text-shadow:0 18px 46px rgba(31,24,20,.055);
+}
+
+/* Preview: raised acrylic control. */
+.lp-v95-how .lp-v91-preview{
+  position:relative;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.72) !important;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.72),rgba(255,255,255,.34)),
+    radial-gradient(circle at 50% 100%,rgba(231,42,67,.055),transparent 58%) !important;
+  backdrop-filter:blur(20px) saturate(122%);
+  -webkit-backdrop-filter:blur(20px) saturate(122%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.98),
+    0 18px 44px rgba(42,32,27,.085),
+    0 2px 5px rgba(42,32,27,.035) !important;
+}
+.lp-v95-how .lp-v91-preview::before{
+  content:"";
+  position:absolute;
+  left:-35%;
+  top:-70%;
+  width:42%;
+  height:240%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.72),transparent);
+  transform:rotate(17deg);
+  opacity:.42;
+  transition:transform .62s cubic-bezier(.2,.72,.18,1);
+}
+.lp-v95-how .lp-v91-preview:hover::before{transform:translateX(330%) rotate(17deg);}
+.lp-v95-how .lp-v91-preview:hover{
+  transform:translateY(-4px) scale(1.012) !important;
+  border-color:rgba(255,255,255,.94) !important;
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 28px 62px rgba(42,32,27,.12),
+    0 0 36px rgba(231,42,67,.045) !important;
+}
+
+/* Acrylic cards + magnetic cursor spotlight. */
+.lp-v95-how .lp-v91-grid{align-items:start;}
+.lp-v95-how .lp-v91-unit:nth-child(2){margin-top:10px;}
+.lp-v95-how .lp-v91-unit:nth-child(3){margin-top:16px;}
+.lp-v95-card-link{
+  --mx:50%;
+  --my:50%;
+  --rx:0deg;
+  --ry:0deg;
+  transform:perspective(1000px) rotateX(var(--rx)) rotateY(var(--ry));
+  transform-style:preserve-3d;
+  transition:transform 150ms ease-out;
+}
+.lp-v95-card-link .lp-v91-card{
+  isolation:isolate;
+  overflow:hidden;
+  background:rgba(255,255,255,.18) !important;
+  border:1px solid rgba(255,255,255,.44);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.78),
+    0 24px 68px rgba(45,34,28,.085) !important;
+  backdrop-filter:blur(24px) saturate(128%);
+  -webkit-backdrop-filter:blur(24px) saturate(128%);
+}
+.lp-v95-card-link .lp-v91-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:5;
+  padding:1px;
+  border-radius:inherit;
+  pointer-events:none;
+  opacity:0;
+  background:
+    radial-gradient(300px circle at var(--mx) var(--my),rgba(255,255,255,.95),rgba(231,42,67,.28) 30%,transparent 65%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask-composite:exclude;
+  transition:opacity .20s ease;
+}
+.lp-v95-card-link:hover .lp-v91-card::before{opacity:.82;}
+.lp-v95-card-link .lp-v91-card-body{
+  position:relative;
+  z-index:1;
+  overflow:hidden;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.50),rgba(255,255,255,.25)),
+    rgba(255,255,255,.14) !important;
+  backdrop-filter:blur(22px) saturate(125%);
+  -webkit-backdrop-filter:blur(22px) saturate(125%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.90),
+    inset 0 -1px 0 rgba(255,255,255,.20) !important;
+}
+.lp-v95-card-link .lp-v91-card-body::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  opacity:.10;
+  background:
+    radial-gradient(330px circle at var(--mx) var(--my),rgba(255,255,255,.70),rgba(231,42,67,.12) 34%,transparent 70%);
+  transition:opacity .22s ease;
+}
+.lp-v95-card-link:hover .lp-v91-card-body::before{opacity:.80;}
+.lp-v95-card-link .lp-v91-card-gloss,
+.lp-v95-card-link .lp-v91-step,
+.lp-v95-card-link .lp-v91-card h3{
+  position:relative;
+  z-index:2;
+}
+.lp-v95-card-link .lp-v91-card h3{
+  clip-path:inset(100% 0 0 0);
+  transform:translateY(18px);
+  transition:clip-path .66s cubic-bezier(.2,.76,.18,1),transform .66s cubic-bezier(.2,.76,.18,1);
+}
+.lp-v95-how .lp-v91-unit.is-visible .lp-v91-card h3{
+  clip-path:inset(0 0 0 0);
+  transform:translateY(0);
+}
+.lp-v95-card-link .lp-v91-cta{
+  position:relative;
+  z-index:3;
+}
+.lp-v95-card-link:hover .lp-v91-card{
+  transform:translateY(-5px) scale(1.004) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.92),
+    0 34px 84px rgba(45,34,28,.125),
+    0 0 38px rgba(231,42,67,.038) !important;
+}
+
+@keyframes v95GlowOrbitOne{
+  0%,100%{transform:translate(-54%,-50%) scale(.95);opacity:.40}
+  50%{transform:translate(-46%,-45%) scale(1.06);opacity:.58}
+}
+@keyframes v95GlowOrbitTwo{
+  0%,100%{transform:translate(-46%,-55%) scale(1.04);opacity:.30}
+  50%{transform:translate(-56%,-45%) scale(.94);opacity:.50}
+}
+@keyframes v95FiFloat{
+  0%,100%{margin-top:0;filter:blur(.05px)}
+  50%{margin-top:-4px;filter:blur(.18px)}
+}
+
+@media(max-width:1020px){
+  .lp-v95-how .lp-v91-unit:nth-child(2),
+  .lp-v95-how .lp-v91-unit:nth-child(3){margin-top:0;}
+}
+@media(max-width:640px){
+  .lp-v95-hero .lp-v91-internal{
+    top:max(14px,env(safe-area-inset-top)) !important;
+    right:12px !important;
+    padding:9px 11px;
+    font-size:8px !important;
+    letter-spacing:.22em !important;
+  }
+  .lp-v95-fi-object{width:94vw;height:52vw;top:50%;}
+  .lp-v95-fi-object-inner{gap:32px;}
+  .lp-v95-fi-object-inner span{font-size:clamp(118px,39vw,190px);}
+  .lp-v95-eyebrow{font-size:9px;letter-spacing:.28em;margin-bottom:16px;}
+  .lp-v95-how{padding:104px 18px 88px !important;}
+  .lp-v95-card-link{transform:none !important;}
+}
+@media(prefers-reduced-motion:reduce){
+  .lp-v95-blush-one,
+  .lp-v95-blush-two,
+  .lp-v95-fi-object-inner{animation:none !important;}
+  .lp-v95-fi-object-inner{transition:none !important;transform:none !important;}
+  .lp-v95-how .lp-v91-how-title,
+  .lp-v95-how .lp-v91-preview,
+  .lp-v95-how .lp-v91-unit,
+  .lp-v95-card-link .lp-v91-card h3{
+    clip-path:inset(0 0 0 0) !important;
+    opacity:1 !important;
+    transform:none !important;
+  }
+  .lp-v95-card-link{transition:none !important;transform:none !important;}
 }

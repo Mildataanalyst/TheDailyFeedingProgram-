@@ -96,8 +96,8 @@ function setPointerVars(event: PointerEvent<HTMLElement>) {
   const py = y / rect.height;
   target.style.setProperty('--mx', `${x}px`);
   target.style.setProperty('--my', `${y}px`);
-  target.style.setProperty('--rx', `${(0.5 - py) * 5.5}deg`);
-  target.style.setProperty('--ry', `${(px - 0.5) * 7.5}deg`);
+  target.style.setProperty('--rx', `${(0.5 - py) * 0.65}deg`);
+  target.style.setProperty('--ry', `${(px - 0.5) * 0.8}deg`);
 }
 
 function resetPointerVars(event: PointerEvent<HTMLElement>) {
@@ -106,30 +106,23 @@ function resetPointerVars(event: PointerEvent<HTMLElement>) {
   target.style.setProperty('--ry', '0deg');
 }
 
-function movePageGlow(event: PointerEvent<HTMLElement>) {
-  const rect = event.currentTarget.getBoundingClientRect();
-  event.currentTarget.style.setProperty('--page-x', `${event.clientX - rect.left}px`);
-  event.currentTarget.style.setProperty('--page-y', `${event.clientY - rect.top}px`);
-}
-
-function moveOrb(event: PointerEvent<HTMLElement>) {
+function moveHeroObject(event: PointerEvent<HTMLElement>) {
   const target = event.currentTarget;
   const rect = target.getBoundingClientRect();
-  const x = event.clientX - rect.left;
-  const y = event.clientY - rect.top;
-  const px = x / rect.width;
-  const py = y / rect.height;
-
-  target.style.setProperty('--orb-x', `${x}px`);
-  target.style.setProperty('--orb-y', `${y}px`);
-  target.style.setProperty('--orb-rx', `${(0.5 - py) * 8}deg`);
-  target.style.setProperty('--orb-ry', `${(px - 0.5) * 10}deg`);
+  const px = (event.clientX - rect.left) / rect.width - 0.5;
+  const py = (event.clientY - rect.top) / rect.height - 0.5;
+  target.style.setProperty('--fi-x', `${px * 14}px`);
+  target.style.setProperty('--fi-y', `${py * 10}px`);
+  target.style.setProperty('--fi-rx', `${py * -1.2}deg`);
+  target.style.setProperty('--fi-ry', `${px * 1.5}deg`);
 }
 
-function resetOrb(event: PointerEvent<HTMLElement>) {
+function resetHeroObject(event: PointerEvent<HTMLElement>) {
   const target = event.currentTarget;
-  target.style.setProperty('--orb-rx', '0deg');
-  target.style.setProperty('--orb-ry', '0deg');
+  target.style.setProperty('--fi-x', '0px');
+  target.style.setProperty('--fi-y', '0px');
+  target.style.setProperty('--fi-rx', '0deg');
+  target.style.setProperty('--fi-ry', '0deg');
 }
 
 function StoryVisual({ visual }: { visual: string }) {
@@ -313,35 +306,56 @@ export default function Home() {
   }
 
   return (
-    <main className="lp-v91-page">
-      <section className="lp-v91-hero" id="top">
+    <main className="lp-v91-page lp-v95-page">
+      <section className="lp-v91-hero lp-v95-hero" id="top" onPointerMove={moveHeroObject} onPointerLeave={resetHeroObject}>
         <div className="lp-v91-internal">For internal use only</div>
 
-        <div className="lp-v91-ambient" aria-hidden="true">
-          <span className="lp-v91-ambient-ring lp-v91-ring-one" />
-          <span className="lp-v91-ambient-ring lp-v91-ring-two" />
-          <span className="lp-v91-blush" />
+        <div className="lp-v91-ambient lp-v95-ambient" aria-hidden="true">
+          <span className="lp-v91-blush lp-v95-blush-one" />
+          <span className="lp-v95-blush-two" />
         </div>
 
-        <div className="lp-v93-fi-emboss" aria-hidden="true" />
+        <div className="lp-v95-fi-object" aria-hidden="true">
+          <div className="lp-v95-fi-object-inner">
+            <span data-letter="f">f</span>
+            <span data-letter="i">i</span>
+          </div>
+        </div>
 
-        <div className="lp-v91-hero-core">
+        <div className="lp-v91-hero-core lp-v95-hero-core">
+          <p className="lp-v95-eyebrow">NGO Discovery Engine</p>
           <h1 className="lp-v91-title">
             <span className="lp-v91-dfp">DFP</span>
             <span className="lp-v91-version">
-              <span>2</span><span className="lp-v91-dot">.</span><span>0</span>
+              <span>2</span>
+              <span className="lp-v94-heart-dot" aria-hidden="true">
+                <svg viewBox="0 0 32 29" focusable="false">
+                  <defs>
+                    <linearGradient id="lp-v94-heart-gradient" x1="5" y1="2" x2="25" y2="27" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#ff5a70" />
+                      <stop offset="0.48" stopColor="#e53249" />
+                      <stop offset="1" stopColor="#bd1f35" />
+                    </linearGradient>
+                  </defs>
+                  <path fill="url(#lp-v94-heart-gradient)" d="M16 28.2 3.2 16.05C-4.1 9.15 1.18-2.1 10.42.55 12.68 1.2 14.55 2.75 16 4.72 17.45 2.75 19.32 1.2 21.58.55c9.24-2.65 14.52 8.6 7.22 15.5L16 28.2Z" />
+                </svg>
+              </span>
+              <span>0</span>
             </span>
           </h1>
           <p className="lp-v91-subtitle">Find the best NGOs</p>
         </div>
 
-        <a className="lp-v91-scroll" href="#how" aria-label="Scroll down to How it works">
+        <a className="lp-v91-scroll lp-v94-scroll" href="#how" aria-label="Scroll down to How it works">
           <span>Scroll down</span>
-          <i><b className="lp-v93-heart" aria-hidden="true">♥</b></i>
+          <i aria-hidden="true">
+            <b className="lp-v94-scroll-arrow" />
+            <em className="lp-v94-scroll-comet" />
+          </i>
         </a>
       </section>
 
-      <section className="lp-v91-how" id="how">
+      <section className="lp-v91-how lp-v95-how" id="how">
         <div className="lp-v91-how-inner">
           <h2 className={revealed ? 'lp-v91-how-title is-visible' : 'lp-v91-how-title'}>How it works</h2>
           <Link
@@ -359,9 +373,11 @@ export default function Home() {
                 key={item.step}
               >
                 <Link
-                  className="lp-v91-card-link"
+                  className="lp-v91-card-link lp-v95-card-link"
                   href={item.href}
                   aria-label={`${item.title} — ${item.cta}`}
+                  onPointerMove={setPointerVars}
+                  onPointerLeave={resetPointerVars}
                 >
                   <div className="lp-v91-card">
                     <div className="lp-v91-card-body">
