@@ -303,7 +303,7 @@ export default function Home() {
             <span className="lp-v91-dfp">DFP</span>
             <span className="lp-v91-version">
               <span>2</span>
-              <span className="lp-v94-heart-dot lp-v96-heart-dot lp-v98-heart-dot" aria-hidden="true">
+              <span className="lp-v94-heart-dot lp-v96-heart-dot lp-v98-heart-dot lp-v100-heart-dot" aria-hidden="true">
                 <svg viewBox="0 0 32 29" focusable="false">
                   <defs>
                     <linearGradient id="lp-v94-heart-gradient" x1="5" y1="2" x2="25" y2="27" gradientUnits="userSpaceOnUse">
@@ -321,12 +321,12 @@ export default function Home() {
           <p className="lp-v91-subtitle">Find the best NGOs</p>
         </div>
 
-        <a className="lp-v98-scroll lp-v99-scroll" href="#how" aria-label="Scroll down to How it works">
+        <a className="lp-v98-scroll lp-v99-scroll lp-v100-scroll" href="#how" aria-label="Scroll down to How it works">
           <span className="lp-v98-scroll-text lp-v99-scroll-text">Scroll down</span>
           <span className="lp-v99-fi-lockup" aria-hidden="true">
             <b className="lp-v99-fi-f">f</b>
             <span className="lp-v99-fi-i">
-              <b>i</b>
+              <b>ı</b>
               <em className="lp-v99-fi-heart">♥</em>
             </span>
           </span>

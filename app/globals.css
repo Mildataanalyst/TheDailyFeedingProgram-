@@ -7545,3 +7545,564 @@ body.dfp-v99-theme .ranking-journey-grid .source-choice-card:focus-visible{
   }
   .lp-v99-fi-heart{opacity:.88;transform:translateX(-50%);}
 }
+
+/* ==================================================================
+   V100 — Final visual/contrast repair
+   White acrylic navigation, high-contrast operational surfaces,
+   consistent tracker metrics, optical 2♥0, and compact FI scroll cue.
+================================================================== */
+
+/* Rich warm canvas: not flat white, not pink fog. */
+body.dfp-v100-theme{
+  --v100-paper:#f3ede6;
+  --v100-paper-light:#faf7f2;
+  --v100-panel:#fffaf4;
+  --v100-stone:#e8ddd2;
+  --v100-ink:#171311;
+  --v100-muted:#6f655f;
+  --v100-line:rgba(50,37,31,.12);
+  --v100-red:#e72a43;
+  --v100-red-dark:#b51c33;
+  color:var(--v100-ink) !important;
+  background:
+    radial-gradient(ellipse at 84% 12%,rgba(231,42,67,.105),transparent 27rem),
+    radial-gradient(ellipse at 8% 78%,rgba(112,82,69,.055),transparent 30rem),
+    linear-gradient(180deg,#fbf8f4 0%,#f3ede6 56%,#ece2d8 100%) !important;
+}
+body.dfp-v100-theme::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-2;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 62% 36%,rgba(255,255,255,.54),transparent 23rem),
+    radial-gradient(circle at 42% 78%,rgba(231,42,67,.035),transparent 22rem);
+}
+
+/* ---------------------------------------------------------------
+   Global navigation: remove the black strip entirely.
+---------------------------------------------------------------- */
+body.dfp-v100-theme .dfp-topbar{
+  top:10px !important;
+  padding:0 18px !important;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+  backdrop-filter:none !important;
+}
+body.dfp-v100-theme .dfp-topbar-inner{
+  width:min(calc(100% - 12px),1380px) !important;
+  height:62px !important;
+  border:1px solid rgba(72,53,45,.095) !important;
+  border-radius:22px !important;
+  background:
+    radial-gradient(circle at 82% 0%,rgba(231,42,67,.065),transparent 29%),
+    rgba(255,252,248,.88) !important;
+  -webkit-backdrop-filter:blur(24px) saturate(130%) !important;
+  backdrop-filter:blur(24px) saturate(130%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.98),
+    0 16px 42px rgba(53,39,32,.10) !important;
+}
+body.dfp-v100-theme .dfp-nav{
+  gap:4px !important;
+  padding:4px !important;
+  border:1px solid rgba(52,39,33,.055) !important;
+  border-radius:999px !important;
+  background:rgba(71,55,47,.035) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.72) !important;
+}
+body.dfp-v100-theme .nav-pill{
+  color:rgba(23,19,17,.60) !important;
+  background:transparent !important;
+  border:1px solid transparent !important;
+  font-weight:750 !important;
+}
+body.dfp-v100-theme .nav-pill:hover{
+  color:#171311 !important;
+  background:rgba(255,255,255,.74) !important;
+}
+body.dfp-v100-theme .nav-pill.active{
+  color:#fff !important;
+  border-color:rgba(181,28,51,.12) !important;
+  background:linear-gradient(180deg,#f34a61,#d9213d) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.30),
+    0 10px 24px rgba(231,42,67,.25) !important;
+}
+
+/* ---------------------------------------------------------------
+   Core typography and controls on light operational surfaces.
+---------------------------------------------------------------- */
+body.dfp-v100-theme :is(.page-stack,.tracker-shell,.progress-final){
+  color:var(--v100-ink) !important;
+}
+body.dfp-v100-theme :is(.state-gate-card,.source-choice-card,.empty-progress,.ranking-subtop,
+  .admin-undo-redo,.tracker-stat,.tracker-table-card,.review-board,.review-summary-card,.review-band,
+  .final-ranking-tools-strip,.final-rank-bucket,.final-rank-card,.pmu-card,.workstream-main-card,
+  .workstream-task-card,.workstream-side .mini-panel,.end-summary-card,.discover-card,.table-card,
+  .output-section,.collapse-card,.funnel-card,.source-row,.recovery-panel,.contact-import-box,
+  .contact-variable-box,.contact-gear-panel,.shortlist-carousel-card,.base-shortlist){
+  color:var(--v100-ink) !important;
+}
+body.dfp-v100-theme :is(.state-gate-card,.source-choice-card,.empty-progress,.ranking-subtop,
+  .admin-undo-redo,.tracker-stat,.tracker-table-card,.review-board,.review-summary-card,.review-band,
+  .final-ranking-tools-strip,.final-rank-bucket,.final-rank-card,.pmu-card,.workstream-main-card,
+  .workstream-task-card,.workstream-side .mini-panel,.end-summary-card,.discover-card,.table-card,
+  .output-section,.collapse-card,.funnel-card,.source-row,.recovery-panel,.contact-import-box,
+  .contact-variable-box,.shortlist-carousel-card,.base-shortlist) :is(h1,h2,h3,h4,b,strong){
+  color:var(--v100-ink) !important;
+}
+body.dfp-v100-theme :is(.state-gate-card,.source-choice-card,.empty-progress,.ranking-subtop,
+  .admin-undo-redo,.tracker-stat,.tracker-table-card,.review-board,.review-summary-card,.review-band,
+  .final-ranking-tools-strip,.final-rank-bucket,.final-rank-card,.pmu-card,.workstream-main-card,
+  .workstream-task-card,.workstream-side .mini-panel,.end-summary-card,.discover-card,.table-card,
+  .output-section,.collapse-card,.funnel-card,.source-row,.recovery-panel,.contact-import-box,
+  .contact-variable-box,.shortlist-carousel-card,.base-shortlist) :is(p,small,span,em,label){
+  color:rgba(23,19,17,.61) !important;
+}
+body.dfp-v100-theme :is(input,textarea,select){
+  color:var(--v100-ink) !important;
+  background:rgba(255,252,248,.94) !important;
+  border-color:rgba(53,40,34,.13) !important;
+}
+body.dfp-v100-theme :is(input,textarea)::placeholder{
+  color:rgba(23,19,17,.38) !important;
+}
+body.dfp-v100-theme select option{
+  color:var(--v100-ink) !important;
+  background:#fffaf4 !important;
+}
+
+/* ---------------------------------------------------------------
+   Ranking: one clean, readable header and journey system.
+---------------------------------------------------------------- */
+body.dfp-v100-theme .progress-final{
+  padding-top:82px !important;
+}
+body.dfp-v100-theme .progress-stack{
+  padding-top:34px !important;
+}
+body.dfp-v100-theme .ranking-state-gate{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  border:1px solid rgba(60,44,36,.10) !important;
+  background:
+    radial-gradient(circle at 87% 10%,rgba(231,42,67,.095),transparent 29%),
+    linear-gradient(145deg,rgba(255,252,248,.94),rgba(235,225,215,.82)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.98),
+    0 24px 62px rgba(49,36,30,.10) !important;
+}
+body.dfp-v100-theme .ranking-state-gate::after{
+  content:"";
+  position:absolute;
+  right:-55px;
+  top:-70px;
+  width:290px;
+  height:290px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(231,42,67,.10),transparent 67%);
+  opacity:.56;
+  pointer-events:none;
+}
+body.dfp-v100-theme .ranking-state-gate > *{position:relative;z-index:2;}
+body.dfp-v100-theme .ranking-state-gate h2{
+  color:#171311 !important;
+  text-shadow:none !important;
+  font-weight:800 !important;
+}
+body.dfp-v100-theme .ranking-state-gate small{
+  color:rgba(23,19,17,.56) !important;
+}
+body.dfp-v100-theme .ranking-state-gate .compact-kicker,
+body.dfp-v100-theme .ranking-state-gate .tracker-kicker{
+  color:var(--v100-red) !important;
+}
+body.dfp-v100-theme .ranking-state-gate label > span{
+  color:rgba(23,19,17,.43) !important;
+}
+body.dfp-v100-theme .ranking-state-gate select{
+  color:#171311 !important;
+  background:rgba(255,252,248,.96) !important;
+  border-color:rgba(53,40,34,.13) !important;
+  box-shadow:inset 0 1px 0 #fff,0 9px 24px rgba(49,36,30,.055) !important;
+}
+body.dfp-v100-theme .empty-progress{
+  min-height:410px;
+  border:1px solid rgba(60,44,36,.08) !important;
+  background:
+    radial-gradient(circle at 79% 13%,rgba(231,42,67,.065),transparent 27%),
+    linear-gradient(145deg,rgba(255,252,248,.90),rgba(235,225,215,.72)) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.94),0 22px 58px rgba(49,36,30,.08) !important;
+}
+body.dfp-v100-theme .empty-progress p{
+  color:rgba(23,19,17,.64) !important;
+  font-weight:700 !important;
+}
+body.dfp-v100-theme .empty-progress .empty-icon{
+  color:var(--v100-red) !important;
+  background:rgba(255,255,255,.72) !important;
+  border-color:rgba(231,42,67,.18) !important;
+  box-shadow:0 14px 34px rgba(49,36,30,.07) !important;
+}
+
+/* Uniform journey cards: visual hierarchy comes from typography and
+   accents, not arbitrary black/pink/white fills. */
+body.dfp-v100-theme .source-choice-grid.three-choice .source-choice-card,
+body.dfp-v100-theme .ranking-journey-grid .source-choice-card{
+  min-height:220px;
+  overflow:visible !important;
+  color:var(--v100-ink) !important;
+  border:1px solid rgba(59,43,36,.09) !important;
+  background:
+    radial-gradient(circle at 88% 7%,rgba(231,42,67,.07),transparent 29%),
+    linear-gradient(145deg,rgba(255,252,248,.96),rgba(232,221,211,.78)) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.98),0 22px 60px rgba(49,36,30,.09) !important;
+}
+body.dfp-v100-theme .source-choice-grid.three-choice .source-choice-card :is(b,small),
+body.dfp-v100-theme .ranking-journey-grid .source-choice-card :is(b,small){
+  color:var(--v100-ink) !important;
+}
+body.dfp-v100-theme .source-choice-grid.three-choice .source-choice-card small,
+body.dfp-v100-theme .ranking-journey-grid .source-choice-card small{
+  color:rgba(23,19,17,.55) !important;
+  line-height:1.5 !important;
+}
+body.dfp-v100-theme .source-choice-grid.three-choice .source-choice-card > span,
+body.dfp-v100-theme .ranking-journey-grid .source-choice-card > span{
+  color:var(--v100-red-dark) !important;
+  border-color:rgba(231,42,67,.18) !important;
+  background:rgba(255,255,255,.48) !important;
+}
+body.dfp-v100-theme .source-choice-grid.three-choice .source-choice-card:hover,
+body.dfp-v100-theme .ranking-journey-grid .source-choice-card:hover{
+  transform:translateY(-5px) !important;
+  border-color:rgba(231,42,67,.20) !important;
+  box-shadow:inset 0 1px 0 #fff,0 30px 72px rgba(49,36,30,.12),0 0 28px rgba(231,42,67,.035) !important;
+}
+body.dfp-v100-theme .ranking-journey-grid .source-choice-card b{
+  overflow:visible !important;
+  line-height:1.04 !important;
+  padding-bottom:.16em !important;
+}
+
+/* All secondary ranking bars and content stay readable. */
+body.dfp-v100-theme .ranking-subtop,
+body.dfp-v100-theme .admin-undo-redo{
+  border:1px solid rgba(59,43,36,.085) !important;
+  background:rgba(255,252,248,.78) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.98),0 15px 38px rgba(49,36,30,.065) !important;
+}
+body.dfp-v100-theme .ranking-subtop span,
+body.dfp-v100-theme .admin-undo-redo :is(b,small,span){
+  color:rgba(23,19,17,.68) !important;
+}
+body.dfp-v100-theme .pmu-board-head{
+  color:var(--v100-ink) !important;
+  border:1px solid rgba(59,43,36,.09) !important;
+  background:
+    radial-gradient(circle at 88% 8%,rgba(231,42,67,.075),transparent 29%),
+    linear-gradient(145deg,rgba(255,252,248,.96),rgba(232,221,211,.80)) !important;
+  box-shadow:inset 0 1px 0 #fff,0 24px 64px rgba(49,36,30,.10) !important;
+}
+body.dfp-v100-theme .pmu-board-head :is(h1,h2,h3,b){color:var(--v100-ink) !important;}
+body.dfp-v100-theme .pmu-board-head :is(p,span,small){color:rgba(23,19,17,.58) !important;}
+
+/* ---------------------------------------------------------------
+   Discovery: retain the authored dark hero, repair every light card.
+---------------------------------------------------------------- */
+body.dfp-v100-theme .module-hero{
+  border:1px solid rgba(255,255,255,.10) !important;
+  background:
+    radial-gradient(circle at 86% 12%,rgba(231,42,67,.26),transparent 29%),
+    linear-gradient(145deg,#2b221f,#171311) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 30px 76px rgba(43,30,25,.18) !important;
+}
+body.dfp-v100-theme .module-hero :is(h1,h2){color:#fff !important;text-shadow:none !important;}
+body.dfp-v100-theme .module-hero h1 span{color:#ff4059 !important;}
+body.dfp-v100-theme .module-hero .red-kicker{color:#ff5369 !important;}
+body.dfp-v100-theme .module-hero p{color:rgba(255,255,255,.64) !important;}
+body.dfp-v100-theme .discovery-revamp > .state-gate-card{
+  border:1px solid rgba(59,43,36,.09) !important;
+  background:
+    radial-gradient(circle at 88% 0%,rgba(231,42,67,.07),transparent 29%),
+    linear-gradient(145deg,rgba(255,252,248,.96),rgba(232,221,211,.80)) !important;
+  box-shadow:inset 0 1px 0 #fff,0 20px 54px rgba(49,36,30,.085) !important;
+}
+body.dfp-v100-theme .discovery-revamp > .state-gate-card h2{color:var(--v100-ink) !important;}
+body.dfp-v100-theme .discovery-revamp > .state-gate-card .red-kicker{color:var(--v100-red) !important;}
+body.dfp-v100-theme .discovery-revamp > .state-gate-card label > span{color:rgba(23,19,17,.43) !important;}
+
+/* ---------------------------------------------------------------
+   Tracker: deliberate dark hero, readable controls, uniform metrics.
+---------------------------------------------------------------- */
+body.dfp-v100-theme .tracker-hero{
+  border:1px solid rgba(255,255,255,.10) !important;
+  background:
+    radial-gradient(circle at 86% 12%,rgba(231,42,67,.27),transparent 29%),
+    linear-gradient(145deg,#2b221f,#171311) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 30px 76px rgba(43,30,25,.19) !important;
+}
+body.dfp-v100-theme .tracker-hero :is(h1,h2){color:#fff !important;text-shadow:none !important;}
+body.dfp-v100-theme .tracker-hero .tracker-kicker{color:#ff5369 !important;}
+body.dfp-v100-theme .tracker-hero p{color:rgba(255,255,255,.65) !important;}
+body.dfp-v100-theme .tracker-hero :is(select,input){
+  color:#171311 !important;
+  background:rgba(255,252,248,.94) !important;
+  border-color:rgba(255,255,255,.22) !important;
+  box-shadow:inset 0 1px 0 #fff,0 8px 20px rgba(0,0,0,.12) !important;
+}
+body.dfp-v100-theme .tracker-hero :is(a,button,.tracker-upload-label){
+  color:rgba(255,255,255,.84) !important;
+  border-color:rgba(255,255,255,.13) !important;
+  background:rgba(255,255,255,.09) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08) !important;
+}
+body.dfp-v100-theme .tracker-hero :is(a,button,.tracker-upload-label):hover{
+  color:#fff !important;
+  background:rgba(255,255,255,.15) !important;
+}
+body.dfp-v100-theme .contact-stats .tracker-stat,
+body.dfp-v100-theme .tracker-stats .tracker-stat{
+  color:var(--v100-ink) !important;
+  border:1px solid rgba(59,43,36,.09) !important;
+  background:
+    radial-gradient(circle at 88% 0%,rgba(231,42,67,.055),transparent 29%),
+    linear-gradient(145deg,rgba(255,252,248,.96),rgba(232,221,211,.78)) !important;
+  box-shadow:inset 0 1px 0 #fff,0 16px 42px rgba(49,36,30,.075) !important;
+}
+body.dfp-v100-theme .contact-stats .tracker-stat :is(strong,span),
+body.dfp-v100-theme .tracker-stats .tracker-stat :is(strong,span){
+  color:var(--v100-ink) !important;
+}
+body.dfp-v100-theme .contact-stats .tracker-stat span,
+body.dfp-v100-theme .tracker-stats .tracker-stat span{
+  color:rgba(23,19,17,.53) !important;
+}
+body.dfp-v100-theme .contact-stats .tracker-stat::before,
+body.dfp-v100-theme .tracker-stats .tracker-stat::before{
+  content:"";
+  position:absolute;
+  left:16px;
+  top:0;
+  width:28px;
+  height:2px;
+  border-radius:999px;
+  background:var(--v100-red);
+}
+
+/* ---------------------------------------------------------------
+   Global tables, labels and secondary buttons.
+---------------------------------------------------------------- */
+body.dfp-v100-theme :is(th,.contact-table th,.tracker-table th){
+  color:rgba(255,255,255,.72) !important;
+  background:#211a18 !important;
+}
+body.dfp-v100-theme :is(td,.contact-table td,.tracker-table td){
+  color:rgba(23,19,17,.78) !important;
+  background:rgba(255,252,248,.72) !important;
+}
+body.dfp-v100-theme tbody tr:nth-child(even) td{background:rgba(235,225,215,.72) !important;}
+body.dfp-v100-theme :is(.ghost-btn,.advanced-btn,.quiet-btn,.sample-btn,.info-btn,.back-button,
+  .nav-action-link,.add-ngo-btn,.gold-in-depth-btn,.admin-undo-redo button){
+  color:rgba(23,19,17,.72) !important;
+  background:linear-gradient(180deg,#fffaf4,#e9dfd5) !important;
+  border-color:rgba(53,40,34,.11) !important;
+}
+body.dfp-v100-theme :is(.primary-red,.small-red,.card-cta,.pmu-primary-action){color:#fff !important;}
+body.dfp-v100-theme .page-foot{
+  color:rgba(23,19,17,.40) !important;
+  border-top-color:rgba(53,40,34,.08) !important;
+}
+
+/* ---------------------------------------------------------------
+   Landing decimal: a real 2.0 rhythm with a luminous heart point.
+---------------------------------------------------------------- */
+body.dfp-v100-theme .lp-v91-version{
+  display:inline-flex !important;
+  align-items:flex-end !important;
+  gap:0 !important;
+  letter-spacing:0 !important;
+  font-kerning:none;
+}
+body.dfp-v100-theme .lp-v91-version > span:first-child,
+body.dfp-v100-theme .lp-v91-version > span:last-child{
+  display:inline-block !important;
+  margin:0 !important;
+  padding:0 !important;
+  letter-spacing:-.055em !important;
+}
+body.dfp-v100-theme .lp-v100-heart-dot{
+  position:relative;
+  flex:0 0 .082em !important;
+  width:.082em !important;
+  height:.077em !important;
+  margin:0 .050em .090em .052em !important;
+  align-self:flex-end !important;
+  opacity:.96 !important;
+  transform:translateY(0) !important;
+  filter:drop-shadow(0 .018em .045em rgba(177,25,49,.14)) !important;
+  animation:v100HeartPulse 5.2s cubic-bezier(.22,.72,.2,1) infinite !important;
+}
+body.dfp-v100-theme .lp-v100-heart-dot::before{
+  inset:-56% !important;
+  opacity:.12 !important;
+  background:radial-gradient(circle,rgba(231,42,67,.30),rgba(231,42,67,.07) 34%,transparent 70%) !important;
+  animation:v100HeartAura 5.2s ease-in-out infinite !important;
+}
+body.dfp-v100-theme .lp-v100-heart-dot::after{
+  left:8% !important;
+  top:7% !important;
+  width:28% !important;
+  height:12% !important;
+  opacity:.58 !important;
+  background:rgba(255,255,255,.94) !important;
+  filter:blur(.22px) !important;
+  animation:v100HeartGlint 5.2s ease-in-out infinite !important;
+}
+
+/* FI scroll signature: compact, aligned, and visibly downward. */
+body.dfp-v100-theme .lp-v100-scroll{
+  bottom:max(11px,env(safe-area-inset-bottom)) !important;
+  gap:3px !important;
+}
+body.dfp-v100-theme .lp-v100-scroll .lp-v99-scroll-text{
+  margin:0 0 1px !important;
+  color:rgba(23,19,17,.52) !important;
+  font-size:9px !important;
+  letter-spacing:.31em !important;
+}
+body.dfp-v100-theme .lp-v100-scroll .lp-v99-fi-lockup{
+  display:inline-flex !important;
+  align-items:flex-end !important;
+  justify-content:center !important;
+  gap:1px !important;
+  min-width:31px !important;
+  height:22px !important;
+  color:#171311 !important;
+  line-height:1 !important;
+}
+body.dfp-v100-theme .lp-v100-scroll .lp-v99-fi-f,
+body.dfp-v100-theme .lp-v100-scroll .lp-v99-fi-i > b{
+  color:#171311 !important;
+  font-size:21px !important;
+  line-height:1 !important;
+  letter-spacing:-.12em !important;
+}
+body.dfp-v100-theme .lp-v100-scroll .lp-v99-fi-f{
+  transform:none !important;
+}
+body.dfp-v100-theme .lp-v100-scroll .lp-v99-fi-i{
+  position:relative !important;
+  display:inline-flex !important;
+  align-items:flex-end !important;
+  justify-content:center !important;
+  width:8px !important;
+  height:22px !important;
+  overflow:visible !important;
+}
+body.dfp-v100-theme .lp-v100-scroll .lp-v99-fi-heart{
+  left:52% !important;
+  top:-4px !important;
+  color:var(--v100-red) !important;
+  font-size:6.5px !important;
+  text-shadow:0 0 8px rgba(231,42,67,.34) !important;
+  animation:v100HeartDrop 2.75s cubic-bezier(.42,0,.22,1) infinite !important;
+}
+body.dfp-v100-theme .lp-v100-scroll .lp-v99-scroll-arrow{
+  width:26px !important;
+  height:22px !important;
+  margin-top:-3px !important;
+}
+body.dfp-v100-theme .lp-v100-scroll .lp-v99-scroll-arrow::before{
+  top:0 !important;
+  height:13px !important;
+  width:1.3px !important;
+  background:linear-gradient(180deg,rgba(231,42,67,.16),rgba(231,42,67,.86)) !important;
+  animation:v100ScrollStem 1.85s cubic-bezier(.42,0,.2,1) infinite !important;
+}
+body.dfp-v100-theme .lp-v100-scroll .lp-v99-scroll-arrow i{
+  bottom:1px !important;
+  width:9px !important;
+  height:9px !important;
+  border-right:2px solid var(--v100-red) !important;
+  border-bottom:2px solid var(--v100-red) !important;
+  animation:v100ScrollChevron 1.85s cubic-bezier(.42,0,.2,1) infinite !important;
+}
+
+@keyframes v100HeartPulse{
+  0%,72%,100%{transform:scale(1)}
+  78%{transform:scale(1.10)}
+  84%{transform:scale(.985)}
+  90%{transform:scale(1.035)}
+}
+@keyframes v100HeartAura{
+  0%,72%,100%{opacity:.07;transform:scale(.76)}
+  80%{opacity:.24;transform:scale(1.14)}
+  92%{opacity:.06;transform:scale(1.34)}
+}
+@keyframes v100HeartGlint{
+  0%,68%,100%{opacity:.28;transform:translate(-6%,8%) rotate(-25deg)}
+  79%{opacity:.94;transform:translate(20%,-18%) rotate(-25deg)}
+  90%{opacity:.34;transform:translate(27%,-20%) rotate(-25deg)}
+}
+@keyframes v100HeartDrop{
+  0%,12%{opacity:.96;transform:translate(-50%,0) scale(1)}
+  58%{opacity:.90;transform:translate(-50%,13px) scale(.96)}
+  78%{opacity:.42;transform:translate(-50%,19px) scale(.82)}
+  86%,100%{opacity:0;transform:translate(-50%,22px) scale(.72)}
+}
+@keyframes v100ScrollStem{
+  0%,100%{opacity:.24;transform:translateX(-50%) scaleY(.28)}
+  48%{opacity:1;transform:translateX(-50%) scaleY(1)}
+  78%{opacity:.42;transform:translateX(-50%) scaleY(.76)}
+}
+@keyframes v100ScrollChevron{
+  0%,100%{opacity:.55;transform:translate(-50%,-3px) rotate(45deg)}
+  48%{opacity:1;transform:translate(-50%,3px) rotate(45deg)}
+  78%{opacity:.34;transform:translate(-50%,5px) rotate(45deg)}
+}
+
+@media(max-width:900px){
+  body.dfp-v100-theme .dfp-topbar{top:7px !important;padding:0 10px !important;}
+  body.dfp-v100-theme .dfp-topbar-inner{width:100% !important;height:59px !important;border-radius:18px !important;}
+  body.dfp-v100-theme .progress-final{padding-top:74px !important;}
+}
+@media(max-width:640px){
+  body.dfp-v100-theme .nav-pill{padding:9px 12px !important;font-size:11px !important;}
+  body.dfp-v100-theme .ranking-state-gate{padding:28px 22px !important;}
+  body.dfp-v100-theme .lp-v100-heart-dot{
+    flex-basis:.087em !important;
+    width:.087em !important;
+    height:.082em !important;
+    margin-left:.048em !important;
+    margin-right:.047em !important;
+    margin-bottom:.084em !important;
+  }
+  body.dfp-v100-theme .lp-v100-scroll{bottom:max(8px,env(safe-area-inset-bottom)) !important;}
+  body.dfp-v100-theme .lp-v100-scroll .lp-v99-fi-f,
+  body.dfp-v100-theme .lp-v100-scroll .lp-v99-fi-i > b{font-size:19px !important;}
+  body.dfp-v100-theme .lp-v100-scroll .lp-v99-fi-i{height:20px !important;}
+  body.dfp-v100-theme .lp-v100-scroll .lp-v99-scroll-arrow{height:20px !important;}
+}
+@media(prefers-reduced-motion:reduce){
+  body.dfp-v100-theme .lp-v100-heart-dot,
+  body.dfp-v100-theme .lp-v100-heart-dot::before,
+  body.dfp-v100-theme .lp-v100-heart-dot::after,
+  body.dfp-v100-theme .lp-v100-scroll .lp-v99-fi-heart,
+  body.dfp-v100-theme .lp-v100-scroll .lp-v99-scroll-arrow::before,
+  body.dfp-v100-theme .lp-v100-scroll .lp-v99-scroll-arrow i{
+    animation:none !important;
+  }
+}
+
+/* Final optical correction: do not let per-glyph negative tracking pull
+   the heart toward the 2. The two margins around the heart now control
+   both sides equally. */
+body.dfp-v100-theme .lp-v91-version > span:first-child,
+body.dfp-v100-theme .lp-v91-version > span:last-child{
+  letter-spacing:0 !important;
+}
