@@ -106,24 +106,6 @@ function resetPointerVars(event: PointerEvent<HTMLElement>) {
   target.style.setProperty('--ry', '0deg');
 }
 
-function moveHeroObject(event: PointerEvent<HTMLElement>) {
-  const target = event.currentTarget;
-  const rect = target.getBoundingClientRect();
-  const px = (event.clientX - rect.left) / rect.width - 0.5;
-  const py = (event.clientY - rect.top) / rect.height - 0.5;
-  target.style.setProperty('--fi-x', `${px * 14}px`);
-  target.style.setProperty('--fi-y', `${py * 10}px`);
-  target.style.setProperty('--fi-rx', `${py * -1.2}deg`);
-  target.style.setProperty('--fi-ry', `${px * 1.5}deg`);
-}
-
-function resetHeroObject(event: PointerEvent<HTMLElement>) {
-  const target = event.currentTarget;
-  target.style.setProperty('--fi-x', '0px');
-  target.style.setProperty('--fi-y', '0px');
-  target.style.setProperty('--fi-rx', '0deg');
-  target.style.setProperty('--fi-ry', '0deg');
-}
 
 function StoryVisual({ visual }: { visual: string }) {
   if (visual === 'twoWays') {
@@ -306,8 +288,8 @@ export default function Home() {
   }
 
   return (
-    <main className="lp-v91-page lp-v95-page">
-      <section className="lp-v91-hero lp-v95-hero" id="top" onPointerMove={moveHeroObject} onPointerLeave={resetHeroObject}>
+    <main className="lp-v91-page lp-v95-page lp-v96-page">
+      <section className="lp-v91-hero lp-v95-hero lp-v96-hero" id="top">
         <div className="lp-v91-internal">For internal use only</div>
 
         <div className="lp-v91-ambient lp-v95-ambient" aria-hidden="true">
@@ -315,20 +297,13 @@ export default function Home() {
           <span className="lp-v95-blush-two" />
         </div>
 
-        <div className="lp-v95-fi-object" aria-hidden="true">
-          <div className="lp-v95-fi-object-inner">
-            <span data-letter="f">f</span>
-            <span data-letter="i">i</span>
-          </div>
-        </div>
 
         <div className="lp-v91-hero-core lp-v95-hero-core">
-          <p className="lp-v95-eyebrow">NGO Discovery Engine</p>
           <h1 className="lp-v91-title">
             <span className="lp-v91-dfp">DFP</span>
             <span className="lp-v91-version">
               <span>2</span>
-              <span className="lp-v94-heart-dot" aria-hidden="true">
+              <span className="lp-v94-heart-dot lp-v96-heart-dot" aria-hidden="true">
                 <svg viewBox="0 0 32 29" focusable="false">
                   <defs>
                     <linearGradient id="lp-v94-heart-gradient" x1="5" y1="2" x2="25" y2="27" gradientUnits="userSpaceOnUse">
@@ -346,11 +321,14 @@ export default function Home() {
           <p className="lp-v91-subtitle">Find the best NGOs</p>
         </div>
 
-        <a className="lp-v91-scroll lp-v94-scroll" href="#how" aria-label="Scroll down to How it works">
-          <span>Scroll down</span>
+        <a className="lp-v91-scroll lp-v94-scroll lp-v96-scroll" href="#how" aria-label="Scroll down to How it works">
+          <span className="lp-v96-scroll-fi" aria-hidden="true">
+            <b>F</b>
+            <b>I</b>
+          </span>
+          <span className="lp-v96-scroll-text">Scroll down</span>
           <i aria-hidden="true">
             <b className="lp-v94-scroll-arrow" />
-            <em className="lp-v94-scroll-comet" />
           </i>
         </a>
       </section>
