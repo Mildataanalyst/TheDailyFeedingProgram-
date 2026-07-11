@@ -323,6 +323,8 @@ export default function Home() {
           <span className="lp-v91-blush" />
         </div>
 
+        <div className="lp-v93-fi-emboss" aria-hidden="true" />
+
         <div className="lp-v91-hero-core">
           <h1 className="lp-v91-title">
             <span className="lp-v91-dfp">DFP</span>
@@ -335,7 +337,7 @@ export default function Home() {
 
         <a className="lp-v91-scroll" href="#how" aria-label="Scroll down to How it works">
           <span>Scroll down</span>
-          <i><b /></i>
+          <i><b className="lp-v93-heart" aria-hidden="true">♥</b></i>
         </a>
       </section>
 

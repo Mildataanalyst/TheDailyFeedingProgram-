@@ -4965,3 +4965,65 @@ body,.lp-page,.de-page{font-family:var(--font)!important;}
   .lp-v91-cta::before,
   .lp-v91-cta svg{transition:none !important;}
 }
+
+/* ------------------------------------------------------------------
+   V93 — Subtle Feeding India signature
+   One visible heart cue + a near-subliminal, non-animated wordmark emboss.
+------------------------------------------------------------------- */
+.lp-v91-hero{
+  isolation:isolate;
+}
+.lp-v93-fi-emboss{
+  position:absolute;
+  left:50%;
+  top:68%;
+  z-index:0;
+  width:min(1240px,116vw);
+  aspect-ratio:440 / 85;
+  transform:translate(-50%,-50%) rotate(-1deg);
+  pointer-events:none;
+  user-select:none;
+  background:rgba(17,16,15,.017);
+  -webkit-mask:url('/feeding-india-wordmark-emboss.png') center / contain no-repeat;
+  mask:url('/feeding-india-wordmark-emboss.png') center / contain no-repeat;
+  mix-blend-mode:multiply;
+  filter:blur(.12px);
+}
+.lp-v91-hero-core,
+.lp-v91-scroll,
+.lp-v91-internal{
+  position:relative;
+  z-index:2;
+}
+.lp-v91-scroll i{
+  overflow:hidden;
+}
+.lp-v91-scroll .lp-v93-heart{
+  display:block;
+  width:auto;
+  height:auto;
+  border:0;
+  color:var(--v91-red);
+  background:none;
+  font-family:Arial,Helvetica,sans-serif;
+  font-size:10px;
+  font-weight:400;
+  line-height:1;
+  transform:none;
+  animation:v93HeartDrift 2.5s ease-in-out infinite;
+  text-shadow:0 0 12px rgba(229,50,73,.22);
+}
+@keyframes v93HeartDrift{
+  0%,100%{opacity:.58;transform:translateY(-1px) scale(.94)}
+  50%{opacity:.94;transform:translateY(2px) scale(1)}
+}
+@media(max-width:640px){
+  .lp-v93-fi-emboss{
+    top:70%;
+    width:148vw;
+    background:rgba(17,16,15,.015);
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .lp-v91-scroll .lp-v93-heart{animation:none!important;}
+}
