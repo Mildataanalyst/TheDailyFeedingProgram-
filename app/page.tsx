@@ -288,8 +288,8 @@ export default function Home() {
   }
 
   return (
-    <main className="lp-v91-page lp-v95-page lp-v96-page">
-      <section className="lp-v91-hero lp-v95-hero lp-v96-hero" id="top">
+    <main className="lp-v91-page lp-v95-page lp-v96-page lp-v98-page">
+      <section className="lp-v91-hero lp-v95-hero lp-v96-hero lp-v98-hero" id="top">
         <div className="lp-v91-internal">For internal use only</div>
 
         <div className="lp-v91-ambient lp-v95-ambient" aria-hidden="true">
@@ -303,7 +303,7 @@ export default function Home() {
             <span className="lp-v91-dfp">DFP</span>
             <span className="lp-v91-version">
               <span>2</span>
-              <span className="lp-v94-heart-dot lp-v96-heart-dot" aria-hidden="true">
+              <span className="lp-v94-heart-dot lp-v96-heart-dot lp-v98-heart-dot" aria-hidden="true">
                 <svg viewBox="0 0 32 29" focusable="false">
                   <defs>
                     <linearGradient id="lp-v94-heart-gradient" x1="5" y1="2" x2="25" y2="27" gradientUnits="userSpaceOnUse">
@@ -321,15 +321,16 @@ export default function Home() {
           <p className="lp-v91-subtitle">Find the best NGOs</p>
         </div>
 
-        <a className="lp-v91-scroll lp-v94-scroll lp-v96-scroll" href="#how" aria-label="Scroll down to How it works">
-          <span className="lp-v96-scroll-fi" aria-hidden="true">
-            <b>F</b>
-            <b>I</b>
+        <a className="lp-v98-scroll" href="#how" aria-label="Scroll down to How it works">
+          <span className="lp-v98-scroll-text">Scroll down</span>
+          <span className="lp-v98-fi-stack" aria-hidden="true">
+            <b className="lp-v98-fi-f">F</b>
+            <span className="lp-v98-fi-i">
+              <b>I</b>
+              <em className="lp-v98-fi-heart">♥</em>
+              <i className="lp-v98-fi-arrow" />
+            </span>
           </span>
-          <span className="lp-v96-scroll-text">Scroll down</span>
-          <i aria-hidden="true">
-            <b className="lp-v94-scroll-arrow" />
-          </i>
         </a>
       </section>
 

@@ -6576,3 +6576,540 @@ body.dfp-v97-theme .remove,
 body.dfp-v97-theme .warn{color:#b71931 !important;}
 body.dfp-v97-theme .good,
 body.dfp-v97-theme .ok{color:#3f7d55 !important;}
+
+/* ==================================================================
+   V98 — Intentional warm-stone system
+   Adds contrast, depth and rhythm across every operational screen.
+   Landing remains minimal; internal tools gain a charcoal / ivory / red
+   material language that reads as the same product, not a separate app.
+================================================================== */
+body.dfp-v98-theme{
+  --v98-canvas:#e9dfd5;
+  --v98-canvas-2:#f2ebe3;
+  --v98-paper:#f8f3ec;
+  --v98-paper-deep:#e8ddd2;
+  --v98-charcoal:#181412;
+  --v98-charcoal-2:#2b231f;
+  --v98-ink:#151210;
+  --v98-red:#e72a43;
+  --v98-red-deep:#b81931;
+  --v98-rose:#d89aa5;
+  --v98-line:rgba(31,24,21,.11);
+  --v98-shadow:0 26px 70px rgba(48,35,29,.12);
+  background:
+    radial-gradient(circle at 82% 5%,rgba(231,42,67,.11),transparent 26rem),
+    radial-gradient(circle at 9% 38%,rgba(74,54,47,.07),transparent 31rem),
+    radial-gradient(circle at 64% 82%,rgba(231,42,67,.045),transparent 34rem),
+    linear-gradient(180deg,#f3ece4 0%,#ebe1d7 50%,#e5d9ce 100%) !important;
+}
+body.dfp-v98-theme::after{
+  content:"";
+  position:fixed;
+  inset:-20vh -18vw;
+  z-index:-1;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 78% 20%,rgba(231,42,67,.095),transparent 19%),
+    radial-gradient(circle at 20% 72%,rgba(52,40,35,.055),transparent 22%),
+    radial-gradient(circle at 50% 52%,rgba(255,255,255,.20),transparent 34%);
+  filter:blur(52px);
+  animation:v98AmbientDrift 28s ease-in-out infinite alternate;
+}
+
+/* Landing lock-up: heart reads as the decimal rather than a third glyph. */
+body.dfp-v98-theme .lp-v91-version{
+  gap:0 !important;
+  letter-spacing:-.065em !important;
+}
+body.dfp-v98-theme .lp-v98-heart-dot{
+  width:.088em;
+  height:.084em;
+  margin:0 .018em .092em .042em;
+  opacity:.94;
+  filter:drop-shadow(0 .012em .034em rgba(177,25,49,.10));
+  animation:v98HeartBeat 5.8s cubic-bezier(.22,.72,.2,1) infinite;
+}
+body.dfp-v98-theme .lp-v98-heart-dot + span{
+  margin-left:-.010em;
+}
+body.dfp-v98-theme .lp-v98-heart-dot::before{
+  inset:-32%;
+  opacity:.08;
+  animation:v98HeartAura 5.8s ease-in-out infinite;
+}
+body.dfp-v98-theme .lp-v98-heart-dot::after{
+  opacity:.34;
+  width:18%;
+  height:9%;
+}
+
+/* FI scroll signature: Scroll down / F / I, with a quiet heart-drop through I. */
+.lp-v98-scroll{
+  position:absolute;
+  left:50%;
+  bottom:max(22px,env(safe-area-inset-bottom));
+  z-index:12;
+  transform:translateX(-50%);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+  color:var(--v98-ink);
+  text-decoration:none;
+  user-select:none;
+  transition:transform .24s ease,color .24s ease;
+}
+.lp-v98-scroll:hover{transform:translateX(-50%) translateY(-3px);}
+.lp-v98-scroll-text{
+  margin-bottom:3px;
+  color:rgba(21,18,16,.46);
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:.31em;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.lp-v98-fi-stack{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:0;
+  color:#171311;
+  font-family:var(--font,'Lexend',system-ui,sans-serif);
+  font-weight:800;
+  line-height:.72;
+  filter:drop-shadow(0 10px 18px rgba(31,24,21,.08));
+}
+.lp-v98-fi-f{
+  font-size:15px;
+  letter-spacing:-.08em;
+}
+.lp-v98-fi-i{
+  position:relative;
+  display:grid;
+  place-items:center;
+  width:18px;
+  height:31px;
+  margin-top:2px;
+}
+.lp-v98-fi-i > b{
+  position:relative;
+  z-index:2;
+  font-size:19px;
+  line-height:1;
+  letter-spacing:-.08em;
+}
+.lp-v98-fi-heart{
+  position:absolute;
+  left:50%;
+  top:-1px;
+  z-index:4;
+  transform:translateX(-50%);
+  color:var(--v98-red);
+  font-family:Arial,sans-serif;
+  font-size:6px;
+  font-style:normal;
+  line-height:1;
+  text-shadow:0 0 8px rgba(231,42,67,.22);
+  animation:v98HeartDrop 3.4s cubic-bezier(.45,0,.24,1) infinite;
+}
+.lp-v98-fi-arrow{
+  position:absolute;
+  left:50%;
+  bottom:-2px;
+  width:6px;
+  height:6px;
+  border-right:1.2px solid var(--v98-red);
+  border-bottom:1.2px solid var(--v98-red);
+  transform:translateX(-50%) rotate(45deg);
+  opacity:.54;
+  animation:v98ArrowBreathe 3.4s ease-in-out infinite;
+}
+
+/* Floating dark product chrome. */
+body.dfp-v98-theme .dfp-topbar{
+  top:10px;
+  padding:0 18px;
+  border:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  backdrop-filter:none;
+}
+body.dfp-v98-theme .dfp-topbar-inner{
+  width:min(calc(100% - 12px),1380px) !important;
+  height:64px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:22px;
+  background:
+    radial-gradient(circle at 78% 0%,rgba(231,42,67,.18),transparent 26%),
+    linear-gradient(145deg,rgba(39,31,28,.96),rgba(22,18,16,.96));
+  backdrop-filter:blur(24px) saturate(125%);
+  -webkit-backdrop-filter:blur(24px) saturate(125%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    0 18px 48px rgba(38,27,23,.20);
+}
+body.dfp-v98-theme .dfp-nav{
+  gap:4px;
+  padding:4px;
+  border:0;
+  background:rgba(255,255,255,.035);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045);
+}
+body.dfp-v98-theme .nav-pill{
+  color:rgba(255,255,255,.58) !important;
+}
+body.dfp-v98-theme .nav-pill:hover{
+  color:#fff !important;
+  background:rgba(255,255,255,.075) !important;
+}
+body.dfp-v98-theme .nav-pill.active{
+  color:#fff !important;
+  background:linear-gradient(180deg,#f1445a,#d91f3a) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.26),0 10px 24px rgba(231,42,67,.28) !important;
+}
+
+/* Operational pages sit on a warmer, deeper canvas. */
+body.dfp-v98-theme .page-stack,
+body.dfp-v98-theme .tracker-shell{
+  position:relative;
+}
+body.dfp-v98-theme .page-stack::before,
+body.dfp-v98-theme .tracker-shell::before{
+  content:"";
+  position:absolute;
+  left:-10vw;
+  right:-10vw;
+  top:0;
+  height:360px;
+  z-index:-1;
+  pointer-events:none;
+  background:radial-gradient(ellipse at 68% 12%,rgba(231,42,67,.075),transparent 50%);
+  filter:blur(42px);
+}
+
+/* Charcoal hero panels anchor every tool with the same black / red language. */
+body.dfp-v98-theme :is(.module-hero,.tracker-hero,.ranking-state-gate){
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.11) !important;
+  background:
+    radial-gradient(circle at 84% 24%,rgba(231,42,67,.28),transparent 25%),
+    radial-gradient(circle at 12% 100%,rgba(255,255,255,.045),transparent 34%),
+    linear-gradient(145deg,#2a211e 0%,#171311 62%,#110e0d 100%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    0 32px 90px rgba(42,29,24,.22) !important;
+}
+body.dfp-v98-theme :is(.module-hero,.tracker-hero,.ranking-state-gate)::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  opacity:.22;
+  background-image:radial-gradient(rgba(255,255,255,.34) .45px,transparent .45px);
+  background-size:8px 8px;
+  mask-image:linear-gradient(110deg,transparent 24%,black 72%,transparent 100%);
+}
+body.dfp-v98-theme :is(.module-hero,.tracker-hero,.ranking-state-gate) :is(h1,h2){
+  color:#fff !important;
+  text-shadow:0 18px 50px rgba(0,0,0,.24) !important;
+}
+body.dfp-v98-theme :is(.module-hero,.tracker-hero,.ranking-state-gate) h1 span{
+  color:#ff4059 !important;
+}
+body.dfp-v98-theme :is(.module-hero,.tracker-hero,.ranking-state-gate) :is(p,small){
+  color:rgba(255,255,255,.56) !important;
+}
+body.dfp-v98-theme :is(.module-hero,.tracker-hero,.ranking-state-gate) :is(.red-kicker,.tracker-kicker,.compact-kicker){
+  color:#ff5369 !important;
+}
+body.dfp-v98-theme .ranking-state-gate label > span{color:rgba(255,255,255,.52) !important;}
+body.dfp-v98-theme :is(.tracker-hero,.ranking-state-gate) :is(select,input){
+  border-color:rgba(255,255,255,.12) !important;
+  background:rgba(255,255,255,.10) !important;
+  color:#fff !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08) !important;
+}
+body.dfp-v98-theme :is(.tracker-hero,.ranking-state-gate) select option{background:#231d1a;color:#fff;}
+body.dfp-v98-theme .tracker-hero :is(a,button,.tracker-upload-label){
+  border-color:rgba(255,255,255,.12) !important;
+  background:rgba(255,255,255,.08) !important;
+  color:rgba(255,255,255,.76) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07) !important;
+}
+body.dfp-v98-theme .tracker-hero :is(a,button,.tracker-upload-label):hover{
+  background:rgba(255,255,255,.14) !important;
+  color:#fff !important;
+}
+
+/* Richer material cards: darker stone beneath a warm acrylic face. */
+body.dfp-v98-theme :is(
+  .discover-card,.status-card,.table-card,.output-section,.collapse-card,.funnel-card,.source-row,
+  .empty-progress,.metric-card,.ngo-tile,.state-gate-card,.advanced-shell,.lead-pool-card,.recovery-panel,
+  .source-choice-card,.result-card,.review-board,.final-ranking-tools-strip,.final-rank-bucket,.review-band,
+  .review-summary-card,.pm-score-card,.pmu-board-head,.pmu-card,.workstream-main-card,.workstream-side .mini-panel,
+  .workstream-task-card,.mini-panel,.end-summary-card,.tracker-stat,.tracker-table-card,.tracker-details,
+  .contact-import-box,.contact-variable-box,.contact-gear-panel,.final-rank-card,.final-rank-tier-clean,
+  .final-ranking-overview div,.shortlist-carousel-card,.base-shortlist
+){
+  position:relative;
+  border-color:rgba(255,255,255,.60) !important;
+  background:
+    radial-gradient(circle at 90% 0%,rgba(231,42,67,.07),transparent 30%),
+    linear-gradient(150deg,rgba(250,246,240,.88),rgba(230,220,210,.66)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.96),
+    inset 0 -1px 0 rgba(96,72,62,.035),
+    0 22px 62px rgba(48,35,29,.105) !important;
+}
+body.dfp-v98-theme :is(
+  .discover-card,.status-card,.table-card,.output-section,.collapse-card,.funnel-card,.source-row,
+  .state-gate-card,.advanced-shell,.lead-pool-card,.recovery-panel,.tracker-table-card,.tracker-details,
+  .workstream-main-card,.workstream-side .mini-panel,.shortlist-carousel-card
+)::after{
+  content:"";
+  position:absolute;
+  left:22px;
+  right:22px;
+  top:0;
+  height:1px;
+  pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(231,42,67,.30),rgba(255,255,255,.72),transparent);
+  opacity:.76;
+}
+
+/* Three primary journeys get deliberate contrast rather than three identical pale boxes. */
+body.dfp-v98-theme .source-choice-grid.three-choice .source-choice-card:nth-child(1){
+  border-color:rgba(255,255,255,.10) !important;
+  background:
+    radial-gradient(circle at 86% 14%,rgba(231,42,67,.25),transparent 27%),
+    linear-gradient(145deg,#2b231f,#171311) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 26px 68px rgba(43,30,25,.18) !important;
+}
+body.dfp-v98-theme .source-choice-grid.three-choice .source-choice-card:nth-child(1) :is(b,small){color:#fff !important;}
+body.dfp-v98-theme .source-choice-grid.three-choice .source-choice-card:nth-child(1) > span{color:#ff5067 !important;}
+body.dfp-v98-theme .source-choice-grid.three-choice .source-choice-card:nth-child(2){
+  background:
+    radial-gradient(circle at 84% 12%,rgba(255,255,255,.70),transparent 30%),
+    linear-gradient(145deg,#fbf6ef,#e7dcd1) !important;
+}
+body.dfp-v98-theme .source-choice-grid.three-choice .source-choice-card:nth-child(3){
+  border-color:rgba(231,42,67,.15) !important;
+  background:
+    radial-gradient(circle at 88% 10%,rgba(255,255,255,.52),transparent 30%),
+    linear-gradient(145deg,#f6e4e4,#e9c9ce) !important;
+}
+body.dfp-v98-theme .source-choice-grid.three-choice .source-choice-card:nth-child(3) > span,
+body.dfp-v98-theme .source-choice-grid.three-choice .source-choice-card:nth-child(3) b{color:#8f172a !important;}
+body.dfp-v98-theme .source-choice-grid.three-choice .source-choice-card:hover{
+  transform:translateY(-7px) scale(1.004);
+}
+
+/* Stronger typography hierarchy inside cards and sections. */
+body.dfp-v98-theme :is(.table-title,.tracker-table-head,.overview-head,.funnel-head,.workstream-head,.contact-details-head,.advanced-head,.collapse-head,.drawer-head){
+  position:relative;
+  border-color:rgba(42,31,27,.08) !important;
+}
+body.dfp-v98-theme :is(.table-title,.tracker-table-head,.overview-head,.funnel-head,.workstream-head,.contact-details-head,.advanced-head,.collapse-head) > :first-child{
+  position:relative;
+}
+body.dfp-v98-theme :is(.table-title,.tracker-table-head,.overview-head,.funnel-head,.workstream-head,.contact-details-head,.advanced-head,.collapse-head)::before{
+  content:"";
+  flex:0 0 auto;
+  width:3px;
+  height:24px;
+  margin-right:10px;
+  border-radius:999px;
+  background:linear-gradient(180deg,#ff5369,var(--v98-red-deep));
+  box-shadow:0 0 16px rgba(231,42,67,.20);
+}
+body.dfp-v98-theme :is(.module-hero,.tracker-hero,.ranking-state-gate,.table-card,.discover-card,.funnel-card,.workstream-main-card) h2,
+body.dfp-v98-theme :is(.module-hero,.tracker-hero,.ranking-state-gate,.table-card,.discover-card,.funnel-card,.workstream-main-card) h3{
+  letter-spacing:-.045em;
+}
+
+/* Tables use charcoal headers for needed contrast. */
+body.dfp-v98-theme :is(th,.contact-table th,.tracker-table th){
+  color:rgba(255,255,255,.68) !important;
+  background:#251e1b !important;
+  border-color:rgba(255,255,255,.06) !important;
+}
+body.dfp-v98-theme :is(th,.contact-table th,.tracker-table th):first-child{
+  box-shadow:inset 3px 0 0 var(--v98-red);
+}
+body.dfp-v98-theme :is(td,.contact-table td,.tracker-table td){
+  background:rgba(249,245,239,.54) !important;
+}
+body.dfp-v98-theme tbody tr:nth-child(even) td{background:rgba(229,218,207,.46) !important;}
+body.dfp-v98-theme tbody tr:hover td{
+  background:rgba(231,42,67,.075) !important;
+  color:#171311 !important;
+}
+
+/* Forms are warm stone with crisp ivory inputs. */
+body.dfp-v98-theme :is(.form-card,.advanced-panel,.upload-box,.minimal-upload,.inline-upload,.referral-card,.contact-import-box){
+  border-color:rgba(55,41,35,.09) !important;
+  background:
+    radial-gradient(circle at 90% 0%,rgba(231,42,67,.055),transparent 26%),
+    rgba(230,220,210,.58) !important;
+}
+body.dfp-v98-theme :is(input,textarea,select){
+  border-color:rgba(49,37,32,.12) !important;
+  background:#faf6f0 !important;
+  box-shadow:inset 0 1px 0 #fff,0 7px 18px rgba(48,35,29,.035) !important;
+}
+body.dfp-v98-theme :is(input,textarea,select):focus{
+  border-color:rgba(231,42,67,.38) !important;
+  box-shadow:0 0 0 4px rgba(231,42,67,.08),inset 0 1px 0 #fff !important;
+}
+body.dfp-v98-theme .upload-box:hover,
+body.dfp-v98-theme .minimal-upload:hover{
+  border-color:rgba(231,42,67,.28) !important;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(231,42,67,.10),transparent 48%),
+    rgba(242,233,225,.76) !important;
+}
+
+/* Stats and metric cards intentionally alternate dark / blush / ivory. */
+body.dfp-v98-theme .tracker-stats .tracker-stat:nth-child(1),
+body.dfp-v98-theme .tracker-stats .tracker-stat:nth-child(6),
+body.dfp-v98-theme .team-metrics .metric-card:first-child{
+  border-color:rgba(255,255,255,.10) !important;
+  background:
+    radial-gradient(circle at 86% 12%,rgba(231,42,67,.25),transparent 28%),
+    linear-gradient(145deg,#2b231f,#171311) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 24px 62px rgba(43,30,25,.18) !important;
+}
+body.dfp-v98-theme .tracker-stats .tracker-stat:nth-child(1) :is(strong,span),
+body.dfp-v98-theme .tracker-stats .tracker-stat:nth-child(6) :is(strong,span),
+body.dfp-v98-theme .team-metrics .metric-card:first-child :is(strong,span,small){color:#fff !important;}
+body.dfp-v98-theme .tracker-stats .tracker-stat:nth-child(2),
+body.dfp-v98-theme .team-metrics .shortlisted-metric{
+  border-color:rgba(231,42,67,.14) !important;
+  background:linear-gradient(145deg,#f7e6e6,#e8c7cc) !important;
+}
+body.dfp-v98-theme .team-metrics .shortlisted-metric strong{color:#9b182d !important;}
+
+/* PM / workstream gets the same dark anchor as the other tools. */
+body.dfp-v98-theme .pmu-board-head{
+  border-color:rgba(255,255,255,.10) !important;
+  background:
+    radial-gradient(circle at 84% 0%,rgba(231,42,67,.24),transparent 28%),
+    linear-gradient(145deg,#2a211e,#171311) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 30px 78px rgba(43,30,25,.20) !important;
+}
+body.dfp-v98-theme .pmu-board-head :is(h1,h2,h3,b){color:#fff !important;}
+body.dfp-v98-theme .pmu-board-head :is(p,span,small){color:rgba(255,255,255,.56) !important;}
+body.dfp-v98-theme .pmu-board-head .source-icon{background:rgba(231,42,67,.16) !important;color:#ff5369 !important;}
+body.dfp-v98-theme .workstream-main-card{
+  background:
+    radial-gradient(circle at 94% 0%,rgba(231,42,67,.075),transparent 25%),
+    linear-gradient(145deg,#f8f2eb,#e7dbd0) !important;
+}
+body.dfp-v98-theme .workstream-side .mini-panel:nth-child(odd){background:linear-gradient(145deg,#f4e7e5,#e9d2d3) !important;}
+
+/* Drawers and modals retain ivory but gain a charcoal title rail. */
+body.dfp-v98-theme :is(.config-drawer,.contact-gear-panel,.modal-card,.sector-card,.pm-about-modal,.milestone-modal,.ai-review-modal,.in-depth-modal,.trend-modal,.final-settings-modal){
+  background:
+    radial-gradient(circle at 86% 0%,rgba(231,42,67,.08),transparent 28%),
+    linear-gradient(150deg,#f8f3ec,#e9ded3) !important;
+  box-shadow:0 38px 110px rgba(43,30,25,.25) !important;
+}
+body.dfp-v98-theme :is(.drawer-head,.contact-gear-head){
+  margin:-1px -1px 18px;
+  padding:20px 22px;
+  color:#fff !important;
+  border-radius:24px 24px 0 0;
+  background:linear-gradient(145deg,#2a211e,#171311) !important;
+}
+body.dfp-v98-theme :is(.drawer-head,.contact-gear-head) :is(h2,h3,b,span){color:#fff !important;}
+
+/* Buttons: keep red primaries, make secondaries feel crafted rather than flat. */
+body.dfp-v98-theme :is(.ghost-btn,.advanced-btn,.quiet-btn,.sample-btn,.info-btn,.back-button,.nav-action-link,.add-ngo-btn,.gold-in-depth-btn){
+  background:linear-gradient(180deg,#fbf7f1,#e7ddd3) !important;
+  border-color:rgba(49,37,32,.11) !important;
+  box-shadow:inset 0 1px 0 #fff,0 9px 22px rgba(48,35,29,.055) !important;
+}
+body.dfp-v98-theme :is(.ghost-btn,.advanced-btn,.quiet-btn,.sample-btn,.info-btn,.back-button,.nav-action-link,.add-ngo-btn,.gold-in-depth-btn):hover{
+  background:#fffaf4 !important;
+  border-color:rgba(231,42,67,.22) !important;
+  box-shadow:inset 0 1px 0 #fff,0 14px 28px rgba(48,35,29,.08),0 0 24px rgba(231,42,67,.04) !important;
+}
+
+/* Small surface details that make the system feel authored. */
+body.dfp-v98-theme :is(.tag,.contact-chip,.selected-state-chip,.mini-metrics span,.contact-chip-row span){
+  background:linear-gradient(180deg,#fbf7f2,#e8ddd3) !important;
+  border-color:rgba(49,37,32,.09) !important;
+}
+body.dfp-v98-theme .selected-state-chip b{color:var(--v98-red-deep) !important;}
+body.dfp-v98-theme .status-dot{
+  box-shadow:0 0 0 5px rgba(79,154,109,.08),0 0 18px rgba(79,154,109,.28) !important;
+}
+body.dfp-v98-theme .page-foot{
+  color:rgba(21,18,16,.40) !important;
+  padding-top:22px;
+  border-top:1px solid rgba(49,37,32,.08);
+}
+
+@keyframes v98HeartBeat{
+  0%,76%,100%{transform:scale(1)}
+  82%{transform:scale(1.065)}
+  88%{transform:scale(.99)}
+  93%{transform:scale(1.025)}
+}
+@keyframes v98HeartAura{
+  0%,76%,100%{opacity:.05;transform:scale(.82)}
+  85%{opacity:.13;transform:scale(1.10)}
+}
+@keyframes v98HeartDrop{
+  0%,18%{opacity:0;transform:translate(-50%,-2px) scale(.82)}
+  27%{opacity:.88;transform:translate(-50%,0) scale(1)}
+  68%{opacity:.70;transform:translate(-50%,20px) scale(.94)}
+  82%,100%{opacity:0;transform:translate(-50%,25px) scale(.78)}
+}
+@keyframes v98ArrowBreathe{
+  0%,100%{opacity:.28;transform:translateX(-50%) rotate(45deg) translate(-2px,-2px)}
+  55%{opacity:.72;transform:translateX(-50%) rotate(45deg) translate(1px,1px)}
+}
+@keyframes v98AmbientDrift{
+  0%{transform:translate3d(-1.5%,0,0) scale(.98)}
+  100%{transform:translate3d(1.5%,1%,0) scale(1.03)}
+}
+
+@media(max-width:900px){
+  body.dfp-v98-theme .dfp-topbar{top:7px;padding:0 10px;}
+  body.dfp-v98-theme .dfp-topbar-inner{width:100% !important;height:60px;border-radius:18px;}
+  body.dfp-v98-theme .module-hero,
+  body.dfp-v98-theme .tracker-hero,
+  body.dfp-v98-theme .ranking-state-gate{border-radius:28px !important;}
+}
+@media(max-width:640px){
+  body.dfp-v98-theme .lp-v98-heart-dot{
+    width:.094em;
+    height:.090em;
+    margin-left:.036em;
+    margin-right:.014em;
+  }
+  .lp-v98-scroll{bottom:max(14px,env(safe-area-inset-bottom));gap:4px;}
+  .lp-v98-scroll-text{font-size:8px;letter-spacing:.28em;}
+  .lp-v98-fi-f{font-size:13px;}
+  .lp-v98-fi-i{height:27px;}
+  .lp-v98-fi-i > b{font-size:17px;}
+  body.dfp-v98-theme .dfp-topbar{padding:0 8px;}
+  body.dfp-v98-theme .dfp-topbar-inner{border-radius:16px;}
+  body.dfp-v98-theme .nav-pill{padding:9px 12px;}
+  body.dfp-v98-theme .source-choice-grid.three-choice .source-choice-card:nth-child(1),
+  body.dfp-v98-theme .source-choice-grid.three-choice .source-choice-card:nth-child(2),
+  body.dfp-v98-theme .source-choice-grid.three-choice .source-choice-card:nth-child(3){margin:0;}
+}
+@media(prefers-reduced-motion:reduce){
+  body.dfp-v98-theme::after,
+  body.dfp-v98-theme .lp-v98-heart-dot,
+  body.dfp-v98-theme .lp-v98-heart-dot::before,
+  .lp-v98-fi-heart,
+  .lp-v98-fi-arrow{animation:none !important;}
+  .lp-v98-fi-heart{opacity:.85;top:-1px;}
+}
