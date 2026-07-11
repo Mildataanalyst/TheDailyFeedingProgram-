@@ -106,32 +106,6 @@ function resetPointerVars(event: PointerEvent<HTMLElement>) {
   target.style.setProperty('--ry', '0deg');
 }
 
-function movePageGlow(event: PointerEvent<HTMLElement>) {
-  const rect = event.currentTarget.getBoundingClientRect();
-  event.currentTarget.style.setProperty('--page-x', `${event.clientX - rect.left}px`);
-  event.currentTarget.style.setProperty('--page-y', `${event.clientY - rect.top}px`);
-}
-
-function moveOrb(event: PointerEvent<HTMLElement>) {
-  const target = event.currentTarget;
-  const rect = target.getBoundingClientRect();
-  const x = event.clientX - rect.left;
-  const y = event.clientY - rect.top;
-  const px = x / rect.width;
-  const py = y / rect.height;
-
-  target.style.setProperty('--orb-x', `${x}px`);
-  target.style.setProperty('--orb-y', `${y}px`);
-  target.style.setProperty('--orb-rx', `${(0.5 - py) * 8}deg`);
-  target.style.setProperty('--orb-ry', `${(px - 0.5) * 10}deg`);
-}
-
-function resetOrb(event: PointerEvent<HTMLElement>) {
-  const target = event.currentTarget;
-  target.style.setProperty('--orb-rx', '0deg');
-  target.style.setProperty('--orb-ry', '0deg');
-}
-
 function StoryVisual({ visual }: { visual: string }) {
   if (visual === 'twoWays') {
     return (
@@ -313,40 +287,23 @@ export default function Home() {
   }
 
   return (
-    <main className="lp-page" onPointerMove={movePageGlow}>
-      <div className="lp-ambient-layers" aria-hidden="true">
-        <span className="lp-cursor-glow" />
-        <span className="lp-bg-noise" />
-      </div>
-
-      <section className="lp-hero" id="top">
+    <main className="lp-page">
+      <section className="lp-hero lp-minimal-hero" id="top">
         <div className="lp-internal-note">For internal use only</div>
 
-        <div
-          className="lp-orb-shell"
-          onPointerMove={moveOrb}
-          onPointerLeave={resetOrb}
-        >
-          <span className="lp-orb-red-haze" aria-hidden="true" />
-          <span className="lp-orb-ring" aria-hidden="true">
-            <span className="lp-orb-glint" />
-          </span>
-          <div className="lp-orb-core">
-            <h1 className="lp-hero-title">
-              <span className="lp-dfp-word">DFP</span>
-              <span className="lp-version">
-                <span className="lp-version-two">2</span>
-                <span className="lp-version-dot">.</span>
-                <span className="lp-version-zero">0</span>
-              </span>
-            </h1>
-            <p className="lp-hero-subtitle">Find the best NGOs</p>
-          </div>
+        <div className="lp-minimal-stage">
+          <span className="lp-minimal-bloom" aria-hidden="true" />
+          <h1 className="lp-minimal-title">
+            <span className="lp-minimal-dfp">DFP</span>
+            <span className="lp-minimal-version">2.0</span>
+          </h1>
+          <p className="lp-minimal-subtitle">Find the best NGOs</p>
+          <span className="lp-minimal-accent" aria-hidden="true" />
         </div>
 
-        <a className="lp-scroll-cue" href="#how" aria-label="Scroll down to How it works">
+        <a className="lp-minimal-scroll" href="#how" aria-label="Scroll down to How it works">
           <span>Scroll down</span>
-          <i><b /></i>
+          <i aria-hidden="true"><b /></i>
         </a>
       </section>
 
