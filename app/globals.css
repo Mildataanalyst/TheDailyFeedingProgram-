@@ -10350,3 +10350,1053 @@ body.dfp-v108-theme .progress-final .admin-undo-redo :is(small,span){color:var(-
   body.dfp-v108-theme .lp-v91-preview::before,
   body.dfp-v108-theme .lp-v91-preview::after{animation:none !important;}
 }
+
+/* ============================================================
+   V109 — Final Ranking rebuilt as one editorial system.
+   This is a structural pass, not another colour-only override.
+============================================================ */
+body.dfp-v109-theme{
+  --v109-canvas:#f3f1ee;
+  --v109-surface:#ffffff;
+  --v109-ink:#111111;
+  --v109-copy:#56514d;
+  --v109-muted:#77706a;
+  --v109-line:#e1ddd8;
+  --v109-line-strong:#cbc4bd;
+  --v109-red:#e23744;
+  --v109-red-dark:#c72938;
+  --v109-gold-a:#fff4d5;
+  --v109-gold-b:#e7c77f;
+  --v109-gold-c:#bd8d36;
+  background:var(--v109-canvas) !important;
+  background-image:none !important;
+  color:var(--v109-ink) !important;
+}
+body.dfp-v109-theme .dfp-topbar{
+  background:var(--v109-canvas) !important;
+  border:0 !important;
+}
+body.dfp-v109-theme .dfp-wrap{
+  width:min(calc(100vw - 48px),1320px) !important;
+}
+body.dfp-v109-theme .progress-stack{
+  padding-top:10px !important;
+  gap:18px !important;
+}
+body.dfp-v109-theme .ranking-state-gate{
+  padding:28px 30px !important;
+  border-radius:24px !important;
+  background:#fff !important;
+  border:1px solid var(--v109-line) !important;
+  box-shadow:0 10px 28px rgba(17,17,17,.055) !important;
+}
+body.dfp-v109-theme .ranking-state-gate h2{
+  color:var(--v109-ink) !important;
+  font-size:clamp(34px,3vw,46px) !important;
+  letter-spacing:-.07em !important;
+  line-height:.98 !important;
+}
+body.dfp-v109-theme .ranking-state-gate small{
+  color:var(--v109-copy) !important;
+  font-size:15px !important;
+  line-height:1.5 !important;
+}
+body.dfp-v109-theme .ranking-state-gate select{
+  min-width:300px;
+  height:50px !important;
+  border-radius:14px !important;
+  font-size:14px !important;
+  font-weight:800 !important;
+}
+
+/* Single toolbar: Back + state + recovery + premium controls. */
+body.dfp-v109-theme .final-ranking-v109{
+  margin-top:0 !important;
+  gap:16px !important;
+  padding-bottom:96px !important;
+}
+body.dfp-v109-theme .final-commandbar{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;
+  gap:16px;
+  min-height:76px;
+  padding:10px 12px;
+  background:#fff;
+  border:1px solid var(--v109-line);
+  border-radius:20px;
+  box-shadow:0 9px 24px rgba(17,17,17,.045);
+}
+body.dfp-v109-theme .final-command-leading,
+body.dfp-v109-theme .final-command-special{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+body.dfp-v109-theme .final-state-pill{
+  display:inline-flex;
+  align-items:center;
+  min-height:40px;
+  padding:0 14px;
+  border-left:1px solid var(--v109-line);
+  color:var(--v109-copy) !important;
+  font-size:13px;
+  font-weight:900;
+  letter-spacing:.02em;
+}
+body.dfp-v109-theme .final-commandbar .admin-undo-redo{
+  min-width:0;
+  min-height:0 !important;
+  padding:0 !important;
+  margin:0 !important;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px !important;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+body.dfp-v109-theme .final-commandbar .admin-undo-redo > div:first-child{
+  display:none !important;
+}
+body.dfp-v109-theme .final-commandbar .admin-undo-redo input{
+  width:160px;
+  height:40px !important;
+  border-radius:12px !important;
+  padding:0 12px !important;
+  font-size:12px !important;
+}
+body.dfp-v109-theme .final-commandbar .admin-undo-redo button{
+  min-height:40px !important;
+  padding:0 13px !important;
+  border-radius:12px !important;
+  white-space:nowrap;
+}
+body.dfp-v109-theme .final-commandbar .admin-undo-redo > span{
+  display:none !important;
+}
+body.dfp-v109-theme .final-back-btn{
+  min-height:42px !important;
+  padding:0 16px !important;
+  border-radius:12px !important;
+  font-weight:900 !important;
+}
+body.dfp-v109-theme .final-command-special{
+  padding-left:12px;
+  border-left:1px solid var(--v109-line);
+}
+
+/* Premium gold: visible, controlled, and legible. */
+body.dfp-v109-theme .gold-in-depth-btn{
+  position:relative !important;
+  overflow:hidden !important;
+  isolation:isolate;
+  min-height:44px !important;
+  padding:0 18px !important;
+  border-radius:999px !important;
+  border:1px solid #bd8d36 !important;
+  color:#3c2a0b !important;
+  background:linear-gradient(180deg,var(--v109-gold-a),var(--v109-gold-b) 56%,var(--v109-gold-c)) !important;
+  box-shadow:0 8px 20px rgba(151,107,29,.20),inset 0 1px 0 rgba(255,255,255,.88) !important;
+  font-weight:950 !important;
+}
+body.dfp-v109-theme .gold-in-depth-btn .gold-spark{
+  position:relative;
+  z-index:2;
+  margin-right:6px;
+  color:#7a5312 !important;
+  animation:v109SparkPulse 1.7s steps(4,end) infinite;
+}
+body.dfp-v109-theme .gold-in-depth-btn::before{
+  content:"" !important;
+  position:absolute !important;
+  z-index:1;
+  top:-90%;
+  left:-42%;
+  width:32%;
+  height:280%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.92),transparent) !important;
+  transform:rotate(18deg);
+  animation:v109GoldSweep 3.2s cubic-bezier(.2,.7,.25,1) infinite !important;
+}
+body.dfp-v109-theme .gold-in-depth-btn::after{
+  content:"" !important;
+  position:absolute !important;
+  inset:2px !important;
+  border-radius:inherit !important;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 14% 35%,rgba(255,255,255,.98) 0 1px,transparent 2px),
+    radial-gradient(circle at 52% 20%,rgba(255,250,224,.96) 0 1px,transparent 2.2px),
+    radial-gradient(circle at 82% 68%,rgba(255,255,255,.95) 0 1.2px,transparent 2.4px) !important;
+  background-size:38px 30px,48px 36px,44px 40px !important;
+  opacity:.28;
+  animation:v109GoldGlitter 2s steps(5,end) infinite !important;
+}
+body.dfp-v109-theme .final-gear-btn{
+  width:44px !important;
+  height:44px !important;
+  border-radius:999px !important;
+  color:#3e3a37 !important;
+  background:linear-gradient(180deg,#fff,#e6e3e0) !important;
+  border:1px solid #c9c3bd !important;
+  box-shadow:0 6px 16px rgba(17,17,17,.07),inset 0 1px 0 #fff !important;
+}
+@keyframes v109GoldSweep{
+  0%,30%{transform:translateX(-190%) rotate(18deg);opacity:0}
+  42%{opacity:.9}
+  70%,100%{transform:translateX(520%) rotate(18deg);opacity:0}
+}
+@keyframes v109GoldGlitter{
+  0%,100%{opacity:.14;filter:brightness(.95)}
+  25%{opacity:.55;filter:brightness(1.28)}
+  50%{opacity:.22;filter:brightness(1)}
+  75%{opacity:.64;filter:brightness(1.35)}
+}
+@keyframes v109SparkPulse{
+  0%,100%{transform:scale(.9) rotate(0deg);opacity:.62}
+  40%{transform:scale(1.16) rotate(15deg);opacity:1}
+  70%{transform:scale(.96) rotate(-8deg);opacity:.78}
+}
+
+/* One visual material: white tier surfaces, no tinted sub-cards. */
+body.dfp-v109-theme .final-ranking-buckets{
+  display:grid;
+  gap:14px !important;
+  margin:0 !important;
+}
+body.dfp-v109-theme .final-rank-bucket{
+  min-height:0 !important;
+  height:auto !important;
+  overflow:hidden !important;
+  border-radius:22px !important;
+  background:#fff !important;
+  background-image:none !important;
+  border:1px solid var(--v109-line) !important;
+  box-shadow:0 9px 24px rgba(17,17,17,.045) !important;
+}
+body.dfp-v109-theme .final-rank-bucket > .final-tier-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:24px;
+  padding:22px 24px !important;
+  background:#fff !important;
+  border-bottom:1px solid var(--v109-line) !important;
+}
+body.dfp-v109-theme .final-tier-heading{
+  display:flex;
+  align-items:flex-start;
+  gap:15px;
+  min-width:0;
+}
+body.dfp-v109-theme .final-tier-index{
+  display:grid;
+  place-items:center;
+  flex:0 0 auto;
+  width:34px;
+  height:34px;
+  border-radius:999px;
+  color:#fff !important;
+  background:var(--v109-red) !important;
+  font-size:10px;
+  font-weight:950;
+  letter-spacing:.08em;
+}
+body.dfp-v109-theme .final-tier-heading h3{
+  margin:0 !important;
+  color:var(--v109-ink) !important;
+  font-size:clamp(26px,2.6vw,36px) !important;
+  line-height:1 !important;
+  letter-spacing:-.065em !important;
+}
+body.dfp-v109-theme .final-tier-heading p{
+  margin:7px 0 0 !important;
+  color:var(--v109-copy) !important;
+  font-size:14px !important;
+  line-height:1.45 !important;
+}
+body.dfp-v109-theme .final-tier-controls{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex:0 0 auto;
+}
+body.dfp-v109-theme .final-tier-count{
+  color:var(--v109-muted) !important;
+  font-size:11px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+}
+body.dfp-v109-theme .final-tier-controls button{
+  min-height:40px !important;
+  padding:0 16px !important;
+  border-radius:999px !important;
+}
+
+/* Rows are editorial separators—not cards inside cards. */
+body.dfp-v109-theme .final-rank-list-clean{
+  display:block !important;
+  padding:0 !important;
+  min-height:0 !important;
+}
+body.dfp-v109-theme .final-rank-card-clean{
+  display:grid !important;
+  grid-template-columns:minmax(0,1.35fr) minmax(250px,.72fr) auto !important;
+  gap:28px !important;
+  align-items:center !important;
+  min-height:0 !important;
+  padding:22px 24px !important;
+  margin:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  border-top:1px solid var(--v109-line) !important;
+  background:#fff !important;
+  box-shadow:none !important;
+}
+body.dfp-v109-theme .final-rank-card-clean:first-child{
+  border-top:0 !important;
+}
+body.dfp-v109-theme .final-rank-card-clean:hover{
+  background:#fbfaf9 !important;
+  box-shadow:none !important;
+}
+body.dfp-v109-theme .final-rank-name-row{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+}
+body.dfp-v109-theme .final-rank-main h4{
+  margin:0 !important;
+  color:var(--v109-ink) !important;
+  font-size:19px !important;
+  line-height:1.18 !important;
+  letter-spacing:-.035em !important;
+}
+body.dfp-v109-theme .final-row-number{
+  flex:0 0 auto;
+  color:#aaa29b !important;
+  font-size:10px;
+  font-weight:950;
+  letter-spacing:.12em;
+}
+body.dfp-v109-theme .final-rank-summary{
+  margin:9px 0 0 !important;
+  color:var(--v109-copy) !important;
+  font-size:13.5px !important;
+  line-height:1.55 !important;
+}
+body.dfp-v109-theme .final-rank-note{
+  align-self:stretch;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding-left:20px;
+  border-left:1px solid var(--v109-line);
+}
+body.dfp-v109-theme .final-note-label{
+  display:block;
+  margin-bottom:8px;
+  color:var(--v109-red) !important;
+  font-size:10px;
+  font-weight:950;
+  letter-spacing:.15em;
+  text-transform:uppercase;
+}
+body.dfp-v109-theme .final-rank-note > p{
+  margin:0 !important;
+  color:var(--v109-copy) !important;
+  font-size:13px !important;
+  line-height:1.5 !important;
+}
+body.dfp-v109-theme .final-rank-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:13px !important;
+}
+body.dfp-v109-theme .final-rank-meta span{
+  display:inline-flex;
+  align-items:center;
+  min-height:24px;
+  padding:0 9px !important;
+  border-radius:999px !important;
+  color:#57514c !important;
+  background:#fff !important;
+  border:1px solid var(--v109-line) !important;
+  font-size:10px !important;
+  font-weight:850 !important;
+}
+body.dfp-v109-theme .final-rank-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+}
+body.dfp-v109-theme .final-rank-actions .quiet-btn{
+  min-height:40px !important;
+  padding:0 14px !important;
+  border-radius:12px !important;
+  white-space:nowrap;
+}
+body.dfp-v109-theme .final-fullcopy{
+  margin-top:10px;
+  color:var(--v109-copy);
+}
+body.dfp-v109-theme .final-fullcopy summary{
+  width:max-content;
+  max-width:100%;
+  color:var(--v109-red) !important;
+  font-size:11px;
+  font-weight:900;
+  cursor:pointer;
+}
+body.dfp-v109-theme .final-fullcopy p{
+  margin:9px 0 0 !important;
+  padding:12px 14px;
+  color:var(--v109-copy) !important;
+  background:#fff !important;
+  border-left:2px solid var(--v109-red);
+  font-size:13px !important;
+  line-height:1.55 !important;
+}
+body.dfp-v109-theme .final-empty-tier{
+  min-height:0 !important;
+  height:auto !important;
+  margin:0 !important;
+  padding:17px 24px !important;
+  display:flex !important;
+  align-items:center;
+  justify-content:flex-start;
+  background:#fff !important;
+  border:0 !important;
+  border-radius:0 !important;
+  color:var(--v109-muted) !important;
+  font-style:italic;
+  text-align:left !important;
+}
+body.dfp-v109-theme .final-empty-tier span{
+  color:var(--v109-muted) !important;
+  font-size:13px;
+}
+body.dfp-v109-theme .final-show-row{
+  display:flex;
+  justify-content:center;
+  padding:0 24px 18px !important;
+  border-top:1px solid var(--v109-line);
+}
+body.dfp-v109-theme .final-show-row .quiet-btn{
+  margin-top:14px;
+  min-height:40px !important;
+  padding:0 16px !important;
+  border-radius:999px !important;
+}
+
+/* Strict contrast lock for the rebuilt final page. */
+body.dfp-v109-theme .final-ranking-v109 :is(h1,h2,h3,h4,h5,h6,b,strong,label){
+  color:var(--v109-ink) !important;
+}
+body.dfp-v109-theme .final-ranking-v109 :is(p,small,em){
+  color:var(--v109-copy) !important;
+}
+body.dfp-v109-theme .final-ranking-v109 :is(input,select,textarea){
+  background:#fff !important;
+  color:var(--v109-ink) !important;
+  border:1px solid var(--v109-line-strong) !important;
+}
+body.dfp-v109-theme .final-ranking-v109 :is(input,textarea)::placeholder{
+  color:#8c857f !important;
+  opacity:1 !important;
+}
+body.dfp-v109-theme .final-ranking-v109 .primary-red,
+body.dfp-v109-theme .final-ranking-v109 .small-red{
+  color:#fff !important;
+  background:var(--v109-red) !important;
+  border-color:var(--v109-red) !important;
+}
+body.dfp-v109-theme .final-ranking-v109 .primary-red:hover,
+body.dfp-v109-theme .final-ranking-v109 .small-red:hover{
+  background:var(--v109-red-dark) !important;
+  border-color:var(--v109-red-dark) !important;
+}
+body.dfp-v109-theme .final-ranking-v109 .quiet-btn{
+  background:#fff !important;
+  color:var(--v109-ink) !important;
+  border:1px solid var(--v109-line-strong) !important;
+}
+body.dfp-v109-theme .final-ranking-v109 .quiet-btn:hover{
+  background:#171717 !important;
+  color:#fff !important;
+  border-color:#171717 !important;
+}
+body.dfp-v109-theme .final-ranking-v109 .quiet-btn.disabled{
+  background:#efebe7 !important;
+  color:#918a84 !important;
+  border-color:#ddd6d0 !important;
+}
+
+/* Tracker CTA: visible but not floating over content. */
+body.dfp-v109-theme .final-go-tracker{
+  position:static !important;
+  justify-self:end;
+  width:max-content;
+  min-height:48px !important;
+  margin-top:2px;
+  padding:0 20px !important;
+  border-radius:999px !important;
+}
+
+@media(max-width:1160px){
+  body.dfp-v109-theme .final-commandbar{
+    grid-template-columns:1fr auto;
+  }
+  body.dfp-v109-theme .final-commandbar .admin-undo-redo{
+    grid-column:1/-1;
+    justify-content:flex-start;
+    padding-top:10px !important;
+    border-top:1px solid var(--v109-line) !important;
+  }
+  body.dfp-v109-theme .final-rank-card-clean{
+    grid-template-columns:minmax(0,1.2fr) minmax(230px,.8fr) !important;
+  }
+  body.dfp-v109-theme .final-rank-actions{
+    grid-column:1/-1;
+    justify-content:flex-start;
+  }
+}
+@media(max-width:820px){
+  body.dfp-v109-theme .dfp-wrap{
+    width:min(calc(100vw - 28px),100%) !important;
+  }
+  body.dfp-v109-theme .ranking-state-gate{
+    padding:22px !important;
+  }
+  body.dfp-v109-theme .ranking-state-gate select{
+    min-width:0;
+    width:100%;
+  }
+  body.dfp-v109-theme .final-commandbar{
+    grid-template-columns:1fr;
+    align-items:stretch;
+  }
+  body.dfp-v109-theme .final-command-leading,
+  body.dfp-v109-theme .final-command-special{
+    justify-content:space-between;
+  }
+  body.dfp-v109-theme .final-command-special{
+    padding-left:0;
+    padding-top:10px;
+    border-left:0;
+    border-top:1px solid var(--v109-line);
+  }
+  body.dfp-v109-theme .final-commandbar .admin-undo-redo{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+  }
+  body.dfp-v109-theme .final-commandbar .admin-undo-redo input{
+    width:100%;
+    grid-column:1/-1;
+  }
+  body.dfp-v109-theme .final-rank-bucket > .final-tier-header{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+  body.dfp-v109-theme .final-tier-controls{
+    width:100%;
+    justify-content:space-between;
+  }
+  body.dfp-v109-theme .final-rank-card-clean{
+    grid-template-columns:1fr !important;
+    gap:18px !important;
+  }
+  body.dfp-v109-theme .final-rank-note{
+    padding-left:0;
+    padding-top:16px;
+    border-left:0;
+    border-top:1px solid var(--v109-line);
+  }
+  body.dfp-v109-theme .final-rank-actions{
+    grid-column:auto;
+  }
+  body.dfp-v109-theme .final-go-tracker{
+    width:100%;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  body.dfp-v109-theme .gold-in-depth-btn::before,
+  body.dfp-v109-theme .gold-in-depth-btn::after,
+  body.dfp-v109-theme .gold-in-depth-btn .gold-spark{
+    animation:none !important;
+  }
+}
+
+/* V110 — one-surface system for Discovery + Rankings
+   Goal: one neutral canvas, one exact white surface, one red accent.
+   No top strips, no gradient cards, no competing whites. */
+body.dfp-v110-theme{
+  --v110-canvas:#f3f3f1;
+  --v110-surface:#ffffff;
+  --v110-ink:#151515;
+  --v110-copy:#5f5b57;
+  --v110-muted:#7b756f;
+  --v110-line:#dedbd7;
+  --v110-line-strong:#cfcac4;
+  --v110-red:#e23744;
+  --v110-red-dark:#c62838;
+  --v110-red-soft:#fdebed;
+  background:var(--v110-canvas) !important;
+  background-image:none !important;
+  color:var(--v110-ink) !important;
+}
+
+/* Remove the large blank white navigation slab. Keep only the nav pill itself. */
+body.dfp-v110-theme .dfp-topbar{
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+  backdrop-filter:none !important;
+}
+body.dfp-v110-theme .dfp-topbar-inner{
+  min-height:86px !important;
+  height:86px !important;
+  padding:0 !important;
+  background:transparent !important;
+  background-image:none !important;
+  border:0 !important;
+  box-shadow:none !important;
+  justify-content:flex-end !important;
+}
+body.dfp-v110-theme .dfp-nav{
+  padding:7px !important;
+  gap:4px !important;
+  border-radius:999px !important;
+  background:var(--v110-surface) !important;
+  background-image:none !important;
+  border:1px solid var(--v110-line) !important;
+  box-shadow:0 14px 32px rgba(20,20,20,.075) !important;
+}
+body.dfp-v110-theme .nav-pill{
+  color:#4f4b47 !important;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+body.dfp-v110-theme .nav-pill.active{
+  color:#fff !important;
+  background:var(--v110-red) !important;
+  box-shadow:0 8px 20px rgba(226,55,68,.20) !important;
+}
+
+/* One exact page canvas. */
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final){
+  background:transparent !important;
+  background-image:none !important;
+  color:var(--v110-ink) !important;
+}
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) .dfp-wrap,
+body.dfp-v110-theme .dfp-wrap{
+  background:transparent !important;
+  background-image:none !important;
+}
+body.dfp-v110-theme .page-stack,
+body.dfp-v110-theme .progress-stack,
+body.dfp-v110-theme .discovery-revamp{
+  gap:18px !important;
+}
+
+/* Exact white surface lock across operational pages. */
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) :is(
+  .module-hero,
+  .state-gate-card,
+  .source-choice-card,
+  .source-topline,
+  .discover-card,
+  .advanced-shell,
+  .status-card,
+  .table-card,
+  .output-section,
+  .collapse-card,
+  .funnel-card,
+  .source-row,
+  .form-card,
+  .recovery-panel,
+  .upload-box,
+  .budget-strip,
+  .selected-state-chip,
+  .archive-row,
+  .category-grid-dark button,
+  .ranking-subtop,
+  .admin-undo-redo,
+  .review-board,
+  .review-summary-card,
+  .review-band,
+  .combined-minimal-board,
+  .workstream-main-card,
+  .workstream-side .mini-panel,
+  .empty-progress,
+  .final-commandbar,
+  .final-ranking-tools-strip,
+  .final-rank-bucket,
+  .final-rank-card,
+  .final-rank-card-clean,
+  .final-empty-tier,
+  .tracker-table-card,
+  .tracker-details,
+  .team-metrics .metric-card,
+  .base-shortlist,
+  .ngo-tile,
+  .trend-modal,
+  .sector-card,
+  .pm-about-modal
+){
+  background:var(--v110-surface) !important;
+  background-image:none !important;
+  border-color:var(--v110-line) !important;
+  color:var(--v110-ink) !important;
+}
+
+/* Every light surface must contain dark readable text. */
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) :is(
+  .module-hero,
+  .state-gate-card,
+  .source-choice-card,
+  .source-topline,
+  .discover-card,
+  .advanced-shell,
+  .status-card,
+  .table-card,
+  .output-section,
+  .collapse-card,
+  .funnel-card,
+  .source-row,
+  .form-card,
+  .recovery-panel,
+  .upload-box,
+  .budget-strip,
+  .selected-state-chip,
+  .archive-row,
+  .ranking-subtop,
+  .admin-undo-redo,
+  .review-board,
+  .review-summary-card,
+  .review-band,
+  .combined-minimal-board,
+  .workstream-main-card,
+  .workstream-side .mini-panel,
+  .empty-progress,
+  .final-commandbar,
+  .final-ranking-tools-strip,
+  .final-rank-bucket,
+  .final-rank-card,
+  .final-rank-card-clean,
+  .final-empty-tier,
+  .tracker-table-card,
+  .tracker-details,
+  .team-metrics .metric-card,
+  .base-shortlist,
+  .ngo-tile
+) :is(h1,h2,h3,h4,h5,h6,b,strong,label){
+  color:var(--v110-ink) !important;
+}
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) :is(
+  .module-hero,
+  .state-gate-card,
+  .source-choice-card,
+  .source-topline,
+  .discover-card,
+  .advanced-shell,
+  .status-card,
+  .table-card,
+  .output-section,
+  .collapse-card,
+  .funnel-card,
+  .source-row,
+  .form-card,
+  .recovery-panel,
+  .upload-box,
+  .budget-strip,
+  .selected-state-chip,
+  .archive-row,
+  .ranking-subtop,
+  .admin-undo-redo,
+  .review-board,
+  .review-summary-card,
+  .review-band,
+  .combined-minimal-board,
+  .workstream-main-card,
+  .workstream-side .mini-panel,
+  .empty-progress,
+  .final-commandbar,
+  .final-ranking-tools-strip,
+  .final-rank-bucket,
+  .final-rank-card,
+  .final-rank-card-clean,
+  .final-empty-tier,
+  .tracker-table-card,
+  .tracker-details,
+  .team-metrics .metric-card,
+  .base-shortlist,
+  .ngo-tile
+) :is(p,small,em){
+  color:var(--v110-copy) !important;
+}
+
+/* Discovery masthead: same exact white as everything below. */
+body.dfp-v110-theme .discovery-revamp .module-hero.discovery-hero{
+  width:100% !important;
+  max-width:none !important;
+  margin:0 !important;
+  padding:38px 42px !important;
+  border:1px solid var(--v110-line) !important;
+  border-radius:28px !important;
+  background:var(--v110-surface) !important;
+  background-image:none !important;
+  box-shadow:0 16px 36px rgba(20,20,20,.065) !important;
+}
+body.dfp-v110-theme .discovery-revamp .module-hero.discovery-hero::before,
+body.dfp-v110-theme .discovery-revamp .module-hero.discovery-hero::after{
+  display:none !important;
+}
+body.dfp-v110-theme .discovery-revamp .module-hero.discovery-hero .hero-dots{
+  opacity:.055 !important;
+  background-image:radial-gradient(circle,var(--v110-red) 1px,transparent 1.4px) !important;
+}
+body.dfp-v110-theme .discovery-revamp .module-hero.discovery-hero h1{
+  color:var(--v110-ink) !important;
+}
+body.dfp-v110-theme .discovery-revamp .module-hero.discovery-hero h1 span,
+body.dfp-v110-theme .discovery-revamp .module-hero.discovery-hero .red-kicker{
+  color:var(--v110-red) !important;
+}
+body.dfp-v110-theme .discovery-revamp .module-hero.discovery-hero p{
+  color:var(--v110-muted) !important;
+}
+
+/* State blocks are the same exact surface—not another shade. */
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) .state-gate-card{
+  background:var(--v110-surface) !important;
+  border:1px solid var(--v110-line) !important;
+  box-shadow:0 14px 32px rgba(20,20,20,.06) !important;
+}
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) :is(select,input,textarea){
+  background:var(--v110-surface) !important;
+  color:var(--v110-ink) !important;
+  border:1px solid var(--v110-line-strong) !important;
+  background-image:none !important;
+}
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) :is(input,textarea)::placeholder{
+  color:#8a8580 !important;
+  opacity:1 !important;
+}
+
+/* Shared landing-card treatment for NGO Discovery + Ranking Center. */
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) .source-choice-grid.three-choice{
+  gap:22px !important;
+}
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) .source-choice-card{
+  position:relative !important;
+  min-height:270px !important;
+  padding:32px 34px !important;
+  overflow:hidden !important;
+  border:1px solid var(--v110-line) !important;
+  border-radius:30px !important;
+  background:var(--v110-surface) !important;
+  background-image:none !important;
+  box-shadow:
+    0 24px 62px rgba(30,27,24,.075),
+    inset 0 1px 0 rgba(255,255,255,1) !important;
+  transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease !important;
+}
+/* Kill every old red/black top strip. */
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) .source-choice-card::before{
+  display:none !important;
+  content:none !important;
+}
+/* Subtle landing-page-style light gloss—not another card color. */
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) .source-choice-card::after{
+  content:"" !important;
+  display:block !important;
+  position:absolute !important;
+  inset:-36% -32% auto -32% !important;
+  height:72% !important;
+  border-radius:50% !important;
+  pointer-events:none !important;
+  background:radial-gradient(ellipse at center,rgba(255,255,255,.96) 0%,rgba(255,255,255,.48) 42%,transparent 72%) !important;
+  opacity:.55 !important;
+  transform:translateX(-10%) rotate(-4deg) !important;
+  transition:transform .45s ease,opacity .25s ease !important;
+}
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) .source-choice-card:hover{
+  transform:translateY(-6px) !important;
+  border-color:#cbc6c1 !important;
+  box-shadow:
+    0 32px 78px rgba(30,27,24,.105),
+    0 0 34px rgba(226,55,68,.025),
+    inset 0 1px 0 #fff !important;
+}
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) .source-choice-card:hover::after{
+  transform:translateX(18%) rotate(-4deg) !important;
+  opacity:.78 !important;
+}
+/* Step marker mirrors landing cards: red dot + quiet step number. */
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) .source-choice-card > span{
+  position:relative !important;
+  z-index:2 !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:10px !important;
+  width:auto !important;
+  height:auto !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  color:#77716c !important;
+  box-shadow:none !important;
+  font-size:12px !important;
+  font-weight:850 !important;
+  letter-spacing:.08em !important;
+}
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) .source-choice-card > span::before{
+  content:"";
+  width:8px;
+  height:8px;
+  flex:0 0 8px;
+  border-radius:50%;
+  background:var(--v110-red);
+  box-shadow:0 0 14px rgba(226,55,68,.22);
+}
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) .source-choice-card b{
+  position:relative !important;
+  z-index:2 !important;
+  display:block !important;
+  margin-top:64px !important;
+  color:var(--v110-ink) !important;
+  font-size:clamp(32px,2.6vw,44px) !important;
+  font-weight:850 !important;
+  line-height:.98 !important;
+  letter-spacing:-.065em !important;
+}
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) .source-choice-card small{
+  position:relative !important;
+  z-index:2 !important;
+  display:block !important;
+  margin-top:14px !important;
+  color:var(--v110-copy) !important;
+  font-size:15px !important;
+  line-height:1.48 !important;
+}
+
+/* All other operational white blocks use the same exact white and same border. */
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) :is(
+  .source-topline,
+  .ranking-subtop,
+  .admin-undo-redo,
+  .final-commandbar,
+  .final-ranking-tools-strip,
+  .review-board,
+  .review-summary-card,
+  .review-band,
+  .combined-minimal-board,
+  .workstream-main-card,
+  .workstream-side .mini-panel,
+  .team-metrics .metric-card,
+  .base-shortlist,
+  .ngo-tile,
+  .final-rank-bucket,
+  .final-rank-card-clean,
+  .final-empty-tier
+){
+  background:var(--v110-surface) !important;
+  background-image:none !important;
+  border-color:var(--v110-line) !important;
+}
+body.dfp-v110-theme .progress-final .final-rank-card-clean:hover{
+  background:var(--v110-surface) !important;
+}
+body.dfp-v110-theme .progress-final :is(
+  .final-rank-highest_transformation_potential,
+  .final-rank-great_ngos,
+  .final-rank-worth_looking_into,
+  .final-rank-needs_more_context
+){
+  background:var(--v110-surface) !important;
+  background-image:none !important;
+}
+body.dfp-v110-theme .progress-final :is(
+  .final-rank-highest_transformation_potential,
+  .final-rank-great_ngos,
+  .final-rank-worth_looking_into,
+  .final-rank-needs_more_context
+) > header,
+body.dfp-v110-theme .progress-final .final-tier-header{
+  background:var(--v110-surface) !important;
+  background-image:none !important;
+}
+
+/* One button system. Gold In-depth remains the deliberate exception. */
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) :is(.primary-red,.btn.red,.nav-action-link,.final-go-tracker,.small-red){
+  background:var(--v110-red) !important;
+  color:#fff !important;
+  border-color:var(--v110-red) !important;
+}
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) :is(.primary-red,.btn.red,.nav-action-link,.final-go-tracker,.small-red):hover{
+  background:var(--v110-red-dark) !important;
+  border-color:var(--v110-red-dark) !important;
+}
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) :is(.quiet-btn,.ghost-btn,.advanced-btn,.sample-btn,.gear-btn,.dark-download,.download-row a,.archive-links a,.archive-links button){
+  background:var(--v110-surface) !important;
+  color:var(--v110-ink) !important;
+  border-color:var(--v110-line-strong) !important;
+}
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) :is(button,a):disabled,
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) :is(button,a).disabled,
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) :is(button,a).off{
+  background:#eceae7 !important;
+  color:#908a84 !important;
+  border-color:#d8d3ce !important;
+  opacity:1 !important;
+}
+
+/* Tables: pure white rows, black header. No pink / ivory variants. */
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) table thead th{
+  background:#171717 !important;
+  color:#fff !important;
+  border-color:#2a2a2a !important;
+}
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) table tbody td,
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) table tbody tr:nth-child(even) td{
+  background:var(--v110-surface) !important;
+  color:var(--v110-ink) !important;
+  border-color:var(--v110-line) !important;
+}
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) table tbody td :is(p,small,span){
+  color:var(--v110-copy) !important;
+}
+
+/* Do not let any old dark-card text remain white on the unified cards. */
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) .source-choice-card :is(h1,h2,h3,h4,b,strong,label){
+  color:var(--v110-ink) !important;
+}
+body.dfp-v110-theme :is(.discovery-revamp,.progress-final) .source-choice-card :is(p,small,em){
+  color:var(--v110-copy) !important;
+}
+
+@media(max-width:900px){
+  body.dfp-v110-theme .dfp-topbar-inner{
+    justify-content:center !important;
+  }
+  body.dfp-v110-theme .discovery-revamp .module-hero.discovery-hero{
+    padding:30px 26px !important;
+  }
+  body.dfp-v110-theme :is(.discovery-revamp,.progress-final) .source-choice-card{
+    min-height:230px !important;
+    padding:28px !important;
+  }
+  body.dfp-v110-theme :is(.discovery-revamp,.progress-final) .source-choice-card b{
+    margin-top:48px !important;
+  }
+}

@@ -250,7 +250,30 @@ function defaultFinalCopy(groups: Array<{key:string; label:string; note:string; 
     buckets: base,
   };
 }
-function FinalOutputPanel({ data, loading, error, region }: { data: any; loading: boolean; error: string; region: string }) {
+function compactPreview(value: any, limit = 420) {
+  const full = String(value || '').replace(/\s+/g, ' ').trim();
+  if (!full) return { preview: '', full: '', shortened: false };
+  if (full.length <= limit) return { preview: full, full, shortened: false };
+  const cut = full.slice(0, limit);
+  const safeCut = cut.slice(0, Math.max(cut.lastIndexOf(' '), limit - 48)).trim();
+  return { preview: `${safeCut}…`, full, shortened: true };
+}
+
+function FinalOutputPanel({
+  data,
+  loading,
+  error,
+  region,
+  onBack,
+  onRestored,
+}: {
+  data: any;
+  loading: boolean;
+  error: string;
+  region: string;
+  onBack: () => void;
+  onRestored: () => void;
+}) {
   const groups = groupsFromFinal(data);
   const [trackerMessage, setTrackerMessage] = useState('');
   const [inDepthOpen, setInDepthOpen] = useState(false);
@@ -291,10 +314,26 @@ function FinalOutputPanel({ data, loading, error, region }: { data: any; loading
     return key;
   }
 
-  return <section className="final-ranking-board final-ranking-editorial">
-    <div className="final-ranking-tools-strip">
-      <button className="gold-in-depth-btn" onClick={() => setInDepthOpen(true)}>In-depth</button>
-      <button className="final-gear-btn" onClick={() => setSettingsOpen(true)} aria-label="Edit final ranking text">⚙</button>
+  return <section className="final-ranking-board final-ranking-editorial final-ranking-v109">
+    <div className="final-commandbar">
+      <div className="final-command-leading">
+        <button className="quiet-btn final-back-btn" onClick={onBack}>← Back</button>
+        <span className="final-state-pill">{region}</span>
+      </div>
+
+      <AdminUndoRedo
+        region={region}
+        context="Final ranking / tracker recovery"
+        onRestored={onRestored}
+      />
+
+      <div className="final-command-special">
+        <button className="gold-in-depth-btn" onClick={() => setInDepthOpen(true)}>
+          <span className="gold-spark" aria-hidden="true">✦</span>
+          In-depth
+        </button>
+        <button className="final-gear-btn" onClick={() => setSettingsOpen(true)} aria-label="Edit final ranking text">⚙</button>
+      </div>
     </div>
 
     {trackerMessage && <div className="pool-message">{trackerMessage}</div>}
@@ -302,44 +341,78 @@ function FinalOutputPanel({ data, loading, error, region }: { data: any; loading
     {error && <div className="error-box">{error}</div>}
 
     <div className="final-ranking-buckets final-ranking-buckets-vertical">
-      {groups.map(bucket => {
+      {groups.map((bucket, bucketIndex) => {
         const visibleRows = expandedBuckets[bucket.key] ? bucket.rows : bucket.rows.slice(0, 4);
         const title = copy.buckets?.[bucket.key]?.label || bucket.label;
         const note = copy.buckets?.[bucket.key]?.note || bucket.note;
         return <section className={`final-rank-bucket final-rank-${bucket.key} final-rank-tier-clean`} key={bucket.key}>
-          <header>
-            <div>
-              <h3>{title}</h3>
-              <p>{note}</p>
+          <header className="final-tier-header">
+            <div className="final-tier-heading">
+              <span className="final-tier-index">{String(bucketIndex + 1).padStart(2, '0')}</span>
+              <div>
+                <h3>{title}</h3>
+                <p>{note}</p>
+              </div>
             </div>
-            <div className="final-bucket-mini-actions">
-              <button className={bucket.key === 'highest_transformation_potential' ? 'primary-red small-red' : 'dark-download ready'} onClick={() => sendBucketToTracker(bucketSendKey(bucket.key))}>Send tier</button>
+            <div className="final-tier-controls">
+              <span className="final-tier-count">{bucket.rows.length} {bucket.rows.length === 1 ? 'NGO' : 'NGOs'}</span>
+              <button
+                className={bucket.key === 'highest_transformation_potential' ? 'primary-red small-red' : 'quiet-btn'}
+                onClick={() => sendBucketToTracker(bucketSendKey(bucket.key))}
+              >
+                Send tier
+              </button>
             </div>
           </header>
+
           <div className="final-rank-list final-rank-list-clean">
             {bucket.rows.length ? visibleRows.map((row:any, i:number) => {
               const website = safeExternalUrl(pick(row,'website','Website'));
+              const understanding = compactPreview(pick(row,'one_line_understanding','background','summary','district','source'), 430);
+              const finalComment = compactPreview(pick(row,'final_comment','pm_comment','comment','reason'), 280);
               return <article className="final-rank-card final-rank-card-clean" key={pick(row,'ngo_ref','id','ngo_name','name') || i}>
                 <div className="final-rank-main">
-                  <h4>{pick(row,'ngo_name','NGO Name','name') || 'Untitled NGO'}</h4>
-                  <p>{pick(row,'one_line_understanding','background','summary','district','source') || 'No summary available yet.'}</p>
+                  <div className="final-rank-name-row">
+                    <h4>{pick(row,'ngo_name','NGO Name','name') || 'Untitled NGO'}</h4>
+                    <span className="final-row-number">{String(i + 1).padStart(2, '0')}</span>
+                  </div>
+
+                  <p className="final-rank-summary">{understanding.preview || 'No summary available yet.'}</p>
+
+                  {understanding.shortened && <details className="final-fullcopy">
+                    <summary>Read full organisation profile</summary>
+                    <p>{understanding.full}</p>
+                  </details>}
+
                   <div className="final-rank-meta">
                     {pick(row,'district','District') && <span>{pick(row,'district','District')}</span>}
                     {pick(row,'source_mix','source','Source') && <span>{pick(row,'source_mix','source','Source')}</span>}
                     {website && <span>Website available</span>}
                   </div>
                 </div>
-                <div className="final-rank-note"><small>{pick(row,'final_comment','pm_comment','comment','reason') || 'No final comment.'}</small></div>
+
+                <div className="final-rank-note">
+                  <span className="final-note-label">Final PM view</span>
+                  <p>{finalComment.preview || 'No final comment.'}</p>
+                  {finalComment.shortened && <details className="final-fullcopy final-fullcopy-note">
+                    <summary>Read full PM view</summary>
+                    <p>{finalComment.full}</p>
+                  </details>}
+                </div>
+
                 <div className="final-rank-actions">
                   {website ? <a className="quiet-btn" href={website} target="_blank" rel="noreferrer">Website</a> : <span className="quiet-btn disabled">No website</span>}
                   <button className="quiet-btn" onClick={() => sendBucketToTracker(bucketSendKey(bucket.key))}>Send</button>
                 </div>
               </article>;
-            }) : <div className="empty-review">No NGOs in this tier yet.</div>}
+            }) : <div className="empty-review final-empty-tier">
+              <span>No NGOs in this tier yet.</span>
+            </div>}
           </div>
+
           {bucket.rows.length > 4 && <div className="final-show-row">
             <button className="quiet-btn" onClick={() => setExpandedBuckets(prev => ({ ...prev, [bucket.key]: !prev[bucket.key] }))}>
-              {expandedBuckets[bucket.key] ? 'Show less' : 'Show full'}
+              {expandedBuckets[bucket.key] ? 'Show less' : `Show all ${bucket.rows.length}`}
             </button>
           </div>}
         </section>;
@@ -567,7 +640,14 @@ export default function ProgressClient({ initialData }: { initialData: AnyObj })
 
       {state && view === 'pm' && <><div className="source-topline ranking-subtop"><button className="quiet-btn" onClick={() => setView('hub')}>← Back</button><span>PM Shortlists · {state}</span></div><AdminUndoRedo region={state} context="PM shortlisting recovery" onRestored={() => setRestoreTick(x => x + 1)} /><WorkstreamPanel key={restoreTick} stateName={state} /></>}
       {state && view === 'combined' && <><div className="source-topline ranking-subtop"><button className="quiet-btn" onClick={() => setView('hub')}>← Back</button><span>Combined Review · {state}</span></div><AdminUndoRedo region={state} context="Combined review recovery" onRestored={() => setRestoreTick(x => x + 1)} /><CombinedReviewPanel data={compiledReview} loading={rankingLoading} error={rankingError} /></>}
-      {state && view === 'final' && <><div className="source-topline ranking-subtop"><button className="quiet-btn" onClick={() => setView('hub')}>← Back</button><span>{state}</span></div><AdminUndoRedo region={state} context="Final ranking / tracker recovery" onRestored={() => setRestoreTick(x => x + 1)} /><FinalOutputPanel data={finalBoard} loading={rankingLoading} error={rankingError} region={state} /></>}
+      {state && view === 'final' && <FinalOutputPanel
+        data={finalBoard}
+        loading={rankingLoading}
+        error={rankingError}
+        region={state}
+        onBack={() => setView('hub')}
+        onRestored={() => setRestoreTick(x => x + 1)}
+      />}
 
       <footer className="page-foot">For internal use only</footer>
     </main>
