@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import Header from '@/components/Header';
+import FloatingPreview from '@/components/FloatingPreview';
 import AdminUndoRedo from '@/components/AdminUndoRedo';
 import { safeExternalUrl } from '@/lib/urlSafety';
 import { BACKEND, SEARCH_BACKEND, STORY_BACKEND, BACKEND_CONFIG_ERROR, SEARCH_BACKEND_CONFIG_ERROR, STORY_BACKEND_CONFIG_ERROR, safeJSON, isFailureStatus, isTerminalReady } from '@/lib/backendClient';
@@ -770,5 +771,15 @@ export default function NgoDiscoveryPage(){
     </>}
 
     <footer className="page-foot">For internal use only</footer>
+    <FloatingPreview
+      title="Preview"
+      kicker="Discovery preview"
+      description="A premium look at the NGO Discovery workflow — stronger typography, cleaner surfaces, and refined control styling across source selection, discovery, referrals, and lead pool."
+      bullets={[
+        'Landing-page card language reused consistently across discovery screens',
+        'Physical-looking action controls with softer but richer depth',
+        'Cleaner visual rhythm with one-surface white cards and stronger contrast',
+      ]}
+    />
   </main></>;
 }
