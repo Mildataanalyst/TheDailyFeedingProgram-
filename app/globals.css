@@ -9801,3 +9801,552 @@ body.dfp-v107-theme .modal-x{
   body.dfp-v107-theme .discovery-revamp .source-choice-card{min-height:204px !important;}
   body.dfp-v107-theme .progress-final .final-go-tracker{left:18px !important; right:18px !important;}
 }
+
+/* =====================================================================
+   V108 — strict unified surface system + contrast lock + compact ranking
+   ===================================================================== */
+body.dfp-v108-theme{
+  --v108-bg:#f5f4f2;
+  --v108-surface:#ffffff;
+  --v108-subtle:#fafaf9;
+  --v108-ink:#111111;
+  --v108-body:#57534e;
+  --v108-muted:#78716c;
+  --v108-border:#e5e2de;
+  --v108-border-strong:#d6d3d1;
+  --v108-red:#e23744;
+  --v108-red-hover:#c92736;
+  --v108-red-soft:#fdecef;
+  --v108-black:#171717;
+  --v108-gold-1:#fff5d9;
+  --v108-gold-2:#edd39a;
+  --v108-gold-3:#c99d4d;
+  background:var(--v108-bg) !important;
+  background-image:none !important;
+  color:var(--v108-ink) !important;
+}
+body.dfp-v108-theme::before,
+body.dfp-v108-theme::after{background-image:none !important;}
+
+/* Global layout: no large dead bands below the sticky nav. */
+body.dfp-v108-theme .dfp-topbar{background:var(--v108-bg) !important;}
+body.dfp-v108-theme .dfp-topbar-inner{height:76px !important;}
+body.dfp-v108-theme .page-stack{padding:16px 0 44px !important;gap:16px !important;}
+body.dfp-v108-theme .progress-final{padding-top:0 !important;}
+body.dfp-v108-theme .progress-stack{padding-top:12px !important;gap:14px !important;}
+body.dfp-v108-theme .discovery-revamp{padding-top:12px !important;gap:16px !important;}
+
+/* Navigation uses one white surface and one red active state. */
+body.dfp-v108-theme .dfp-nav{
+  background:var(--v108-surface) !important;
+  border:1px solid var(--v108-border) !important;
+  box-shadow:0 10px 26px rgba(17,17,17,.06) !important;
+}
+body.dfp-v108-theme .nav-pill{color:#4f4b47 !important;}
+body.dfp-v108-theme .nav-pill:hover{background:var(--v108-subtle) !important;color:var(--v108-ink) !important;}
+body.dfp-v108-theme .nav-pill.active{
+  color:#fff !important;
+  background:var(--v108-red) !important;
+  box-shadow:0 8px 20px rgba(226,55,68,.20) !important;
+}
+body.dfp-v108-theme .nav-pill.active :is(span,b,small){color:#fff !important;}
+
+/* ONE surface language: every operational card is pure white. */
+body.dfp-v108-theme :is(
+  .discovery-revamp .module-hero,
+  .discovery-revamp .state-gate-card,
+  .discovery-revamp .source-choice-card,
+  .discovery-revamp .source-topline,
+  .discovery-revamp .discover-card,
+  .discovery-revamp .advanced-shell,
+  .discovery-revamp .recovery-panel,
+  .discovery-revamp .status-card,
+  .discovery-revamp .table-card,
+  .discovery-revamp .output-section,
+  .discovery-revamp .collapse-card,
+  .discovery-revamp .funnel-card,
+  .discovery-revamp .source-row,
+  .discovery-revamp .form-card,
+  .discovery-revamp .upload-box,
+  .discovery-revamp .budget-strip,
+  .discovery-revamp .selected-state-chip,
+  .discovery-revamp .archive-row,
+  .progress-final .state-gate-card,
+  .progress-final .source-choice-card,
+  .progress-final .ranking-subtop,
+  .progress-final .admin-undo-redo,
+  .progress-final .review-board,
+  .progress-final .review-summary-card,
+  .progress-final .review-band,
+  .progress-final .combined-minimal-board,
+  .progress-final .workstream-main-card,
+  .progress-final .workstream-side .mini-panel,
+  .progress-final .base-shortlist,
+  .progress-final .ngo-tile,
+  .progress-final .metric-card,
+  .progress-final .tracker-table-card,
+  .progress-final .tracker-details,
+  .progress-final .final-rank-bucket,
+  .progress-final .final-rank-card,
+  .progress-final .empty-progress
+){
+  background:var(--v108-surface) !important;
+  background-image:none !important;
+  border:1px solid var(--v108-border) !important;
+  box-shadow:0 10px 26px rgba(17,17,17,.055) !important;
+  color:var(--v108-ink) !important;
+}
+
+/* Nested surfaces may use only the one subtle neutral. */
+body.dfp-v108-theme :is(
+  .discovery-revamp .advanced-panel,
+  .discovery-revamp .statbox,
+  .discovery-revamp .category-grid-dark button,
+  .discovery-revamp .inline-upload,
+  .discovery-revamp .archive-links,
+  .progress-final .trend-placeholder-grid > div,
+  .progress-final .copy-edit-block,
+  .progress-final .final-rank-meta span
+){
+  background:var(--v108-subtle) !important;
+  background-image:none !important;
+  border-color:var(--v108-border) !important;
+}
+
+/* Hard contrast lock: no white text can survive inside white surfaces. */
+body.dfp-v108-theme :is(
+  .discovery-revamp .module-hero,
+  .discovery-revamp .state-gate-card,
+  .discovery-revamp .source-choice-card,
+  .discovery-revamp .source-topline,
+  .discovery-revamp .discover-card,
+  .discovery-revamp .advanced-shell,
+  .discovery-revamp .recovery-panel,
+  .discovery-revamp .status-card,
+  .discovery-revamp .table-card,
+  .discovery-revamp .output-section,
+  .discovery-revamp .collapse-card,
+  .discovery-revamp .funnel-card,
+  .discovery-revamp .source-row,
+  .discovery-revamp .form-card,
+  .discovery-revamp .upload-box,
+  .discovery-revamp .budget-strip,
+  .discovery-revamp .selected-state-chip,
+  .discovery-revamp .archive-row,
+  .progress-final .state-gate-card,
+  .progress-final .source-choice-card,
+  .progress-final .ranking-subtop,
+  .progress-final .admin-undo-redo,
+  .progress-final .review-board,
+  .progress-final .review-summary-card,
+  .progress-final .review-band,
+  .progress-final .combined-minimal-board,
+  .progress-final .workstream-main-card,
+  .progress-final .workstream-side .mini-panel,
+  .progress-final .base-shortlist,
+  .progress-final .ngo-tile,
+  .progress-final .metric-card,
+  .progress-final .tracker-table-card,
+  .progress-final .tracker-details,
+  .progress-final .final-rank-bucket,
+  .progress-final .final-rank-card,
+  .progress-final .empty-progress
+) :is(h1,h2,h3,h4,h5,h6,b,strong,label){
+  color:var(--v108-ink) !important;
+  text-shadow:none !important;
+}
+body.dfp-v108-theme :is(
+  .discovery-revamp .module-hero,
+  .discovery-revamp .state-gate-card,
+  .discovery-revamp .source-choice-card,
+  .discovery-revamp .source-topline,
+  .discovery-revamp .discover-card,
+  .discovery-revamp .advanced-shell,
+  .discovery-revamp .recovery-panel,
+  .discovery-revamp .status-card,
+  .discovery-revamp .table-card,
+  .discovery-revamp .output-section,
+  .discovery-revamp .collapse-card,
+  .discovery-revamp .funnel-card,
+  .discovery-revamp .source-row,
+  .discovery-revamp .form-card,
+  .discovery-revamp .upload-box,
+  .discovery-revamp .budget-strip,
+  .discovery-revamp .selected-state-chip,
+  .discovery-revamp .archive-row,
+  .progress-final .state-gate-card,
+  .progress-final .source-choice-card,
+  .progress-final .ranking-subtop,
+  .progress-final .admin-undo-redo,
+  .progress-final .review-board,
+  .progress-final .review-summary-card,
+  .progress-final .review-band,
+  .progress-final .combined-minimal-board,
+  .progress-final .workstream-main-card,
+  .progress-final .workstream-side .mini-panel,
+  .progress-final .base-shortlist,
+  .progress-final .ngo-tile,
+  .progress-final .metric-card,
+  .progress-final .tracker-table-card,
+  .progress-final .tracker-details,
+  .progress-final .final-rank-bucket,
+  .progress-final .final-rank-card,
+  .progress-final .empty-progress
+) :is(p,small,em,span){
+  color:var(--v108-body) !important;
+  text-shadow:none !important;
+}
+
+/* Never hide or crop copy. Long imported text wraps instead. */
+body.dfp-v108-theme :is(.discovery-revamp,.progress-final) :is(h1,h2,h3,h4,h5,h6,p,small,span,b,strong,td,th,label){
+  overflow-wrap:anywhere;
+  word-break:normal;
+}
+body.dfp-v108-theme .progress-final :is(.final-rank-main p,.final-rank-note small){
+  display:block !important;
+  overflow:visible !important;
+  max-height:none !important;
+  -webkit-line-clamp:unset !important;
+}
+
+/* Inputs: explicit dark text and visible placeholders. */
+body.dfp-v108-theme :is(.discovery-revamp,.progress-final) :is(input,select,textarea){
+  background:#fff !important;
+  color:var(--v108-ink) !important;
+  border:1px solid var(--v108-border-strong) !important;
+  opacity:1 !important;
+}
+body.dfp-v108-theme :is(.discovery-revamp,.progress-final) :is(input,textarea)::placeholder{
+  color:var(--v108-muted) !important;
+  opacity:1 !important;
+}
+
+/* Unified discovery masthead, not a black slab. */
+body.dfp-v108-theme .discovery-revamp .module-hero.discovery-hero{
+  background:var(--v108-surface) !important;
+  border:1px solid var(--v108-border) !important;
+  box-shadow:0 12px 30px rgba(17,17,17,.065) !important;
+}
+body.dfp-v108-theme .discovery-revamp .module-hero.discovery-hero h1{color:var(--v108-ink) !important;}
+body.dfp-v108-theme .discovery-revamp .module-hero.discovery-hero h1 span{color:var(--v108-red) !important;}
+body.dfp-v108-theme .discovery-revamp .module-hero.discovery-hero .red-kicker{color:var(--v108-red) !important;}
+body.dfp-v108-theme .discovery-revamp .module-hero.discovery-hero p{color:#625d59 !important;}
+body.dfp-v108-theme .discovery-revamp .module-hero.discovery-hero::before{background:transparent !important;}
+
+/* Discovery hub: three identical cards. */
+body.dfp-v108-theme .discovery-revamp .source-choice-grid.three-choice .source-choice-card,
+body.dfp-v108-theme .discovery-revamp .source-choice-grid.three-choice .source-choice-card:nth-child(1),
+body.dfp-v108-theme .discovery-revamp .source-choice-grid.three-choice .source-choice-card:nth-child(2),
+body.dfp-v108-theme .discovery-revamp .source-choice-grid.three-choice .source-choice-card:nth-child(3),
+body.dfp-v108-theme .discovery-revamp .source-choice-grid.three-choice .source-choice-card.leadpool-entry{
+  background:var(--v108-surface) !important;
+  background-image:none !important;
+  border:1px solid var(--v108-border) !important;
+  border-top:4px solid var(--v108-red) !important;
+  box-shadow:0 10px 26px rgba(17,17,17,.055) !important;
+}
+body.dfp-v108-theme .discovery-revamp .source-choice-grid.three-choice .source-choice-card:nth-child(n) :is(b,strong){color:var(--v108-ink) !important;}
+body.dfp-v108-theme .discovery-revamp .source-choice-grid.three-choice .source-choice-card:nth-child(n) small{color:var(--v108-body) !important;}
+body.dfp-v108-theme .discovery-revamp .source-choice-grid.three-choice .source-choice-card:nth-child(n) > span{
+  color:#fff !important;
+  background:var(--v108-red) !important;
+  border-color:var(--v108-red) !important;
+}
+
+/* Ranking Center: no black/beige/pink stage cards. */
+body.dfp-v108-theme .progress-final .ranking-journey-grid .source-choice-card,
+body.dfp-v108-theme .progress-final .ranking-journey-grid .source-choice-card:nth-child(1),
+body.dfp-v108-theme .progress-final .ranking-journey-grid .source-choice-card:nth-child(2),
+body.dfp-v108-theme .progress-final .ranking-journey-grid .source-choice-card:nth-child(3){
+  background:var(--v108-surface) !important;
+  background-image:none !important;
+  border:1px solid var(--v108-border) !important;
+  border-top:4px solid var(--v108-red) !important;
+  box-shadow:0 10px 26px rgba(17,17,17,.055) !important;
+  color:var(--v108-ink) !important;
+}
+body.dfp-v108-theme .progress-final .ranking-journey-grid .source-choice-card:nth-child(n) :is(b,strong){color:var(--v108-ink) !important;}
+body.dfp-v108-theme .progress-final .ranking-journey-grid .source-choice-card:nth-child(n) small{color:var(--v108-body) !important;}
+body.dfp-v108-theme .progress-final .ranking-journey-grid .source-choice-card:nth-child(n) > span{
+  color:var(--v108-red) !important;
+  background:var(--v108-red-soft) !important;
+  border-color:#efbcc3 !important;
+}
+body.dfp-v108-theme .progress-final .ranking-journey-grid{gap:14px !important;}
+body.dfp-v108-theme .progress-final .ranking-state-gate{margin-top:0 !important;}
+
+/* Buttons: exactly three families, with explicit child contrast. */
+body.dfp-v108-theme :is(.primary-red,.btn.red,.nav-action-link,.small-red,.final-go-tracker){
+  background:var(--v108-red) !important;
+  background-image:none !important;
+  color:#fff !important;
+  border:1px solid var(--v108-red) !important;
+  box-shadow:0 8px 18px rgba(226,55,68,.16) !important;
+}
+body.dfp-v108-theme :is(.primary-red,.btn.red,.nav-action-link,.small-red,.final-go-tracker) :is(span,small,b,strong){color:#fff !important;}
+body.dfp-v108-theme :is(.primary-red,.btn.red,.nav-action-link,.small-red,.final-go-tracker):hover{
+  background:var(--v108-red-hover) !important;
+  border-color:var(--v108-red-hover) !important;
+}
+body.dfp-v108-theme :is(.ghost-btn,.advanced-btn,.quiet-btn,.sample-btn,.gear-btn,.dark-download,.download-row a,.archive-links a,.archive-links button,.final-gear-btn){
+  background:#fff !important;
+  background-image:none !important;
+  color:var(--v108-ink) !important;
+  border:1px solid var(--v108-border-strong) !important;
+  box-shadow:none !important;
+}
+body.dfp-v108-theme :is(.ghost-btn,.advanced-btn,.quiet-btn,.sample-btn,.gear-btn,.dark-download,.download-row a,.archive-links a,.archive-links button,.final-gear-btn) :is(span,small,b,strong){color:var(--v108-ink) !important;}
+body.dfp-v108-theme :is(.ghost-btn,.advanced-btn,.quiet-btn,.sample-btn,.gear-btn,.dark-download,.download-row a,.archive-links a,.archive-links button,.final-gear-btn):hover{
+  background:var(--v108-black) !important;
+  color:#fff !important;
+  border-color:var(--v108-black) !important;
+}
+body.dfp-v108-theme :is(.ghost-btn,.advanced-btn,.quiet-btn,.sample-btn,.gear-btn,.dark-download,.download-row a,.archive-links a,.archive-links button,.final-gear-btn):hover :is(span,small,b,strong){color:#fff !important;}
+body.dfp-v108-theme :is(button,a):disabled,
+body.dfp-v108-theme :is(button,a).disabled,
+body.dfp-v108-theme :is(button,a).off{
+  background:#ece9e6 !important;
+  color:#8a837d !important;
+  border-color:var(--v108-border-strong) !important;
+  opacity:1 !important;
+}
+body.dfp-v108-theme :is(button,a):disabled :is(span,small,b,strong),
+body.dfp-v108-theme :is(button,a).disabled :is(span,small,b,strong){color:#8a837d !important;}
+
+/* Tables retain one deliberate dark header; all body copy is explicit. */
+body.dfp-v108-theme :is(.discovery-revamp,.progress-final) table thead th{
+  background:var(--v108-black) !important;
+  color:#fff !important;
+  border-color:#272727 !important;
+}
+body.dfp-v108-theme :is(.discovery-revamp,.progress-final) table thead th :is(span,b,strong,small){color:#fff !important;}
+body.dfp-v108-theme :is(.discovery-revamp,.progress-final) table tbody td{
+  background:#fff !important;
+  color:var(--v108-ink) !important;
+  border-color:var(--v108-border) !important;
+}
+body.dfp-v108-theme :is(.discovery-revamp,.progress-final) table tbody tr:nth-child(even) td{background:var(--v108-subtle) !important;}
+body.dfp-v108-theme :is(.discovery-revamp,.progress-final) table tbody td :is(p,small,span){color:var(--v108-body) !important;}
+
+/* Final ranking: compact, content-driven tiers, no random white bands. */
+body.dfp-v108-theme .progress-final .ranking-subtop{
+  min-height:56px !important;
+  padding:8px 12px !important;
+  border-radius:16px !important;
+}
+body.dfp-v108-theme .progress-final .admin-undo-redo{
+  min-height:58px !important;
+  padding:9px 184px 9px 12px !important;
+  border-radius:16px !important;
+  gap:8px !important;
+  position:relative;
+  z-index:2;
+}
+body.dfp-v108-theme .progress-final .final-ranking-editorial{
+  margin-top:-72px !important;
+  gap:14px !important;
+  padding-bottom:86px !important;
+  position:relative;
+  z-index:3;
+}
+body.dfp-v108-theme .progress-final .final-ranking-tools-strip{
+  height:58px !important;
+  min-height:58px !important;
+  padding:6px 10px !important;
+  justify-content:flex-end !important;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+  pointer-events:none;
+}
+body.dfp-v108-theme .progress-final .final-ranking-tools-strip > *{pointer-events:auto;}
+body.dfp-v108-theme .progress-final .final-ranking-buckets{
+  gap:14px !important;
+  margin-top:0 !important;
+}
+body.dfp-v108-theme .progress-final .final-rank-bucket{
+  min-height:0 !important;
+  height:auto !important;
+  border-radius:22px !important;
+  overflow:hidden !important;
+}
+body.dfp-v108-theme .progress-final .final-rank-bucket,
+body.dfp-v108-theme .progress-final .final-rank-highest_transformation_potential,
+body.dfp-v108-theme .progress-final .final-rank-great_ngos,
+body.dfp-v108-theme .progress-final .final-rank-worth_looking_into,
+body.dfp-v108-theme .progress-final .final-rank-needs_more_context{
+  background:#fff !important;
+  background-image:none !important;
+  border-color:var(--v108-border) !important;
+}
+body.dfp-v108-theme .progress-final .final-rank-bucket > header,
+body.dfp-v108-theme .progress-final .final-rank-highest_transformation_potential > header{
+  background:#fff !important;
+  background-image:none !important;
+  padding:20px 22px 16px !important;
+  border-bottom:1px solid var(--v108-border) !important;
+}
+body.dfp-v108-theme .progress-final .final-rank-bucket > header h3{
+  color:var(--v108-ink) !important;
+  font-size:30px !important;
+}
+body.dfp-v108-theme .progress-final .final-rank-bucket > header p{
+  color:var(--v108-body) !important;
+  margin-top:6px !important;
+}
+body.dfp-v108-theme .progress-final .final-rank-list-clean{
+  padding:12px !important;
+  gap:10px !important;
+  min-height:0 !important;
+}
+body.dfp-v108-theme .progress-final .final-rank-list-clean > .empty-review{
+  min-height:0 !important;
+  height:auto !important;
+  margin:0 !important;
+  padding:14px 16px !important;
+  background:var(--v108-subtle) !important;
+  border:1px solid var(--v108-border) !important;
+  border-radius:12px !important;
+  color:var(--v108-muted) !important;
+  font-style:italic;
+  text-align:left !important;
+}
+body.dfp-v108-theme .progress-final .final-rank-card-clean{
+  background:#fff !important;
+  background-image:none !important;
+  border:1px solid var(--v108-border) !important;
+  box-shadow:none !important;
+  border-radius:16px !important;
+  padding:16px !important;
+}
+body.dfp-v108-theme .progress-final .final-rank-card-clean:hover{
+  border-color:var(--v108-border-strong) !important;
+  box-shadow:0 8px 20px rgba(17,17,17,.05) !important;
+}
+body.dfp-v108-theme .progress-final .final-rank-main h4{color:var(--v108-ink) !important;}
+body.dfp-v108-theme .progress-final .final-rank-main p,
+body.dfp-v108-theme .progress-final .final-rank-note small{color:var(--v108-body) !important;}
+body.dfp-v108-theme .progress-final .final-rank-meta span{
+  color:#494440 !important;
+  background:var(--v108-subtle) !important;
+  border:1px solid var(--v108-border) !important;
+}
+body.dfp-v108-theme .progress-final .final-bucket-mini-actions .dark-download.ready{
+  background:#fff !important;
+  color:var(--v108-ink) !important;
+  border:1px solid var(--v108-border-strong) !important;
+}
+body.dfp-v108-theme .progress-final .final-bucket-mini-actions .primary-red.small-red{color:#fff !important;}
+
+/* Gold feature controls: In-depth and Preview only. */
+body.dfp-v108-theme .progress-final .gold-in-depth-btn,
+body.dfp-v108-theme .lp-v91-preview{
+  position:relative !important;
+  isolation:isolate;
+  overflow:hidden !important;
+  color:#3c2b0f !important;
+  background:
+    linear-gradient(180deg,var(--v108-gold-1) 0%,var(--v108-gold-2) 54%,var(--v108-gold-3) 100%) !important;
+  border:1px solid #c39749 !important;
+  box-shadow:
+    0 9px 22px rgba(171,126,45,.20),
+    inset 0 1px 0 rgba(255,255,255,.85),
+    inset 0 -1px 0 rgba(126,84,18,.14) !important;
+  text-shadow:0 1px 0 rgba(255,255,255,.5) !important;
+}
+body.dfp-v108-theme .progress-final .gold-in-depth-btn :is(span,b,strong,small),
+body.dfp-v108-theme .lp-v91-preview :is(span,b,strong,small){color:#3c2b0f !important;}
+body.dfp-v108-theme .progress-final .gold-in-depth-btn::before,
+body.dfp-v108-theme .lp-v91-preview::before{
+  content:"" !important;
+  position:absolute !important;
+  z-index:-1;
+  top:-80% !important;
+  left:-45% !important;
+  width:34% !important;
+  height:260% !important;
+  border-radius:50% !important;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.88),transparent) !important;
+  transform:rotate(19deg) !important;
+  animation:v108GoldSweep 3.8s cubic-bezier(.2,.7,.25,1) infinite !important;
+  pointer-events:none;
+}
+body.dfp-v108-theme .progress-final .gold-in-depth-btn::after,
+body.dfp-v108-theme .lp-v91-preview::after{
+  content:"" !important;
+  position:absolute !important;
+  z-index:2;
+  inset:2px !important;
+  border-radius:inherit !important;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 18% 30%,rgba(255,255,255,.95) 0 1px,transparent 2px),
+    radial-gradient(circle at 72% 22%,rgba(255,250,221,.95) 0 1px,transparent 2px),
+    radial-gradient(circle at 84% 68%,rgba(255,255,255,.88) 0 1.2px,transparent 2.4px),
+    radial-gradient(circle at 40% 76%,rgba(255,244,194,.9) 0 1px,transparent 2px) !important;
+  background-size:44px 32px,52px 38px,48px 42px,58px 44px !important;
+  opacity:.22;
+  animation:v108GoldGlitter 2.4s steps(5,end) infinite !important;
+}
+body.dfp-v108-theme .progress-final .gold-in-depth-btn:hover,
+body.dfp-v108-theme .lp-v91-preview:hover{
+  color:#291d08 !important;
+  transform:translateY(-2px) !important;
+  box-shadow:
+    0 13px 28px rgba(171,126,45,.28),
+    0 0 20px rgba(237,211,154,.38),
+    inset 0 1px 0 rgba(255,255,255,.9) !important;
+}
+@keyframes v108GoldSweep{
+  0%,30%{transform:translateX(-180%) rotate(19deg);opacity:0}
+  42%{opacity:.88}
+  68%,100%{transform:translateX(520%) rotate(19deg);opacity:0}
+}
+@keyframes v108GoldGlitter{
+  0%,100%{opacity:.12;filter:brightness(.95)}
+  20%{opacity:.52;filter:brightness(1.25)}
+  40%{opacity:.20;filter:brightness(1)}
+  60%{opacity:.62;filter:brightness(1.35)}
+  80%{opacity:.26;filter:brightness(1.05)}
+}
+
+/* In-depth modal remains readable and carries only a restrained gold edge. */
+body.dfp-v108-theme .progress-final .in-depth-modal{
+  background:#fff !important;
+  background-image:none !important;
+  border:1px solid #d8bd86 !important;
+  box-shadow:0 28px 80px rgba(17,17,17,.20),0 0 0 1px rgba(237,211,154,.18) !important;
+}
+body.dfp-v108-theme .progress-final .in-depth-modal :is(h2,b,strong){color:var(--v108-ink) !important;}
+body.dfp-v108-theme .progress-final .in-depth-modal :is(p,span,small){color:var(--v108-body) !important;}
+body.dfp-v108-theme .progress-final .in-depth-modal .compact-kicker{color:#9a6c20 !important;}
+
+/* Preserve readable dark-on-light ranking headers and state labels. */
+body.dfp-v108-theme .progress-final .state-gate-card .red-kicker,
+body.dfp-v108-theme .discovery-revamp .state-gate-card .red-kicker{color:var(--v108-red) !important;}
+body.dfp-v108-theme .progress-final .ranking-subtop > span{color:var(--v108-body) !important;}
+body.dfp-v108-theme .progress-final .admin-undo-redo :is(b,strong){color:var(--v108-ink) !important;}
+body.dfp-v108-theme .progress-final .admin-undo-redo :is(small,span){color:var(--v108-body) !important;}
+
+@media(max-width:980px){
+  body.dfp-v108-theme .progress-final .admin-undo-redo{padding-right:12px !important;}
+  body.dfp-v108-theme .progress-final .final-ranking-editorial{margin-top:0 !important;}
+  body.dfp-v108-theme .progress-final .final-ranking-tools-strip{
+    justify-content:flex-start !important;
+    background:#fff !important;
+    border:1px solid var(--v108-border) !important;
+    border-radius:16px !important;
+    padding:8px !important;
+  }
+}
+@media(max-width:760px){
+  body.dfp-v108-theme .dfp-topbar-inner{height:70px !important;}
+  body.dfp-v108-theme .page-stack{padding-top:10px !important;}
+  body.dfp-v108-theme .progress-stack{padding-top:8px !important;}
+}
+@media(prefers-reduced-motion:reduce){
+  body.dfp-v108-theme .progress-final .gold-in-depth-btn::before,
+  body.dfp-v108-theme .progress-final .gold-in-depth-btn::after,
+  body.dfp-v108-theme .lp-v91-preview::before,
+  body.dfp-v108-theme .lp-v91-preview::after{animation:none !important;}
+}
