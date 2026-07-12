@@ -8369,448 +8369,597 @@ body.dfp-v100-theme .lp-v95-how .lp-v91-preview:active{
     margin-bottom:38px !important;
   }
 }
+
 /* ============================================================
-   STORY v86 — THE CONTINUOUS FILM
+   STORY v87 — THE CINEMATIC FILM
    Append this entire block to the END of app/globals.css.
-   Fully self-contained under .svf- (does NOT depend on v72).
-   Layout: persistent 30% rail · 1px glowing divider · 70% stage.
-   The stage is one scene; act changes are driven by
-   [data-phase] on the stage. Choreography inside an act uses
-   CSS animations whose delays count from the moment the act's
-   phase class lands (the stage remounts on scrub, so acts
-   always start clean).
+   Fully self-contained under .svfa- (does NOT depend on v72).
+
+   Fixes over v86 (from the screenshot review):
+   - .svfa-film is position:fixed inset:0 with a high z-index —
+     it OWNS the viewport. No white voids.
+   - Every act is a composed, centred scene (flex-centred layer)
+     with a v85-style blur-rise entrance and a soft dissolve
+     exit. No orphaned floating cards.
+   - The rating scale is a real slider: thin track + glowing
+     fill + a knob that drags 1→5. Not a solid red block.
+   - Rail markers are dots ON the thread line, not stray dashes.
    ============================================================ */
 
-.svf-film{
-  --svf-red:#E23744;
-  --svf-ink:#ffffff;
-  --svf-mut:rgba(255,255,255,.5);
-  --svf-faint:rgba(255,255,255,.24);
-  --svf-ease:cubic-bezier(.16,.84,.28,1);
-  --svf-snap:cubic-bezier(.7,0,.2,1.4);
-  position:fixed;inset:0;display:flex;
-  background:#000;color:var(--svf-ink);
+.svfa-film{
+  --sv-red:#E23744;
+  --sv-mut:rgba(255,255,255,.5);
+  --sv-faint:rgba(255,255,255,.24);
+  --sv-ease:cubic-bezier(.16,.84,.28,1);
+  --sv-snap:cubic-bezier(.7,0,.2,1.4);
+  position:fixed;inset:0;z-index:60;display:flex;
+  background:#000;color:#fff;
   font-family:'Lexend','Inter',ui-sans-serif,system-ui,-apple-system,sans-serif;
   overflow:hidden;
 }
-.svf-film[data-paused="true"] .svf-stage *,
-.svf-film[data-paused="true"] .svf-stage *::before,
-.svf-film[data-paused="true"] .svf-stage *::after{
+.svfa-film[data-paused="true"] .svfa-stage *,
+.svfa-film[data-paused="true"] .svfa-stage *::before,
+.svfa-film[data-paused="true"] .svfa-stage *::after,
+.svfa-film[data-paused="true"] .svfa-intro *{
   animation-play-state:paused!important;
 }
 
 /* ============================================================
-   LEFT RAIL — persistent, black, editorial
+   THE COLD OPEN — covers everything, then dissolves into the film
    ============================================================ */
-.svf-rail{
-  flex:0 0 30%;min-width:320px;max-width:460px;
-  display:flex;flex-direction:column;
-  padding:34px 34px 26px;position:relative;z-index:2;
-  background:#000;
+.svfa-intro{
+  position:absolute;inset:0;z-index:20;background:#000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:0 8vw;pointer-events:none;
+  transition:opacity 1.2s var(--sv-ease),visibility 1.2s;
 }
-.svf-back{
-  align-self:flex-start;font-size:13px;color:var(--svf-mut);
-  text-decoration:none;padding:8px 14px;border-radius:99px;
-  border:1px solid rgba(255,255,255,.12);
-  transition:color .3s,border-color .3s;
+/* the overlay dissolves the moment the film leaves the intro act —
+   the two red ways visually hand over to rail steps 01 / 02 */
+.svfa-film:not([data-phase="intro"]) .svfa-intro{opacity:0;visibility:hidden;}
+.svfa-intro h2{
+  margin:0 0 34px;font-weight:800;letter-spacing:-.02em;line-height:1.12;
+  font-size:clamp(34px,4.6vw,72px);max-width:20ch;
 }
-.svf-back:hover{color:#fff;border-color:rgba(255,255,255,.3);}
-.svf-question{
-  margin:30px 0 34px;font-weight:800;line-height:1.12;letter-spacing:-.02em;
-  font-size:clamp(24px,2.2vw,38px);
-  opacity:0;transform:translateY(18px);filter:blur(6px);
-  animation:svfIn .95s var(--svf-ease) .35s forwards;
+.svfa-intro h2 span{
+  display:inline-block;margin-right:.24em;
+  opacity:0;transform:translateY(14px);filter:blur(8px);
+  animation:svfaWord .6s var(--sv-ease) forwards;
 }
-@keyframes svfIn{to{opacity:1;transform:translateY(0);filter:blur(0)}}
-
-/* vertical editorial timeline */
-.svf-steps-wrap{position:relative;flex:1;min-height:0;}
-.svf-thread{
-  position:absolute;left:5px;top:8px;bottom:8px;width:2px;
-  background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;
+@keyframes svfaWord{to{opacity:1;transform:translateY(0);filter:blur(0)}}
+.svfa-way{
+  margin:6px 0 0;font-size:clamp(16px,1.5vw,22px);font-weight:600;
+  color:var(--sv-red);letter-spacing:.01em;
+  opacity:0;transform:translateY(12px);filter:blur(6px);
+  text-shadow:0 0 30px rgba(226,55,68,.35);
+  animation:svfaWay .8s var(--sv-ease) forwards;
 }
-.svf-thread i{
-  display:block;width:100%;height:0;
-  background:linear-gradient(180deg,var(--svf-red),rgba(226,55,68,.4));
-  box-shadow:0 0 12px rgba(226,55,68,.5);
-  border-radius:99px;
-}
-.svf-steps{list-style:none;margin:0;padding:0 0 0 26px;display:flex;flex-direction:column;gap:6px;}
-.svf-step{opacity:0;transform:translateY(14px);animation:svfIn .7s var(--svf-ease) forwards;}
-.svf-step:nth-child(1){animation-delay:.9s;}
-.svf-step:nth-child(2){animation-delay:1.05s;}
-.svf-step:nth-child(3){animation-delay:1.2s;}
-.svf-step:nth-child(4){animation-delay:1.35s;}
-.svf-step:nth-child(5){animation-delay:1.5s;}
-.svf-step button{
-  display:flex;align-items:flex-start;gap:12px;width:100%;text-align:left;
-  background:none;border:0;padding:10px 8px;cursor:pointer;border-radius:10px;
-  transition:background .3s;
-}
-.svf-step button:hover{background:rgba(255,255,255,.04);}
-.svf-marker{
-  flex:none;width:3px;height:16px;margin-top:3px;border-radius:99px;
-  background:rgba(255,255,255,.14);
-  transition:background .4s,box-shadow .4s,height .4s;
-}
-.svf-stepnum{
-  flex:none;font-size:11px;letter-spacing:.16em;color:var(--svf-faint);
-  margin-top:4px;transition:color .4s;
-}
-.svf-steptext b{
-  display:block;font-size:15px;font-weight:700;line-height:1.3;
-  color:var(--svf-faint);letter-spacing:-.01em;
-  transition:color .5s;
-}
-.svf-steptext p{
-  margin:0;font-size:12.5px;line-height:1.55;color:var(--svf-mut);
-  max-height:0;opacity:0;overflow:hidden;
-  transition:max-height .6s var(--svf-ease),opacity .5s,margin .5s;
-}
-/* states: future faint · active bright + red marker + body · done muted */
-.svf-step.active .svf-steptext b{color:#fff;}
-.svf-step.active .svf-stepnum{color:rgba(226,55,68,.9);}
-.svf-step.active .svf-marker{background:var(--svf-red);box-shadow:0 0 12px rgba(226,55,68,.7);height:26px;}
-.svf-step.active .svf-steptext p{max-height:90px;opacity:1;margin-top:6px;}
-.svf-step.done .svf-steptext b{color:rgba(255,255,255,.55);}
-.svf-step.done .svf-marker{background:rgba(226,55,68,.35);}
-.svf-step.done .svf-stepnum{color:rgba(255,255,255,.3);}
-
-.svf-controls{display:flex;gap:10px;margin-top:20px;}
-.svf-controls button{
-  font-size:12px;letter-spacing:.08em;color:var(--svf-mut);
-  background:none;border:1px solid rgba(255,255,255,.14);border-radius:99px;
-  padding:8px 16px;cursor:pointer;transition:color .3s,border-color .3s;
-}
-.svf-controls button:hover{color:#fff;border-color:rgba(255,255,255,.35);}
-
-/* the divider — thin, elegant, faint red breath */
-.svf-divider{
-  flex:none;width:1px;position:relative;z-index:2;
-  background:linear-gradient(180deg,transparent,rgba(255,255,255,.16) 20%,rgba(255,255,255,.16) 80%,transparent);
-}
-.svf-divider::after{
-  content:"";position:absolute;inset:0;
-  background:linear-gradient(180deg,transparent,rgba(226,55,68,.5),transparent);
-  filter:blur(3px);opacity:.35;
-  animation:svfBreathe 6s ease-in-out infinite;
-}
-@keyframes svfBreathe{0%,100%{opacity:.2}50%{opacity:.5}}
+@keyframes svfaWay{to{opacity:1;transform:translateY(0);filter:blur(0)}}
+.svfa-way-1{animation-delay:2.2s;}
+.svfa-way-2{animation-delay:3.3s;}
 
 /* ============================================================
-   STAGE — one continuous scene
+   LEFT RAIL — persistent, resolves in as the intro dissolves
    ============================================================ */
-.svf-stage{
+.svfa-rail{
+  flex:0 0 30%;min-width:320px;max-width:440px;
+  display:flex;flex-direction:column;
+  padding:34px 30px 26px;position:relative;z-index:2;background:#000;
+  opacity:0;transition:opacity 1s var(--sv-ease) .2s;
+}
+.svfa-film:not([data-phase="intro"]) .svfa-rail{opacity:1;}
+.svfa-back{
+  align-self:flex-start;font-size:13px;color:var(--sv-mut);text-decoration:none;
+  padding:8px 14px;border-radius:99px;border:1px solid rgba(255,255,255,.12);
+  transition:color .3s,border-color .3s;
+}
+.svfa-back:hover{color:#fff;border-color:rgba(255,255,255,.3);}
+.svfa-question{
+  margin:26px 0 30px;font-weight:800;line-height:1.14;letter-spacing:-.02em;
+  font-size:clamp(22px,2vw,34px);
+}
+
+/* editorial timeline: dots sit ON the thread */
+.svfa-steps-wrap{position:relative;flex:1;min-height:0;}
+.svfa-thread{
+  position:absolute;left:5px;top:10px;bottom:10px;width:2px;
+  background:rgba(255,255,255,.09);border-radius:99px;overflow:hidden;
+}
+.svfa-thread i{
+  display:block;width:100%;height:0;border-radius:99px;
+  background:linear-gradient(180deg,var(--sv-red),rgba(226,55,68,.35));
+  box-shadow:0 0 12px rgba(226,55,68,.5);
+}
+.svfa-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;}
+.svfa-step button{
+  display:flex;align-items:flex-start;gap:16px;width:100%;text-align:left;
+  background:none;border:0;padding:12px 8px 12px 0;cursor:pointer;border-radius:10px;
+  transition:background .3s;
+}
+.svfa-step button:hover{background:rgba(255,255,255,.04);}
+.svfa-dot{
+  flex:none;width:12px;height:12px;border-radius:50%;margin-top:5px;
+  background:#000;border:2px solid rgba(255,255,255,.18);
+  transform:translateX(0);
+  transition:border-color .4s,background .4s,box-shadow .4s;
+}
+.svfa-steptext{min-width:0;}
+.svfa-steptext em{
+  display:block;font-style:normal;font-size:10px;letter-spacing:.2em;
+  color:var(--sv-faint);margin-bottom:2px;transition:color .4s;
+}
+.svfa-steptext b{
+  display:block;font-size:15px;font-weight:700;line-height:1.3;letter-spacing:-.01em;
+  color:var(--sv-faint);transition:color .5s;
+}
+.svfa-steptext p{
+  margin:0;font-size:12.5px;line-height:1.55;color:var(--sv-mut);
+  max-height:0;opacity:0;overflow:hidden;
+  transition:max-height .6s var(--sv-ease),opacity .5s,margin .5s;
+}
+.svfa-step.active .svfa-dot{
+  border-color:var(--sv-red);background:var(--sv-red);
+  box-shadow:0 0 14px rgba(226,55,68,.8);
+}
+.svfa-step.active .svfa-steptext b{color:#fff;}
+.svfa-step.active .svfa-steptext em{color:rgba(226,55,68,.9);}
+.svfa-step.active .svfa-steptext p{max-height:96px;opacity:1;margin-top:6px;}
+.svfa-step.done .svfa-dot{border-color:rgba(226,55,68,.45);background:rgba(226,55,68,.45);}
+.svfa-step.done .svfa-steptext b{color:rgba(255,255,255,.55);}
+
+.svfa-controls{display:flex;gap:10px;margin-top:18px;}
+.svfa-controls button{
+  font-size:12px;letter-spacing:.08em;color:var(--sv-mut);background:none;
+  border:1px solid rgba(255,255,255,.14);border-radius:99px;padding:8px 16px;
+  cursor:pointer;transition:color .3s,border-color .3s;
+}
+.svfa-controls button:hover{color:#fff;border-color:rgba(255,255,255,.35);}
+
+/* the divider — thin, faint red breath */
+.svfa-divider{
+  flex:none;width:1px;position:relative;z-index:2;
+  background:linear-gradient(180deg,transparent,rgba(255,255,255,.14) 20%,rgba(255,255,255,.14) 80%,transparent);
+}
+.svfa-divider::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,transparent,rgba(226,55,68,.5),transparent);
+  filter:blur(3px);animation:svfaBreathe 6s ease-in-out infinite;
+}
+@keyframes svfaBreathe{0%,100%{opacity:.2}50%{opacity:.5}}
+
+/* ============================================================
+   STAGE — composed acts, cinematic dissolves
+   ============================================================ */
+.svfa-stage{
   flex:1;position:relative;overflow:hidden;
   background:
-    radial-gradient(1000px 600px at 68% 30%,rgba(226,55,68,.05),transparent 60%),
-    radial-gradient(1200px 800px at 30% 90%,rgba(255,255,255,.02),transparent 60%),
+    radial-gradient(1000px 620px at 62% 34%,rgba(226,55,68,.05),transparent 60%),
     #050505;
 }
-/* soft vignette for dimensionality */
-.svf-stage::after{
+.svfa-stage::after{
   content:"";position:absolute;inset:0;pointer-events:none;
   box-shadow:inset 0 0 180px rgba(0,0,0,.85);
 }
 
-/* -------- source streams (act 1) -------- */
-.svf-stream{
-  position:absolute;top:6%;z-index:3;
-  font-size:12px;letter-spacing:.18em;text-transform:uppercase;
-  color:var(--svf-mut);
-  opacity:0;transition:opacity .8s var(--svf-ease);
+/* every act is a centred, composed layer */
+.svfa-act{
+  position:absolute;inset:0;z-index:3;
+  display:flex;align-items:center;justify-content:center;gap:28px;
+  padding:6vh 5% 8vh;
+  opacity:0;visibility:hidden;pointer-events:none;
+  transform:translateY(26px) scale(.985);filter:blur(6px);
+  transition:opacity .8s var(--sv-ease),transform .9s var(--sv-ease),filter .9s var(--sv-ease),visibility .9s;
 }
-.svf-stream b{font-weight:600;}
-.svf-stream::after{
-  content:"";position:absolute;top:calc(100% + 8px);left:0;right:0;height:1px;
-  background:linear-gradient(90deg,rgba(226,55,68,.7),transparent);
+/* which act is on screen (dissolve in) */
+[data-phase="search"] .svfa-act-search,
+[data-phase="pool"] .svfa-act-pool,
+[data-phase="filter"] .svfa-act-filter,
+[data-phase="curation"] .svfa-act-curation,
+[data-phase="shortlist"] .svfa-act-shortlist,
+[data-phase="ending"] .svfa-act-shortlist{
+  opacity:1;visibility:visible;
+  transform:translateY(0) scale(1);filter:blur(0);
 }
-.svf-stream-left{left:6%;}
-.svf-stream-right{right:6%;text-align:right;}
-.svf-stream-right::after{background:linear-gradient(270deg,rgba(255,255,255,.5),transparent);}
-[data-phase="sources"] .svf-stream{opacity:1;}
-[data-phase="compress"] .svf-stream{opacity:.3;}
 
-/* -------- the lead particles (persistent objects) -------- */
-.svf-particles{position:absolute;inset:0;z-index:2;}
-.svf-p{
-  position:absolute;width:7px;height:7px;border-radius:2px;
-  background:rgba(255,255,255,.75);
-  box-shadow:0 0 8px rgba(255,255,255,.25);
-  transition:left 1.5s var(--svf-ease),top 1.5s var(--svf-ease),opacity 1.2s ease,transform 1.5s var(--svf-ease);
+/* -------- particles: the continuity thread -------- */
+.svfa-particles{position:absolute;inset:0;z-index:1;}
+.svfa-p{
+  position:absolute;width:6px;height:6px;border-radius:2px;
+  background:rgba(255,255,255,.7);box-shadow:0 0 8px rgba(255,255,255,.2);
+  transition:left 1.6s var(--sv-ease),top 1.6s var(--sv-ease),opacity 1.2s ease,transform 1.6s var(--sv-ease);
   will-change:left,top,opacity,transform;
 }
-.svf-p-survivor{
-  background:var(--svf-red);
-  box-shadow:0 0 10px rgba(226,55,68,.7),0 0 26px rgba(226,55,68,.3);
+.svfa-p-survivor{
+  background:var(--sv-red);
+  box-shadow:0 0 10px rgba(226,55,68,.7),0 0 24px rgba(226,55,68,.3);
 }
 
-/* -------- the pool (act 2) -------- */
-.svf-pool{
-  position:absolute;left:50%;top:56%;transform:translate(-50%,-50%) scale(.9);
-  z-index:1;padding:26px 44px;border-radius:20px;
-  background:rgba(226,55,68,.05);
-  box-shadow:inset 0 0 0 1px rgba(226,55,68,.35),0 0 60px rgba(226,55,68,.1);
-  opacity:0;transition:opacity .9s var(--svf-ease),transform .9s var(--svf-ease);
+/* ============================================================
+   THE COUNTER — 46,000+ climbs, collapses to 497, docks
+   ============================================================ */
+.svfa-counter{
+  position:absolute;z-index:6;display:flex;flex-direction:column;align-items:center;gap:8px;
+  left:50%;top:26%;transform:translate(-50%,-50%);
+  transition:left 1s var(--sv-ease),top 1s var(--sv-ease),transform 1s var(--sv-ease),opacity .7s ease;
+  pointer-events:none;
 }
-.svf-pool span{
-  font-size:15px;font-weight:700;letter-spacing:-.01em;color:#fff;
-}
-[data-phase="compress"] .svf-pool{opacity:1;transform:translate(-50%,-50%) scale(1);}
-[data-phase="cleanup"] .svf-pool{opacity:.25;transform:translate(-50%,-50%) scale(.85) translateX(-32vw);}
-[data-phase="rating"] .svf-pool,
-[data-phase="ranking"] .svf-pool,
-[data-phase="ending"] .svf-pool{opacity:0;}
-
-/* -------- THE COUNTER: 40,000+ → 497 -------- */
-.svf-counter{
-  position:absolute;z-index:4;display:flex;flex-direction:column;align-items:center;gap:8px;
-  left:50%;top:30%;transform:translate(-50%,-50%);
-  transition:left 1s var(--svf-ease),top 1s var(--svf-ease),transform 1s var(--svf-ease),opacity .7s ease;
-}
-.svf-counter b{
-  font-weight:800;line-height:1;letter-spacing:-.03em;
-  font-variant-numeric:tabular-nums;color:#fff;
-  font-size:clamp(56px,7vw,110px);
+.svfa-counter b{
+  font-weight:800;line-height:1;letter-spacing:-.03em;color:#fff;
+  font-variant-numeric:tabular-nums;
+  font-size:clamp(54px,6.5vw,104px);
   text-shadow:0 0 60px rgba(255,255,255,.12);
-  transition:color .5s,font-size 1s var(--svf-ease),text-shadow .5s;
+  transition:color .5s,font-size 1s var(--sv-ease),text-shadow .5s;
 }
-.svf-counter span{
-  font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--svf-mut);
+.svfa-counter span{
+  font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--sv-mut);
   transition:color .5s;
 }
-.svf-counter-hidden{opacity:0;}
-.svf-counter-grow,.svf-counter-peak{opacity:1;}
-.svf-counter-collapse{opacity:1;}
-.svf-counter-collapse b{color:#fff;}
-.svf-counter-landed{opacity:1;}
-.svf-counter-landed b{
-  color:var(--svf-red);
-  text-shadow:0 0 70px rgba(226,55,68,.55);
-  animation:svfLand .5s var(--svf-snap) both;
+.svfa-counter-hidden{opacity:0;}
+.svfa-counter-grow,.svfa-counter-peak,.svfa-counter-collapse{opacity:1;}
+/* during the collapse the number takes CENTRE stage — it IS the scene */
+.svfa-counter-collapse{top:44%;}
+.svfa-counter-collapse b{font-size:clamp(72px,9vw,150px);}
+.svfa-counter-landed{opacity:1;top:44%;}
+.svfa-counter-landed b{
+  font-size:clamp(72px,9vw,150px);
+  color:var(--sv-red);text-shadow:0 0 80px rgba(226,55,68,.55);
+  animation:svfaLand .5s var(--sv-snap) both;
 }
-@keyframes svfLand{55%{transform:scale(1.06)}100%{transform:scale(1)}}
-.svf-counter-landed span{color:rgba(226,55,68,.85);}
-/* after the reveal, the number docks top-right and stays — the
-   film's persistent artifact */
-.svf-counter-docked{
+@keyframes svfaLand{55%{transform:scale(1.06)}100%{transform:scale(1)}}
+.svfa-counter-landed span{color:rgba(226,55,68,.85);}
+/* after the reveal it docks top-right — the film's persistent artifact */
+.svfa-counter-docked{
   left:calc(100% - 30px);top:34px;transform:translate(-100%,0);
   flex-direction:row;align-items:baseline;gap:10px;opacity:1;
 }
-.svf-counter-docked b{font-size:26px;color:var(--svf-red);text-shadow:0 0 24px rgba(226,55,68,.4);}
-.svf-counter-docked span{font-size:10px;letter-spacing:.2em;color:rgba(226,55,68,.7);}
+.svfa-counter-docked b{font-size:24px;color:var(--sv-red);text-shadow:0 0 24px rgba(226,55,68,.4);}
+.svfa-counter-docked span{font-size:10px;letter-spacing:.2em;color:rgba(226,55,68,.7);}
 
-/* -------- the human gate (act 3) -------- */
-.svf-gate{
-  position:absolute;left:52%;top:32%;height:38%;width:2px;z-index:3;
-  background:linear-gradient(180deg,transparent,rgba(255,255,255,.4),transparent);
-  opacity:0;transition:opacity .8s var(--svf-ease);
+/* ============================================================
+   ACT: SEARCH — the two ways, performed  (6.0s–13.5s)
+   ============================================================ */
+.svfa-act-search{align-items:flex-end;padding-bottom:12vh;}
+.svfa-search-card{
+  width:min(420px,44%);padding:26px 28px;border-radius:18px;
+  background:rgba(255,255,255,.035);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.09),0 24px 70px rgba(0,0,0,.5);
 }
-.svf-gate span{
-  position:absolute;top:-34px;left:50%;transform:translateX(-50%);
-  white-space:nowrap;font-size:11px;letter-spacing:.2em;text-transform:uppercase;
-  color:var(--svf-mut);
+.svfa-search-card em{
+  display:block;font-style:normal;font-size:10px;letter-spacing:.22em;
+  text-transform:uppercase;color:rgba(226,55,68,.85);margin-bottom:10px;
 }
-.svf-gate::after{
-  content:"";position:absolute;inset:-1px -5px;
-  background:linear-gradient(180deg,transparent,rgba(226,55,68,.5),transparent);
-  filter:blur(4px);
+.svfa-search-card h3{margin:0 0 16px;font-size:22px;font-weight:800;letter-spacing:-.01em;}
+[data-phase="search"] .svfa-general{animation:svfaRise .8s var(--sv-ease) .5s both;}
+[data-phase="search"] .svfa-bulk{animation:svfaRise .8s var(--sv-ease) 2.9s both;}
+@keyframes svfaRise{
+  from{opacity:0;transform:translateY(30px);filter:blur(6px)}
+  to{opacity:1;transform:translateY(0);filter:blur(0)}
 }
-[data-phase="cleanup"] .svf-gate{opacity:1;}
-[data-phase="cleanup"] .svf-gate::after{animation:svfScanY 2.4s ease-in-out infinite;}
-@keyframes svfScanY{0%,100%{opacity:.3}50%{opacity:.9}}
-
-/* -------- the cards (acts 3–5): survivors become identifiable -------- */
-.svf-cards{position:absolute;inset:0;z-index:4;pointer-events:none;}
-.svf-card{
-  position:absolute;width:230px;padding:14px 18px;border-radius:14px;
-  background:rgba(255,255,255,.045);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.1),0 14px 40px rgba(0,0,0,.5);
-  opacity:0;
-  transition:left 1s var(--svf-ease),top 1s var(--svf-ease),width 1s var(--svf-ease),opacity .7s ease,transform 1s var(--svf-ease);
+.svfa-chips{display:flex;flex-wrap:wrap;gap:10px;}
+.svfa-chips span{
+  font-size:12.5px;font-weight:600;color:rgba(255,255,255,.85);
+  padding:8px 14px;border-radius:99px;
+  background:rgba(226,55,68,.07);
+  box-shadow:inset 0 0 0 1px rgba(226,55,68,.3);
 }
-.svf-card>b{display:block;font-size:14px;font-weight:700;letter-spacing:-.01em;color:#fff;}
-.svf-review{display:none;}
-
-/* ACT 3 — cleanup: cards march through the gate; two are killed */
-[data-phase="cleanup"] .svf-hero{left:12%;top:38%;opacity:1;animation:svfPass 3s var(--svf-ease) .4s both;}
-[data-phase="cleanup"] .svf-c2{left:12%;top:47%;opacity:1;animation:svfPass 3s var(--svf-ease) 1.2s both;}
-[data-phase="cleanup"] .svf-c3{left:12%;top:56%;opacity:1;animation:svfPass 3s var(--svf-ease) 2s both;}
-@keyframes svfPass{
-  0%{transform:translateX(-8vw);opacity:0}
-  12%{opacity:1}
-  100%{transform:translateX(30vw);opacity:1}
+[data-phase="search"] .svfa-chips span{opacity:0;animation:svfaChip .4s var(--sv-snap) forwards;}
+@keyframes svfaChip{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+[data-phase="search"] .svfa-chips span:nth-child(1){animation-delay:1.2s;}
+[data-phase="search"] .svfa-chips span:nth-child(2){animation-delay:1.35s;}
+[data-phase="search"] .svfa-chips span:nth-child(3){animation-delay:1.5s;}
+[data-phase="search"] .svfa-chips span:nth-child(4){animation-delay:1.65s;}
+[data-phase="search"] .svfa-chips span:nth-child(5){animation-delay:1.8s;}
+[data-phase="search"] .svfa-chips span:nth-child(6){animation-delay:1.95s;}
+.svfa-pipeline{display:flex;align-items:center;gap:12px;}
+.svfa-pipeline span,.svfa-pipeline strong{
+  font-size:12.5px;font-weight:600;padding:9px 14px;border-radius:10px;white-space:nowrap;
+  background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);
 }
-[data-phase="cleanup"] .svf-r1{left:12%;top:65%;animation:svfReject 3s var(--svf-ease) 2.8s both;}
-[data-phase="cleanup"] .svf-r2{left:12%;top:74%;animation:svfReject 3s var(--svf-ease) 3.9s both;}
-@keyframes svfReject{
-  0%{transform:translateX(-8vw);opacity:0}
-  10%{opacity:1}
-  48%{transform:translateX(17vw)}
-  54%{transform:translateX(17.4vw);box-shadow:inset 0 0 0 2px rgba(226,55,68,.9),0 0 30px rgba(226,55,68,.4)}
-  58%{transform:translateX(16.8vw)}
-  62%{transform:translateX(17.2vw);box-shadow:inset 0 0 0 1px rgba(226,55,68,.6)}
-  100%{transform:translateX(17vw) translateY(34vh) rotate(5deg);opacity:0}
+.svfa-pipeline strong{
+  background:rgba(226,55,68,.1);box-shadow:inset 0 0 0 1px rgba(226,55,68,.5);
 }
-
-/* ACT 4 — rating: the hero card becomes the review panel */
-[data-phase="rating"] .svf-hero{
-  left:24%;top:14%;width:min(520px,52%);opacity:1;
-  padding:26px 30px;
-  box-shadow:inset 0 0 0 1px rgba(226,55,68,.4),0 30px 90px rgba(226,55,68,.14);
+.svfa-pipeline i{
+  flex:1;height:2px;border-radius:99px;position:relative;
+  background:linear-gradient(90deg,rgba(226,55,68,.8),rgba(226,55,68,.3));
+  box-shadow:0 0 12px rgba(226,55,68,.45);
+  transform:scaleX(0);transform-origin:left center;
 }
-[data-phase="rating"] .svf-hero>b{font-size:22px;}
-[data-phase="rating"] .svf-c2{left:8%;top:80%;opacity:.45;transform:scale(.8);}
-[data-phase="rating"] .svf-c3{left:30%;top:80%;opacity:.45;transform:scale(.8);}
-[data-phase="rating"] .svf-reject{opacity:0;}
-[data-phase="rating"] .svf-review{display:block;opacity:0;animation:svfIn .7s var(--svf-ease) .9s forwards;transform:translateY(14px);}
-.svf-review p{margin:8px 0 18px;font-size:14px;line-height:1.5;color:var(--svf-mut);}
-.svf-review label{
-  display:block;font-size:10px;letter-spacing:.22em;text-transform:uppercase;
-  color:rgba(255,255,255,.4);margin:0 0 8px;
-}
-.svf-scale{
-  position:relative;display:flex;justify-content:space-between;align-items:center;
-  height:34px;padding:0 12px;margin-bottom:18px;border-radius:10px;
-  background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);
-  overflow:hidden;
-}
-.svf-scale span{position:relative;z-index:1;font-size:13px;font-weight:700;color:rgba(255,255,255,.6);}
-.svf-scale i{
-  position:absolute;left:0;top:0;bottom:0;width:100%;
-  background:linear-gradient(90deg,rgba(226,55,68,.7),rgba(226,55,68,.45));
-  transform:scaleX(.06);transform-origin:left center;
-}
-[data-phase="rating"] .svf-scale i{animation:svfDrag 1.2s var(--svf-snap) 1.8s forwards;}
-@keyframes svfDrag{0%{transform:scaleX(.06)}80%{transform:scaleX(1.03)}100%{transform:scaleX(1)}}
-[data-phase="rating"] .svf-scale span{animation:svfNum .3s ease-out forwards;}
-[data-phase="rating"] .svf-scale span:nth-of-type(1){animation-delay:1.9s;}
-[data-phase="rating"] .svf-scale span:nth-of-type(2){animation-delay:2.12s;}
-[data-phase="rating"] .svf-scale span:nth-of-type(3){animation-delay:2.34s;}
-[data-phase="rating"] .svf-scale span:nth-of-type(4){animation-delay:2.56s;}
-[data-phase="rating"] .svf-scale span:nth-of-type(5){animation-delay:2.8s;}
-@keyframes svfNum{to{color:#fff;text-shadow:0 0 12px rgba(255,255,255,.4)}}
-.svf-reason{
-  position:relative;font-size:14px;line-height:1.5;color:#fff;
-  padding:14px 16px;border-radius:10px;
-  background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);
-}
-[data-phase="rating"] .svf-reason{
-  clip-path:inset(0 100% 0 0);
-  animation:svfType 1.5s steps(30,end) 3.4s forwards;
-}
-@keyframes svfType{to{clip-path:inset(0 0 0 0)}}
-[data-phase="rating"] .svf-reason::after{
-  content:"";position:absolute;top:22%;bottom:22%;left:0;width:2px;
-  background:var(--svf-red);box-shadow:0 0 10px rgba(226,55,68,.8);
-  animation:svfCaret 1.5s steps(30,end) 3.4s both;
-}
-@keyframes svfCaret{0%{left:0;opacity:1}95%{opacity:1}100%{left:100%;opacity:0}}
-
-/* ACT 5 — ranking: cards hand off to the hierarchy */
-[data-phase="ranking"] .svf-card,[data-phase="ending"] .svf-card{opacity:0;transform:translateY(-30px);}
-.svf-tiers{
-  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  width:min(680px,82%);z-index:5;
-  display:flex;flex-direction:column;gap:14px;
-  opacity:0;pointer-events:none;
-}
-[data-phase="ranking"] .svf-tiers,[data-phase="ending"] .svf-tiers{opacity:1;}
-.svf-tier{
-  padding:20px 24px;border-radius:16px;text-align:left;
-  background:rgba(255,255,255,.04);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.09);
-}
-.svf-tier b{display:block;font-size:17px;font-weight:800;letter-spacing:-.01em;color:#fff;}
-.svf-tier span{display:block;margin-top:4px;font-size:13px;color:var(--svf-mut);}
-.svf-tier-quiet b{color:rgba(255,255,255,.6);}
-.svf-tier-chip{
-  display:inline-block;margin:12px 8px 0 0;font-style:normal;
-  font-size:12px;font-weight:700;color:#fff;
-  padding:6px 13px;border-radius:99px;
-  background:rgba(255,255,255,.06);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);
-}
-/* build bottom-up, then coronation */
-[data-phase="ranking"] .svf-tier-quiet{animation:svfTierIn .8s var(--svf-ease) .3s both;}
-[data-phase="ranking"] .svf-tier:not(.svf-tier-high):not(.svf-tier-quiet){animation:svfTierIn .8s var(--svf-ease) .8s both;}
-[data-phase="ranking"] .svf-tier-high{animation:svfTierIn .8s var(--svf-ease) 1.3s both,svfCrown .9s var(--svf-snap) 2.6s forwards;}
-@keyframes svfTierIn{from{opacity:0;transform:translateY(36px)}to{opacity:1;transform:translateY(0)}}
-@keyframes svfCrown{
-  40%{box-shadow:inset 0 0 0 2px rgba(226,55,68,.9),0 26px 70px rgba(226,55,68,.32)}
-  100%{transform:translateY(-4px);box-shadow:inset 0 0 0 1px rgba(226,55,68,.6),0 22px 60px rgba(226,55,68,.2)}
-}
-[data-phase="ranking"] .svf-tier .svf-tier-chip{opacity:0;animation:svfStamp .5s var(--svf-snap) both;}
-[data-phase="ranking"] .svf-tier:not(.svf-tier-high) .svf-tier-chip:nth-of-type(1){animation-delay:1.9s;}
-[data-phase="ranking"] .svf-tier:not(.svf-tier-high) .svf-tier-chip:nth-of-type(2){animation-delay:2.1s;}
-[data-phase="ranking"] .svf-crowned{animation-delay:3.2s!important;}
-.svf-crowned{
-  background:rgba(226,55,68,.16)!important;
-  box-shadow:inset 0 0 0 1px rgba(226,55,68,.6),0 0 20px rgba(226,55,68,.2)!important;
-}
-@keyframes svfStamp{
+[data-phase="search"] .svfa-pipeline i{animation:svfaDrawX .7s var(--sv-ease) 3.8s forwards;}
+@keyframes svfaDrawX{to{transform:scaleX(1)}}
+[data-phase="search"] .svfa-pipeline strong{opacity:0;animation:svfaStamp .5s var(--sv-snap) 4.5s both;}
+@keyframes svfaStamp{
   0%{opacity:0;transform:scale(.7)}
   55%{opacity:1;transform:scale(1.1);filter:brightness(1.5)}
   100%{opacity:1;transform:scale(1);filter:brightness(1)}
 }
-/* shimmer across the crowned tier */
-.svf-tier-high{position:relative;overflow:hidden;}
-[data-phase="ranking"] .svf-tier-high::after{
+.svfa-human{display:flex;align-items:center;gap:10px;margin-top:18px;}
+.svfa-human i{
+  width:8px;height:8px;border-radius:50%;flex:none;
+  background:#fff;box-shadow:0 0 12px rgba(255,255,255,.6);
+}
+.svfa-human span{font-size:13px;font-weight:600;color:rgba(255,255,255,.75);}
+[data-phase="search"] .svfa-human{opacity:0;animation:svfaRise .6s var(--sv-ease) 5.4s both;}
+
+/* ============================================================
+   ACT: POOL — convergence  (13.5s–20s)
+   ============================================================ */
+.svfa-act-pool{gap:44px;padding-top:14vh;}
+.svfa-source{
+  font-size:14px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;
+  padding:16px 24px;border-radius:14px;
+  background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);
+}
+.svfa-source-net{box-shadow:inset 0 0 0 1px rgba(226,55,68,.5);background:rgba(226,55,68,.07);}
+[data-phase="pool"] .svfa-source-net{animation:svfaFromLeft 1s var(--sv-ease) .4s both;}
+[data-phase="pool"] .svfa-source-hum{animation:svfaFromRight 1s var(--sv-ease) .4s both;}
+@keyframes svfaFromLeft{from{opacity:0;transform:translateX(-70px)}to{opacity:1;transform:translateX(0)}}
+@keyframes svfaFromRight{from{opacity:0;transform:translateX(70px)}to{opacity:1;transform:translateX(0)}}
+.svfa-pool-core{
+  position:relative;font-size:clamp(18px,1.8vw,26px);font-weight:800;letter-spacing:-.01em;
+  padding:30px 46px;border-radius:20px;white-space:nowrap;
+  background:rgba(226,55,68,.06);
+  box-shadow:inset 0 0 0 1px rgba(226,55,68,.45),0 0 70px rgba(226,55,68,.12);
+}
+[data-phase="pool"] .svfa-pool-core{animation:svfaIgnite .8s var(--sv-snap) 1.2s both;}
+@keyframes svfaIgnite{
+  0%{opacity:0;transform:scale(.92)}
+  55%{opacity:1;transform:scale(1.03);filter:brightness(1.35)}
+  100%{opacity:1;transform:scale(1);filter:brightness(1)}
+}
+[data-phase="pool"] .svfa-pool-core::after{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  box-shadow:0 0 0 2px rgba(226,55,68,.7);opacity:0;
+  animation:svfaShock 1s ease-out 1.9s both;
+}
+@keyframes svfaShock{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(1.16)}}
+
+/* ============================================================
+   ACT: FILTER — the number IS the scene  (20s–26.5s)
+   ============================================================ */
+.svfa-act-filter{align-items:flex-end;padding-bottom:16vh;}
+.svfa-filter-bar{
+  position:relative;width:min(520px,70%);height:2px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);
+}
+.svfa-filter-bar span{
+  position:absolute;top:14px;left:50%;transform:translateX(-50%);
+  font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--sv-mut);
+  white-space:nowrap;
+}
+.svfa-filter-bar::after{
+  content:"";position:absolute;inset:-2px 0;
+  background:linear-gradient(90deg,transparent,rgba(226,55,68,.6),transparent);
+  filter:blur(4px);
+}
+[data-phase="filter"] .svfa-filter-bar::after{animation:svfaBreathe 2s ease-in-out infinite;}
+
+/* ============================================================
+   ACT: CURATION — the human gate  (26.5s–33.5s)
+   ============================================================ */
+.svfa-act-curation{gap:22px;align-items:stretch;padding-top:14vh;padding-bottom:14vh;}
+.svfa-col{
+  flex:1;max-width:300px;display:flex;flex-direction:column;gap:12px;
+  padding:22px;border-radius:18px;
+  background:rgba(255,255,255,.03);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);
+}
+.svfa-col b{
+  font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--sv-mut);margin-bottom:4px;font-weight:600;
+}
+.svfa-col span{
+  font-size:13.5px;font-weight:600;color:rgba(255,255,255,.85);
+  padding:12px 14px;border-radius:10px;
+  background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px rgba(255,255,255,.09);
+}
+[data-phase="curation"] .svfa-col:nth-child(1){animation:svfaRise .7s var(--sv-ease) .3s both;}
+[data-phase="curation"] .svfa-col-mid{animation:svfaRise .7s var(--sv-ease) .7s both;}
+[data-phase="curation"] .svfa-col-out{animation:svfaRise .7s var(--sv-ease) 3.6s both;}
+/* the checklist runs */
+@keyframes svfaCheck{
+  45%{filter:brightness(1.6);box-shadow:inset 0 0 0 1px rgba(255,255,255,.4),0 0 18px rgba(255,255,255,.12)}
+}
+@keyframes svfaCheckRed{
+  45%{filter:brightness(1.5);box-shadow:inset 0 0 0 1px rgba(226,55,68,.8),0 0 22px rgba(226,55,68,.3)}
+  100%{box-shadow:inset 0 0 0 1px rgba(226,55,68,.4)}
+}
+[data-phase="curation"] .svfa-col-mid span:nth-of-type(1){animation:svfaCheck .55s ease-out 1.3s both;}
+[data-phase="curation"] .svfa-col-mid span:nth-of-type(2){animation:svfaCheck .55s ease-out 1.6s both;}
+[data-phase="curation"] .svfa-col-mid .svfa-mid-red{animation:svfaCheckRed .6s ease-out 1.9s both;}
+/* the kills */
+@keyframes svfaStrike{
+  0%{opacity:1;transform:scale(1)}
+  30%{box-shadow:inset 0 0 0 2px rgba(226,55,68,.9),0 0 24px rgba(226,55,68,.4)}
+  100%{opacity:.35;transform:scale(.97);box-shadow:inset 0 0 0 1px rgba(226,55,68,.45)}
+}
+@keyframes svfaShake{25%{translate:-3px 0}50%{translate:3px 0}75%{translate:-2px 0}}
+[data-phase="curation"] .svfa-k1{animation:svfaStrike .55s var(--sv-snap) 2.3s forwards,svfaShake .4s ease-in-out 2.3s;}
+[data-phase="curation"] .svfa-k2{animation:svfaStrike .55s var(--sv-snap) 2.9s forwards,svfaShake .4s ease-in-out 2.9s;}
+/* the survivor's glow */
+@keyframes svfaSurvive{
+  50%{filter:brightness(1.5)}
+  100%{box-shadow:inset 0 0 0 1px rgba(255,255,255,.35),0 0 18px rgba(255,255,255,.08);filter:brightness(1.15)}
+}
+[data-phase="curation"] .svfa-hero-row{animation:svfaSurvive .7s ease-out 3.4s forwards;}
+/* the stamp forward */
+.svfa-approved{position:relative;}
+[data-phase="curation"] .svfa-approved{opacity:0;animation:svfaStamp .55s var(--sv-snap) 4.2s both;}
+[data-phase="curation"] .svfa-approved::after{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  box-shadow:0 0 0 2px rgba(226,55,68,.7);opacity:0;
+  animation:svfaShock .8s ease-out 4.6s both;
+}
+
+/* ============================================================
+   ACT: SHORTLIST — rating, then ranking  (33.5s–47.5s)
+   Sub-sequence within one act: review card 0–7s, tiers 7s+
+   ============================================================ */
+.svfa-act-shortlist{position:absolute;}
+.svfa-review-card{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(560px,74%);padding:28px 32px;border-radius:20px;
+  background:rgba(255,255,255,.035);
+  box-shadow:inset 0 0 0 1px rgba(226,55,68,.35),0 30px 90px rgba(226,55,68,.1);
+}
+[data-phase="shortlist"] .svfa-review-card{
+  animation:svfaRise .8s var(--sv-ease) .3s both,svfaHandOff .8s var(--sv-ease) 6.8s forwards;
+}
+@keyframes svfaHandOff{to{opacity:0;transform:translate(-50%,-58%) scale(.96);visibility:hidden}}
+[data-phase="ending"] .svfa-review-card{opacity:0;visibility:hidden;}
+.svfa-review-top span{
+  font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:rgba(226,55,68,.85);
+}
+.svfa-review-card h3{margin:12px 0 4px;font-size:24px;font-weight:800;letter-spacing:-.01em;}
+.svfa-review-card>p{margin:0 0 20px;font-size:14px;color:var(--sv-mut);}
+.svfa-review-card label{
+  display:block;font-size:10px;letter-spacing:.22em;text-transform:uppercase;
+  color:rgba(255,255,255,.4);margin-bottom:10px;
+}
+/* THE SLIDER — a real one: track + fill + knob that drags 1→5 */
+.svfa-scale{
+  position:relative;display:flex;justify-content:space-between;
+  padding:0 6px 22px;margin-bottom:20px;
+}
+.svfa-scale span{font-size:13px;font-weight:700;color:rgba(255,255,255,.45);position:relative;z-index:2;}
+.svfa-scale::before{ /* track */
+  content:"";position:absolute;left:0;right:0;bottom:8px;height:3px;border-radius:99px;
+  background:rgba(255,255,255,.1);
+}
+.svfa-fill{ /* glowing fill behind the knob */
+  position:absolute;left:0;bottom:8px;height:3px;border-radius:99px;
+  background:linear-gradient(90deg,var(--sv-red),rgba(226,55,68,.6));
+  box-shadow:0 0 12px rgba(226,55,68,.6);
+  width:100%;transform:scaleX(.02);transform-origin:left center;
+}
+.svfa-knob{ /* the knob */
+  position:absolute;left:2%;bottom:2px;width:15px;height:15px;border-radius:50%;
+  background:var(--sv-red);border:2px solid #fff;
+  box-shadow:0 0 16px rgba(226,55,68,.8),0 2px 8px rgba(0,0,0,.5);
+}
+[data-phase="shortlist"] .svfa-fill{animation:svfaFillDrag 1.3s var(--sv-snap) 1.6s forwards;}
+@keyframes svfaFillDrag{0%{transform:scaleX(.02)}80%{transform:scaleX(1.0)}100%{transform:scaleX(.985)}}
+[data-phase="shortlist"] .svfa-knob{animation:svfaKnobDrag 1.3s var(--sv-snap) 1.6s forwards;}
+@keyframes svfaKnobDrag{0%{left:1%}80%{left:calc(99% - 15px)}100%{left:calc(98% - 15px)}}
+[data-phase="shortlist"] .svfa-scale span{animation:svfaNumOn .3s ease-out forwards;}
+[data-phase="shortlist"] .svfa-scale span:nth-of-type(1){animation-delay:1.7s;}
+[data-phase="shortlist"] .svfa-scale span:nth-of-type(2){animation-delay:1.95s;}
+[data-phase="shortlist"] .svfa-scale span:nth-of-type(3){animation-delay:2.2s;}
+[data-phase="shortlist"] .svfa-scale span:nth-of-type(4){animation-delay:2.45s;}
+[data-phase="shortlist"] .svfa-scale span:nth-of-type(5){animation-delay:2.75s;}
+@keyframes svfaNumOn{to{color:#fff;text-shadow:0 0 12px rgba(255,255,255,.45)}}
+/* the reason types itself */
+.svfa-reason{
+  position:relative;font-size:14px;line-height:1.5;color:#fff;
+  padding:14px 16px;border-radius:10px;
+  background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);
+}
+[data-phase="shortlist"] .svfa-reason{
+  clip-path:inset(0 100% 0 0);
+  animation:svfaType 1.5s steps(30,end) 3.3s forwards;
+}
+@keyframes svfaType{to{clip-path:inset(0 0 0 0)}}
+[data-phase="shortlist"] .svfa-reason::after{
+  content:"";position:absolute;top:22%;bottom:22%;left:0;width:2px;
+  background:var(--sv-red);box-shadow:0 0 10px rgba(226,55,68,.8);
+  animation:svfaCaret 1.5s steps(30,end) 3.3s both;
+}
+@keyframes svfaCaret{0%{left:0;opacity:1}95%{opacity:1}100%{left:100%;opacity:0}}
+
+/* the tiers rise as the review card hands off */
+.svfa-tiers{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(640px,80%);display:flex;flex-direction:column;gap:14px;
+}
+.svfa-tier{
+  padding:20px 24px;border-radius:16px;
+  background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px rgba(255,255,255,.09);
+  opacity:0;
+}
+.svfa-tier b{display:block;font-size:17px;font-weight:800;letter-spacing:-.01em;}
+.svfa-tier span{display:block;margin-top:4px;font-size:13px;color:var(--sv-mut);}
+.svfa-tier-quiet b{color:rgba(255,255,255,.6);}
+.svfa-tchip{
+  display:inline-block;margin:12px 8px 0 0;font-style:normal;
+  font-size:12px;font-weight:700;color:#fff;padding:6px 13px;border-radius:99px;
+  background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);
+}
+@keyframes svfaTierIn{from{opacity:0;transform:translateY(36px)}to{opacity:1;transform:translateY(0)}}
+[data-phase="shortlist"] .svfa-tier-quiet{animation:svfaTierIn .8s var(--sv-ease) 7.4s both;}
+[data-phase="shortlist"] .svfa-tier:not(.svfa-tier-high):not(.svfa-tier-quiet){animation:svfaTierIn .8s var(--sv-ease) 7.9s both;}
+[data-phase="shortlist"] .svfa-tier-high{animation:svfaTierIn .8s var(--sv-ease) 8.4s both,svfaCrown .9s var(--sv-snap) 9.7s forwards;}
+@keyframes svfaCrown{
+  40%{box-shadow:inset 0 0 0 2px rgba(226,55,68,.9),0 26px 70px rgba(226,55,68,.32)}
+  100%{transform:translateY(-4px);box-shadow:inset 0 0 0 1px rgba(226,55,68,.6),0 22px 60px rgba(226,55,68,.2)}
+}
+[data-phase="shortlist"] .svfa-tchip{opacity:0;animation:svfaStamp .5s var(--sv-snap) both;}
+[data-phase="shortlist"] .svfa-tier:not(.svfa-tier-high) .svfa-tchip:nth-of-type(1){animation-delay:9s;}
+[data-phase="shortlist"] .svfa-tier:not(.svfa-tier-high) .svfa-tchip:nth-of-type(2){animation-delay:9.2s;}
+[data-phase="shortlist"] .svfa-crowned{animation-delay:10.3s!important;}
+.svfa-crowned{
+  background:rgba(226,55,68,.16)!important;
+  box-shadow:inset 0 0 0 1px rgba(226,55,68,.6),0 0 20px rgba(226,55,68,.2)!important;
+}
+.svfa-tier-high{position:relative;overflow:hidden;}
+[data-phase="shortlist"] .svfa-tier-high::after{
   content:"";position:absolute;top:-60%;bottom:-60%;left:-30%;width:34%;
   transform:rotate(18deg) translateX(-140%);
   background:linear-gradient(90deg,transparent,rgba(255,255,255,.13),transparent);
-  animation:svfShimmer 1.2s ease-in-out 3.6s both;
+  animation:svfaShimmer 1.2s ease-in-out 10.8s both;
 }
-@keyframes svfShimmer{to{transform:rotate(18deg) translateX(520%)}}
-/* ending phase: hold the final composition WITHOUT replaying */
-[data-phase="ending"] .svf-tier-high{
+@keyframes svfaShimmer{to{transform:rotate(18deg) translateX(520%)}}
+/* ending: hold the finished hierarchy without replaying */
+[data-phase="ending"] .svfa-tier{opacity:1;}
+[data-phase="ending"] .svfa-tier-high{
   transform:translateY(-4px);
   box-shadow:inset 0 0 0 1px rgba(226,55,68,.6),0 22px 60px rgba(226,55,68,.2);
 }
-[data-phase="ending"] .svf-tier-chip{opacity:1;}
+[data-phase="ending"] .svfa-tchip{opacity:1;}
 
-/* -------- the answer (act 6) -------- */
-.svf-ending{
-  position:absolute;inset:0;z-index:8;
+/* ============================================================
+   THE ANSWER  (47.5s → loop)
+   ============================================================ */
+.svfa-endcard{
+  position:absolute;inset:0;z-index:9;
   display:flex;align-items:center;justify-content:center;
-  background:rgba(0,0,0,.84);
-  opacity:0;pointer-events:none;transition:opacity 1.1s var(--svf-ease);
+  background:rgba(0,0,0,.86);
+  opacity:0;pointer-events:none;
+  transition:opacity 1.1s var(--sv-ease);
 }
-[data-phase="ending"] .svf-ending{opacity:1;}
-.svf-ending span{
+[data-phase="ending"] .svfa-endcard{opacity:1;}
+.svfa-endcard span{
   font-size:clamp(40px,5.5vw,80px);font-weight:800;letter-spacing:-.02em;color:#fff;
   opacity:0;filter:blur(8px);transform:translateY(16px);
 }
-[data-phase="ending"] .svf-ending span{animation:svfIn .9s var(--svf-ease) .7s forwards;}
+[data-phase="ending"] .svfa-endcard span{animation:svfaWay .9s var(--sv-ease) .7s forwards;}
 
 /* ============================================================
-   RESPONSIVE — below 860px the rail sits on top, stage below
+   RESPONSIVE
    ============================================================ */
-@media(max-width:860px){
-  .svf-film{flex-direction:column;position:relative;min-height:100vh;overflow:auto;}
-  .svf-rail{flex:none;max-width:none;padding:22px 22px 14px;}
-  .svf-question{margin:18px 0 20px;}
-  .svf-steptext p{display:none;}
-  .svf-divider{width:auto;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent);}
-  .svf-stage{min-height:70vh;}
-  .svf-card{width:180px;}
+@media(max-width:900px){
+  .svfa-film{flex-direction:column;overflow:auto;}
+  .svfa-rail{flex:none;max-width:none;min-width:0;padding:20px;}
+  .svfa-steptext p{display:none;}
+  .svfa-divider{width:auto;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);}
+  .svfa-stage{min-height:72vh;}
+  .svfa-act{flex-direction:column;gap:18px;padding:5vh 5%;}
+  .svfa-search-card{width:100%;}
+  .svfa-act-pool{flex-direction:column;}
 }
 
 /* ============================================================
    ACCESSIBILITY — reduced motion sees the finished hierarchy
-   (the page also freezes its clock at the ranking act)
    ============================================================ */
-.svf-film[data-reduced="true"] *,
-.svf-film[data-reduced="true"] *::before,
-.svf-film[data-reduced="true"] *::after{
+.svfa-film[data-reduced="true"] *,
+.svfa-film[data-reduced="true"] *::before,
+.svfa-film[data-reduced="true"] *::after{
   animation:none!important;transition:none!important;
-  opacity:1;clip-path:none!important;
+  clip-path:none!important;
 }
-.svf-film[data-reduced="true"] .svf-particles,
-.svf-film[data-reduced="true"] .svf-cards,
-.svf-film[data-reduced="true"] .svf-gate,
-.svf-film[data-reduced="true"] .svf-pool,
-.svf-film[data-reduced="true"] .svf-stream,
-.svf-film[data-reduced="true"] .svf-ending,
-.svf-film[data-reduced="true"] .svf-controls{display:none!important;}
-.svf-film[data-reduced="true"] .svf-tiers{opacity:1;}
+.svfa-film[data-reduced="true"] .svfa-intro,
+.svfa-film[data-reduced="true"] .svfa-particles,
+.svfa-film[data-reduced="true"] .svfa-review-card,
+.svfa-film[data-reduced="true"] .svfa-endcard,
+.svfa-film[data-reduced="true"] .svfa-controls{display:none!important;}
+.svfa-film[data-reduced="true"] .svfa-rail{opacity:1;}
+.svfa-film[data-reduced="true"] .svfa-act-shortlist{opacity:1;visibility:visible;transform:none;filter:none;}
+.svfa-film[data-reduced="true"] .svfa-tier,
+.svfa-film[data-reduced="true"] .svfa-tchip{opacity:1;}
