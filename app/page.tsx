@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import HowItWorksFilm from '@/components/HowItWorksFilm';
 import { useEffect, useState, type CSSProperties, type PointerEvent } from 'react';
 
 const steps = [
@@ -255,8 +256,6 @@ function StoryVisual({ visual }: { visual: string }) {
 export default function Home() {
   const [revealed, setRevealed] = useState(false);
   const [storyOpen, setStoryOpen] = useState(false);
-  const [storyIndex, setStoryIndex] = useState(0);
-  const activeScene = storyScenes[storyIndex];
 
   useEffect(() => {
     const section = document.getElementById('how');
@@ -275,17 +274,10 @@ export default function Home() {
     if (!storyOpen) return;
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') setStoryOpen(false);
-      if (event.key === 'ArrowRight') setStoryIndex((current) => Math.min(storyScenes.length - 1, current + 1));
-      if (event.key === 'ArrowLeft') setStoryIndex((current) => Math.max(0, current - 1));
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [storyOpen]);
-
-  function openStory() {
-    setStoryIndex(0);
-    setStoryOpen(true);
-  }
 
   return (
     <main className="lp-v91-page lp-v95-page lp-v96-page lp-v98-page">
@@ -337,12 +329,13 @@ export default function Home() {
       <section className="lp-v91-how lp-v95-how" id="how">
         <div className="lp-v91-how-inner">
           <h2 className={revealed ? 'lp-v91-how-title is-visible' : 'lp-v91-how-title'}>How it works</h2>
-          <Link
-            href="/how-it-works"
+          <button
+            type="button"
             className={revealed ? 'lp-v91-preview is-visible' : 'lp-v91-preview'}
+            onClick={() => setStoryOpen(true)}
           >
             Preview
-          </Link>
+          </button>
 
           <div className="lp-v91-grid">
             {steps.map((item, index) => (
@@ -376,58 +369,7 @@ export default function Home() {
         </div>
       </section>
 
-      {storyOpen && (
-        <div className="lp-story-overlay" role="dialog" aria-modal="true" aria-labelledby="storyOverlayTitle">
-          <button className="lp-story-backdrop" type="button" aria-label="Close preview" onClick={() => setStoryOpen(false)} />
-          <section className="lp-story-modal">
-            <header className="lp-story-topbar">
-              <div>
-                <p className="lp-story-kicker">Preview</p>
-                <h3 id="storyOverlayTitle">How it works</h3>
-              </div>
-              <div className="lp-story-actions">
-                <span>{String(storyIndex + 1).padStart(2, '0')} / {String(storyScenes.length).padStart(2, '0')}</span>
-                <button type="button" onClick={() => setStoryIndex(0)}>Restart</button>
-                <button type="button" aria-label="Close preview" onClick={() => setStoryOpen(false)}>×</button>
-              </div>
-            </header>
-
-            <div className="lp-story-progress" aria-hidden="true">
-              <i style={{ width: `${((storyIndex + 1) / storyScenes.length) * 100}%` }} />
-            </div>
-
-            <div className="lp-story-stage">
-              <article className="lp-story-copy" key={`copy-${storyIndex}`}>
-                <p className="lp-story-kicker">{activeScene.kicker}</p>
-                <h4>{activeScene.title}</h4>
-                <p>{activeScene.body}</p>
-              </article>
-
-              <div className="lp-story-visual" key={`visual-${storyIndex}`}>
-                <StoryVisual visual={activeScene.visual} />
-              </div>
-            </div>
-
-            <footer className="lp-story-footer">
-              <button type="button" disabled={storyIndex === 0} onClick={() => setStoryIndex((current) => Math.max(0, current - 1))}>← Back</button>
-              <div className="lp-story-dots" aria-label="Preview scenes">
-                {storyScenes.map((scene, index) => (
-                  <button
-                    key={scene.kicker + scene.title}
-                    type="button"
-                    aria-label={`Go to ${scene.kicker}`}
-                    className={index === storyIndex ? 'active' : index < storyIndex ? 'done' : ''}
-                    onClick={() => setStoryIndex(index)}
-                  />
-                ))}
-              </div>
-              <button type="button" onClick={() => storyIndex === storyScenes.length - 1 ? setStoryOpen(false) : setStoryIndex((current) => Math.min(storyScenes.length - 1, current + 1))}>
-                {storyIndex === storyScenes.length - 1 ? 'Close' : 'Next →'}
-              </button>
-            </footer>
-          </section>
-        </div>
-      )}
+      {storyOpen && <HowItWorksFilm onClose={() => setStoryOpen(false)} />}
     </main>
   );
 }

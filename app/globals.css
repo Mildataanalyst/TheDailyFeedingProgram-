@@ -12991,3 +12991,75 @@ body.dfp-v111-theme .workstream-task-card:hover{
 .svfb-film[data-reduced="true"] .svfb-tier,
 .svfb-film[data-reduced="true"] .svfb-tchip{opacity:1!important;}
 .svfb-film[data-reduced="true"] .svfb-controls .svfb-ctl:not(:first-child){display:none;}
+
+/* ============================================================
+   V114 — Preview reliability lock
+   Keeps the cinematic preview visible even when older light-theme
+   selectors or browser cache order try to override its surface/text.
+   ============================================================ */
+.lp-v91-preview{
+  appearance:none;
+  -webkit-appearance:none;
+  font:inherit;
+  cursor:pointer;
+}
+
+.svfb-film{
+  display:block!important;
+  position:fixed!important;
+  inset:0!important;
+  z-index:999!important;
+  width:100vw!important;
+  height:100dvh!important;
+  min-height:100vh!important;
+  opacity:1!important;
+  visibility:visible!important;
+  isolation:isolate!important;
+  background:
+    radial-gradient(1200px 700px at 50% 30%,rgba(255,255,255,.018),transparent 60%),
+    #030303!important;
+  color:#fff!important;
+}
+.svfb-film,
+.svfb-film :is(h1,h2,h3,h4,h5,h6,b,strong,label,button,a){color:#fff;}
+.svfb-film :is(p,span,small,em){color:var(--sv-mut,rgba(255,255,255,.52));}
+.svfb-film .svfb-stage{
+  display:block!important;
+  position:absolute!important;
+  inset:0!important;
+  z-index:2!important;
+}
+.svfb-film[data-phase="q"] .svfb-q,
+.svfb-film[data-phase="split"] .svfb-split,
+.svfb-film[data-phase="general"] .svfb-split,
+.svfb-film[data-phase="darpan"] .svfb-split,
+.svfb-film[data-phase="human"] .svfb-split,
+.svfb-film[data-phase="merge"] .svfb-split,
+.svfb-film[data-phase="cleanup"] .svfb-cleanup,
+.svfb-film[data-phase="rating"] .svfb-rating,
+.svfb-film[data-phase="montage"] .svfb-montage,
+.svfb-film[data-phase="ranking"] .svfb-ranking,
+.svfb-film[data-phase="ending"] .svfb-endq{
+  opacity:1!important;
+  visibility:visible!important;
+  transform:translateY(0)!important;
+  filter:blur(0)!important;
+}
+.svfb-film .svfb-ctl{
+  color:rgba(255,255,255,.52)!important;
+  background:transparent!important;
+  border:0!important;
+}
+.svfb-film .svfb-ctl:hover{color:#fff!important;}
+
+/* Explicit modal contrast so the floating Preview cannot render white-on-white. */
+.claude-preview-modal{
+  color:#111!important;
+  background:linear-gradient(180deg,#fff,#fbfaf8)!important;
+}
+.claude-preview-modal h3{color:#111!important;}
+.claude-preview-modal .claude-preview-kicker{color:#9a5860!important;}
+.claude-preview-modal .claude-preview-copy,
+.claude-preview-modal .claude-preview-list p{color:#47423e!important;}
+.claude-preview-modal .claude-preview-list span{color:#d13c49!important;}
+.claude-preview-modal .claude-preview-close{color:#111!important;background:#fff!important;}
