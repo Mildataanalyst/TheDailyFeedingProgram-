@@ -7,6 +7,7 @@ import WorkstreamPanel from './WorkstreamPanel';
 import AdminUndoRedo from '@/components/AdminUndoRedo';
 import FloatingPreview from '@/components/FloatingPreview';
 import DeepEnrichmentModal, { EnrichmentCandidate } from '@/components/DeepEnrichmentModal';
+import DeepEnrichmentRepairModal from '@/components/DeepEnrichmentRepairModal';
 import { DEFAULT_DASHBOARD_DATA, PM_PROFILES } from '@/lib/progressData';
 import { safeExternalUrl } from '@/lib/urlSafety';
 import { BACKEND, safeJSON } from '@/lib/backendClient';
@@ -219,6 +220,7 @@ function CombinedReviewPanel({ data, loading, error, region }: { data: any; load
   const groups = groupsFromCompiled(data);
   const pmCounts = data?.pm_counts || {};
   const [enrichmentOpen, setEnrichmentOpen] = useState(false);
+  const [repairOpen, setRepairOpen] = useState(false);
   const enrichmentRows: EnrichmentCandidate[] = groups
     .filter(group => group.key !== 'pending')
     .flatMap(group => group.rows.map((row: any, index: number) => ({
@@ -234,8 +236,11 @@ function CombinedReviewPanel({ data, loading, error, region }: { data: any; load
     {loading && <div className="empty-review">Loading combined review…</div>}
     {error && <div className="error-box">{error}</div>}
     <div className="combined-review-commandbar">
-      <div><span>Evidence layer</span><b>Research selected NGOs beyond their PM review.</b><small>Official websites + external media + structured GPT/Fable dossiers.</small></div>
-      <button className="deep-enrichment-launch" onClick={() => setEnrichmentOpen(true)} disabled={!enrichmentRows.length}><span>✦</span> Deep enrichment</button>
+      <div className="combined-review-copy"><span>Evidence layer</span><b>Research selected NGOs beyond their PM review.</b><small>Official websites + external media + structured GPT/Fable dossiers.</small></div>
+      <div className="deep-enrichment-actions">
+        <button className="deep-enrichment-repair-launch" onClick={() => setRepairOpen(true)}><span>↻</span> Repair existing run</button>
+        <button className="deep-enrichment-launch" onClick={() => setEnrichmentOpen(true)} disabled={!enrichmentRows.length}><span>✦</span> New enrichment</button>
+      </div>
     </div>
     <div className="review-summary-strip">
       {Object.keys(pmCounts).length ? Object.entries(pmCounts).slice(0,5).map(([name, counts]: any) => <div className="review-summary-card" key={name}><span>{name}</span><b>{counts?.total ?? 0}</b><small>5:{counts?.['5'] ?? 0} · 4:{counts?.['4'] ?? 0} · 3:{counts?.['3'] ?? 0} · 2:{counts?.['2'] ?? 0} · 1:{counts?.['1'] ?? 0}</small></div>) : <>
@@ -258,6 +263,7 @@ function CombinedReviewPanel({ data, loading, error, region }: { data: any; load
       </div>
     </section>)}
     <DeepEnrichmentModal open={enrichmentOpen} onClose={() => setEnrichmentOpen(false)} region={region} rows={enrichmentRows} />
+    <DeepEnrichmentRepairModal open={repairOpen} onClose={() => setRepairOpen(false)} />
   </section>;
 }
 function defaultFinalCopy(groups: Array<{key:string; label:string; note:string; rows:any[]}>) {
