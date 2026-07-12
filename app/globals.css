@@ -8106,3 +8106,266 @@ body.dfp-v100-theme .lp-v91-version > span:first-child,
 body.dfp-v100-theme .lp-v91-version > span:last-child{
   letter-spacing:0 !important;
 }
+
+
+/* ---------------------------------------------------------------
+   V101 — Decimal heart starts as a dot, then blooms into a heart.
+---------------------------------------------------------------- */
+body.dfp-v100-theme .lp-v100-heart-dot{
+  display:inline-grid !important;
+  place-items:center !important;
+  overflow:visible !important;
+  background:none !important;
+  animation:none !important;
+  transform-origin:50% 72%;
+}
+body.dfp-v100-theme .lp-v100-heart-dot::before{
+  content:"";
+  position:absolute;
+  z-index:1;
+  left:50%;
+  top:50%;
+  width:58%;
+  height:58%;
+  border-radius:999px;
+  background:radial-gradient(circle at 35% 35%, #ff6b7f 0%, #e53249 55%, #bd1f35 100%);
+  transform:translate(-50%,-50%) scale(.56);
+  box-shadow:0 0 .10em rgba(229,50,73,.16);
+  opacity:1;
+  animation:v101HeartDotToHeart 4.8s cubic-bezier(.22,.72,.2,1) infinite !important;
+}
+body.dfp-v100-theme .lp-v100-heart-dot svg{
+  position:relative;
+  z-index:2;
+  opacity:0;
+  transform-origin:50% 62%;
+  transform:scale(.26);
+  filter:drop-shadow(0 .018em .06em rgba(177,25,49,.12));
+  animation:v101HeartReveal 4.8s cubic-bezier(.22,.72,.2,1) infinite !important;
+}
+body.dfp-v100-theme .lp-v100-heart-dot::after{
+  left:10% !important;
+  top:8% !important;
+  width:26% !important;
+  height:12% !important;
+  opacity:0 !important;
+  background:rgba(255,255,255,.95) !important;
+  filter:blur(.22px) !important;
+  animation:v101HeartSpark 4.8s ease-in-out infinite !important;
+}
+@keyframes v101HeartDotToHeart{
+  0%,16%{opacity:1;transform:translate(-50%,-50%) scale(.56);border-radius:999px;}
+  24%{opacity:1;transform:translate(-50%,-50%) scale(.74);border-radius:999px;}
+  34%{opacity:.42;transform:translate(-50%,-50%) scale(.98);border-radius:46% 46% 58% 58% / 44% 44% 62% 62%;}
+  42%,100%{opacity:0;transform:translate(-50%,-50%) scale(1.06);border-radius:44% 44% 58% 58% / 44% 44% 62% 62%;}
+}
+@keyframes v101HeartReveal{
+  0%,14%{opacity:0;transform:scale(.18);}
+  24%{opacity:.10;transform:scale(.38);}
+  34%{opacity:.72;transform:scale(.82);}
+  42%{opacity:1;transform:scale(1.02);}
+  50%{opacity:1;transform:scale(.96);}
+  58%,84%{opacity:1;transform:scale(1);}
+  90%{opacity:1;transform:scale(1.04);}
+  100%{opacity:0;transform:scale(.18);}
+}
+@keyframes v101HeartSpark{
+  0%,28%{opacity:0;transform:translateY(0) rotate(-12deg);}
+  40%{opacity:.65;transform:translateY(-1px) rotate(-12deg);}
+  52%{opacity:.28;transform:translateY(0) rotate(-12deg);}
+  100%{opacity:0;transform:translateY(0) rotate(-12deg);}
+}
+@media(prefers-reduced-motion:reduce){
+  body.dfp-v100-theme .lp-v100-heart-dot::before,
+  body.dfp-v100-theme .lp-v100-heart-dot svg,
+  body.dfp-v100-theme .lp-v100-heart-dot::after{
+    animation:none !important;
+    opacity:1 !important;
+    transform:none !important;
+  }
+  body.dfp-v100-theme .lp-v100-heart-dot::before{display:none !important;}
+}
+
+/* ---------------------------------------------------------------
+   V102 — Cuter dot-to-heart morph
+   Adds a tiny bounce, soft squash-and-stretch, and a brief sparkle.
+---------------------------------------------------------------- */
+body.dfp-v100-theme .lp-v100-heart-dot::before{
+  animation:v102CuteDot 4.6s cubic-bezier(.2,.8,.2,1) infinite !important;
+}
+body.dfp-v100-theme .lp-v100-heart-dot svg{
+  animation:v102CuteHeart 4.6s cubic-bezier(.2,.8,.2,1) infinite !important;
+}
+body.dfp-v100-theme .lp-v100-heart-dot::after{
+  animation:v102CuteSpark 4.6s ease-in-out infinite !important;
+}
+
+@keyframes v102CuteDot{
+  0%,10%{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(.48);
+    border-radius:999px;
+  }
+  15%{
+    transform:translate(-50%,-62%) scale(.58,.46);
+  }
+  21%{
+    transform:translate(-50%,-44%) scale(.52,.64);
+  }
+  28%{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(.72);
+  }
+  36%{
+    opacity:.35;
+    transform:translate(-50%,-50%) scale(1.02);
+  }
+  42%,100%{
+    opacity:0;
+    transform:translate(-50%,-50%) scale(1.08);
+  }
+}
+
+@keyframes v102CuteHeart{
+  0%,20%{
+    opacity:0;
+    transform:translateY(1px) scale(.16) rotate(-5deg);
+  }
+  28%{
+    opacity:.22;
+    transform:translateY(0) scale(.48,.38) rotate(-3deg);
+  }
+  36%{
+    opacity:1;
+    transform:translateY(-1px) scale(1.12,.92) rotate(2deg);
+  }
+  43%{
+    transform:translateY(0) scale(.92,1.08) rotate(-1deg);
+  }
+  50%{
+    transform:scale(1.04,.98) rotate(0deg);
+  }
+  58%,80%{
+    opacity:1;
+    transform:scale(1) rotate(0deg);
+  }
+  85%{
+    transform:scale(1.08) rotate(-2deg);
+  }
+  89%{
+    transform:scale(.97) rotate(1deg);
+  }
+  93%{
+    transform:scale(1.035) rotate(0deg);
+  }
+  100%{
+    opacity:0;
+    transform:scale(.18) rotate(0deg);
+  }
+}
+
+@keyframes v102CuteSpark{
+  0%,30%{
+    opacity:0;
+    transform:translate(-2px,2px) rotate(-18deg) scale(.55);
+  }
+  38%{
+    opacity:.95;
+    transform:translate(1px,-2px) rotate(-18deg) scale(1.05);
+  }
+  48%{
+    opacity:.25;
+    transform:translate(3px,-3px) rotate(-18deg) scale(.8);
+  }
+  58%,100%{
+    opacity:0;
+    transform:translate(4px,-4px) rotate(-18deg) scale(.65);
+  }
+}
+
+
+/* ---------------------------------------------------------------
+   V103 — Preview control visual repair
+   Removes the rectangular shadow artefact and replaces the oversized
+   capsule with a restrained acrylic action.
+---------------------------------------------------------------- */
+body.dfp-v100-theme .lp-v95-how .lp-v91-preview{
+  width:min(238px,68vw) !important;
+  min-height:62px !important;
+  margin:0 auto 48px !important;
+  padding:0 30px !important;
+  border:1px solid rgba(74,57,49,.12) !important;
+  border-radius:999px !important;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.84),rgba(250,246,241,.62)) !important;
+  backdrop-filter:blur(18px) saturate(116%) !important;
+  -webkit-backdrop-filter:blur(18px) saturate(116%) !important;
+  color:#171311 !important;
+  font-size:12px !important;
+  font-weight:760 !important;
+  letter-spacing:.30em !important;
+  box-shadow:
+    0 14px 34px rgba(52,39,33,.075),
+    0 2px 6px rgba(52,39,33,.035),
+    inset 0 1px 0 rgba(255,255,255,.96),
+    inset 0 0 0 1px rgba(255,255,255,.24) !important;
+  overflow:hidden !important;
+  isolation:isolate;
+}
+body.dfp-v100-theme .lp-v95-how .lp-v91-preview::before{
+  content:"" !important;
+  position:absolute !important;
+  inset:1px !important;
+  z-index:-1 !important;
+  width:auto !important;
+  height:auto !important;
+  border-radius:inherit !important;
+  transform:none !important;
+  opacity:1 !important;
+  background:
+    radial-gradient(circle at 50% 112%,rgba(231,42,67,.09),transparent 48%),
+    linear-gradient(180deg,rgba(255,255,255,.20),transparent 55%) !important;
+  transition:opacity .24s ease !important;
+}
+body.dfp-v100-theme .lp-v95-how .lp-v91-preview::after{
+  content:"" !important;
+  position:absolute !important;
+  left:50% !important;
+  bottom:9px !important;
+  width:22px !important;
+  height:2px !important;
+  transform:translateX(-50%) scaleX(.55) !important;
+  border-radius:999px !important;
+  background:linear-gradient(90deg,transparent,#e72a43,transparent) !important;
+  opacity:.42 !important;
+  transition:transform .24s ease,opacity .24s ease !important;
+}
+body.dfp-v100-theme .lp-v95-how .lp-v91-preview:hover{
+  transform:translateY(-3px) scale(1.006) !important;
+  border-color:rgba(231,42,67,.22) !important;
+  background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(252,248,243,.76)) !important;
+  box-shadow:
+    0 20px 44px rgba(52,39,33,.10),
+    0 4px 10px rgba(52,39,33,.04),
+    0 0 28px rgba(231,42,67,.035),
+    inset 0 1px 0 #fff,
+    inset 0 0 0 1px rgba(255,255,255,.30) !important;
+}
+body.dfp-v100-theme .lp-v95-how .lp-v91-preview:hover::before{
+  transform:none !important;
+  opacity:1 !important;
+}
+body.dfp-v100-theme .lp-v95-how .lp-v91-preview:hover::after{
+  transform:translateX(-50%) scaleX(1) !important;
+  opacity:.78 !important;
+}
+body.dfp-v100-theme .lp-v95-how .lp-v91-preview:active{
+  transform:translateY(-1px) scale(.998) !important;
+}
+@media(max-width:640px){
+  body.dfp-v100-theme .lp-v95-how .lp-v91-preview{
+    width:min(220px,72vw) !important;
+    min-height:58px !important;
+    margin-bottom:38px !important;
+  }
+}
