@@ -14,7 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       </head>
-      <body className="dfp-v97-theme dfp-v98-theme dfp-v99-theme dfp-v100-theme dfp-v106-theme">{children}</body>
+      <body className="dfp-v97-theme dfp-v98-theme dfp-v99-theme dfp-v100-theme dfp-v106-theme dfp-v107-theme">{children}</body>
     </html>
   );
 }

@@ -1,17 +1,29 @@
-# DFP 2.0 Frontend v15 — design recovery build
+# DFP 2.0 Frontend — V107 Clean Upload
 
-This package fixes the dark UI implementation drift and keeps the existing backend contract intact.
+This is the clean source package for the DFP 2.0 frontend.
 
-What changed:
-- Added a consolidated visual recovery layer in `app/globals.css` for the dark glass panels, red glow, spacing, typography, cards, tabs, buttons, progress views, and story/repository modules.
-- Removed runtime dependency on external map artwork. Local SVG assets now live in `public/assets/india-map.svg` and `public/assets/karnataka-map.svg`.
-- Progress Tracker now defaults to Karnataka so the page opens into the populated dashboard instead of the empty state.
-- Added the Progress back button and tightened the Team / PM view header controls.
-- Made the “No official website re-check” block visible as a first-class panel, matching the supplied designs, rather than hiding it inside Advanced.
-- Removed Google Fonts runtime loading from the layout to avoid build/network dependency; the UI now uses a local system font stack.
-- Verified with `npm run build`.
+## Upload to GitHub
 
-Deployment notes:
-- Upload the contents of this folder to the frontend repo root, not the wrapper folder.
-- Keep `NEXT_PUBLIC_BACKEND_URL` set to the deployed FastAPI backend URL.
-- Set `ADMIN_PASSWORD` plus Upstash/Vercel KV variables only if you want Progress dashboard publishing enabled.
+Upload the **contents of this folder** to the repository root. This package contains fewer than 100 files and excludes generated/development folders.
+
+## Intentionally excluded
+
+- `node_modules/`
+- `.next/`
+- old version-specific README files
+- unused landing/map image assets
+- operating-system cache files
+
+GitHub/Railway will recreate dependencies and build output from `package.json` and `package-lock.json`.
+
+## Local commands
+
+```bash
+npm ci
+npm run build
+npm run dev
+```
+
+## Required deployment configuration
+
+Keep the existing frontend environment variables configured in Railway/Vercel, including the deployed backend URL and any Redis/admin variables already used by the project.
