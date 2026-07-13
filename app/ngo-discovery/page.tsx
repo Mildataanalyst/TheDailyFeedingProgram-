@@ -228,6 +228,10 @@ export default function NgoDiscoveryPage(){
   const [referralMessage,setReferralMessage]=useState('');
   const [referralError,setReferralError]=useState('');
   const [referralSearching,setReferralSearching]=useState(false);
+  const [humanArchive,setHumanArchive]=useState<AnyRow[]>([]);
+  const [humanArchiveLoading,setHumanArchiveLoading]=useState(false);
+  const [humanArchiveOpen,setHumanArchiveOpen]=useState(true);
+  const [humanArchiveError,setHumanArchiveError]=useState('');
 
   const [leadPool,setLeadPool]=useState<AnyRow[]>([]);
   const [poolMessage,setPoolMessage]=useState('');
@@ -244,7 +248,15 @@ export default function NgoDiscoveryPage(){
   const loadDiscoveryArchive = useCallback(async()=>{ if(!STORY_BACKEND)return; const r=await safeJSON(`${STORY_BACKEND}/discovery/archive?limit=120`); if(r.ok&&r.data)setDiscArchive(r.data.rows||[]); },[]);
   const loadRepositoryArchive = useCallback(async()=>{ if(!SEARCH_BACKEND)return; const r=await safeJSON(`${SEARCH_BACKEND}/repository/archive?limit=120`); if(r.ok&&r.data)setRepoArchive(r.data.rows||r.data.runs||[]); },[]);
   const loadLeadPool = useCallback(async()=>{ if(!BACKEND)return; const r=await safeJSON(`${BACKEND}/workspace/${encodeURIComponent(state)}/lead-pool`); if(r.ok&&r.data)setLeadPool(r.data.rows||[]); },[state]);
-  useEffect(()=>{loadDiscoveryArchive(); loadRepositoryArchive(); loadLeadPool();},[loadDiscoveryArchive, loadRepositoryArchive, loadLeadPool]);
+  const loadHumanArchive = useCallback(async()=>{
+    if(!BACKEND)return;
+    setHumanArchiveLoading(true); setHumanArchiveError('');
+    const r=await safeJSON(`${BACKEND}/workspace/${encodeURIComponent(state)}/human-leads/archive`);
+    setHumanArchiveLoading(false);
+    if(r.ok&&r.data)setHumanArchive(r.data.rows||[]);
+    else setHumanArchiveError(r.error||'Could not load the Human Leads archive.');
+  },[state]);
+  useEffect(()=>{loadDiscoveryArchive(); loadRepositoryArchive(); loadLeadPool(); loadHumanArchive();},[loadDiscoveryArchive, loadRepositoryArchive, loadLeadPool, loadHumanArchive]);
   useEffect(()=>{
     try {
       const raw = window.localStorage.getItem('dfp2_sent_archive_runs');
@@ -719,7 +731,7 @@ export default function NgoDiscoveryPage(){
       </section>
       <section className="source-choice-grid three-choice">
         <button className="source-choice-card" onClick={()=>setView('internet')}><span>01</span><b>Internet Leads</b><small>General Discovery, Bulk Discovery, History</small></button>
-        <button className="source-choice-card" onClick={()=>setView('referrals')}><span>02</span><b>Referrals</b><small>Upload referral CSV, enrich, comment, save selected</small></button>
+        <button className="source-choice-card" onClick={()=>{setView('referrals');loadHumanArchive();}}><span>02</span><b>Human Leads</b><small>Upload referrals and reopen every lead already sent forward</small></button>
         <button className="source-choice-card leadpool-entry" onClick={()=>setView('leadpool')}><span>03</span><b>Go to Lead Pool</b><small>Approve leads, follow-ups, and send approved leads to ranking</small></button>
       </section>
     </>}
@@ -756,12 +768,18 @@ export default function NgoDiscoveryPage(){
     </>}
 
     {view==='referrals'&&<>
-      <div className="source-topline"><button className="quiet-btn" onClick={()=>setView('source')}>← Back</button><span>Referrals</span></div>
+      <div className="source-topline"><button className="quiet-btn" onClick={()=>setView('source')}>← Back</button><span>Human Leads</span><div className="topline-actions"><button className="quiet-btn" onClick={loadHumanArchive}>Refresh archive</button><button className="quiet-btn" onClick={()=>setHumanArchiveOpen(v=>!v)}>{humanArchiveOpen?'Hide archive':'Show archive'}</button></div></div>
       <section className="discover-card referral-card">
         <div className="form-card minimal-upload"><label>Upload Referral CSV</label><div className="upload-box" onClick={()=>referralRef.current?.click()}><strong>{referralFile?referralFile.name:'Upload Referral CSV'}</strong><span>Required: ngo_name, contact_number, referred_by</span><small>Optional: district, website, comments</small></div><input ref={referralRef} type="file" accept=".csv" hidden onChange={e=>{const file=e.target.files?.[0]; if(file)handleReferralFile(file);}}/><button className="sample-btn" onClick={()=>downloadText('referral_sample.csv','ngo_name,contact_number,referred_by,district,website,comments\nExample NGO,9876543210,Avika,Bengaluru,,Spoken to founder\n')}>Sample Human Leads CSV</button></div>
         {referralError&&<div className="error-box">{referralError}</div>}
         {referralRows.length>0&&<><div className="referral-actions"><button className="primary-red" disabled={poolBusy} onClick={saveReferrals}>Save selected</button><button className="ghost-btn" disabled={referralSearching} onClick={searchReferralWebsites}>{referralSearching?'Starting…':'Run enrichment'}</button><button className="dark-download ready" onClick={()=>downloadText('referral_clean_preview.csv', referralRowsToCsv(referralRows, state))}>Export clean CSV</button></div>{referralMessage&&<div className="pool-message">{referralMessage}</div>}<div className="scroll-table referral-preview-table"><table><thead><tr><th>Send</th><th>NGO</th><th>District</th><th>Website</th><th>Contact</th><th>Referred by</th><th>Comment</th><th>Status</th></tr></thead><tbody>{referralRows.map((r,i)=><tr key={i}><td><input type="checkbox" checked={referralSelected[i] !== false} onChange={e=>setReferralSelected(old=>({...old,[i]:e.target.checked}))}/></td><td>{rowName(r)}</td><td>{rowLocation(r)||'—'}</td><td><ExternalLink value={rowWebsite(r)}>open</ExternalLink></td><td>{rowContact(r)||'—'}</td><td>{rowReferredBy(r)||'—'}</td><td><input className="mini-comment-input" value={String(rowNote(r)||'')} onChange={e=>updateReferralRow(i,{comments:e.target.value,notes:e.target.value})} placeholder="Add context"/></td><td><span className="tag">{rowStatus(r)||'preview'}</span></td></tr>)}</tbody></table></div></>}
       </section>
+      {humanArchiveOpen&&<section className="table-card human-leads-archive-card">
+        <div className="table-title"><div><b>Human Leads Archive</b><small>Persistent history of uploaded referrals already assigned or rated in PM shortlisting.</small></div><span>{humanArchive.length} archived</span></div>
+        {humanArchiveLoading&&<div className="muted-empty">Loading old Human Leads…</div>}
+        {humanArchiveError&&<div className="error-box">{humanArchiveError}</div>}
+        {!humanArchiveLoading&&!humanArchiveError&&<div className="scroll-table human-leads-archive-table"><table><thead><tr><th>NGO</th><th>District</th><th>Website</th><th>Referred by</th><th>Shortlisting context</th><th>Ranking status</th><th>Last activity</th></tr></thead><tbody>{humanArchive.length?humanArchive.slice(0,250).map((r,i)=><tr key={r.lead_id||`${rowName(r)}-${i}`}><td><b>{rowName(r)||'Untitled NGO'}</b><small>{field(r,'source_tag','source_mix','source_type')||'Human Referral'}</small></td><td>{rowLocation(r)||'—'}</td><td><ExternalLink value={rowWebsite(r)}>open</ExternalLink></td><td>{rowReferredBy(r)||'—'}</td><td>{rowShortlistingComment(r)||field(r,'pm_comment','background_summary')||'—'}</td><td><span className="tag">{field(r,'archive_status','ranking_status')||'Sent'}</span>{field(r,'pm_rating')&&<small>Rating {field(r,'pm_rating')}</small>}</td><td>{field(r,'submitted_at','sent_for_shortlisting_at','updated_at')||'—'}</td></tr>):<tr><td colSpan={7}>No Human Leads have been sent to PM shortlisting yet.</td></tr>}</tbody></table></div>}
+      </section>}
     </>}
 
 

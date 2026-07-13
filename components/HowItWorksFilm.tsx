@@ -10,8 +10,8 @@
 //   3. RACHIT TYPING — the PM writes the reason, live, with a caret
 // Plus one small status row in the new CONTACT act.
 //
-//   0:00  How do we find / the best NGOs / in a region?
-//   0:04  You search the internet. · Or you ask people who know. (red)
+//   0:00  Static opening: How do we find the best NGOs in a region?
+//         You either search the internet or ask people who know the region.
 //   0:08  DISCOVER — text columns (46,000+ names · 5,000+ searches ·
 //         partners / internal employees / connects → ≈150 human leads)
 //   0:19  THE FILTER — funnel graphic · 46,000+ → 497 usable leads
@@ -28,7 +28,6 @@ const TOTAL_MS = 51000;
 
 const PHASES = [
   { id: 'q', at: 0 },
-  { id: 'ways', at: 4200 },
   { id: 'discover', at: 8000 },
   { id: 'funnel', at: 19000 },
   { id: 'rate', at: 27000 },
@@ -127,19 +126,16 @@ export default function HowItWorksFilm({ onClose }: { onClose?: () => void }) {
 
       <section className="svt-stage" key={cycle} data-phase={phase} aria-hidden="true">
 
-        {/* ============ 0:00 — THE QUESTION ============ */}
+        {/* ============ 0:00 — STATIC OPENING ============ */}
         <div className="svt-act svt-q">
           <h1>
             <span className="svt-ph svt-ph1">How do we find</span>
             <span className="svt-ph svt-ph2">the best NGOs</span>
             <span className="svt-ph svt-ph3">in a region?</span>
           </h1>
-        </div>
-
-        {/* ============ 0:04 — THE TWO WAYS (red) ============ */}
-        <div className="svt-act svt-ways">
-          <p className="svt-way svt-way1">You search the internet.</p>
-          <p className="svt-way svt-way2">Or you ask people who know.</p>
+          <p className="svt-opening-answer">
+            You either <span>search the internet</span> or you <span>ask people who know the region.</span>
+          </p>
         </div>
 
         {/* ============ 0:08 — DISCOVER (text columns) ============ */}
