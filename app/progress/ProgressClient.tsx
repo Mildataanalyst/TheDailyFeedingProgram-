@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import WorkstreamPanel from './WorkstreamPanel';
 import AdminUndoRedo from '@/components/AdminUndoRedo';
+import FloatingPreview from '@/components/FloatingPreview';
 import DeepEnrichmentModal, { EnrichmentCandidate } from '@/components/DeepEnrichmentModal';
-import DeepEnrichmentRepairModal from '@/components/DeepEnrichmentRepairModal';
 import { DEFAULT_DASHBOARD_DATA, PM_PROFILES } from '@/lib/progressData';
 import { safeExternalUrl } from '@/lib/urlSafety';
 import { BACKEND, safeJSON } from '@/lib/backendClient';
@@ -219,12 +219,6 @@ function CombinedReviewPanel({ data, loading, error, region }: { data: any; load
   const groups = groupsFromCompiled(data);
   const pmCounts = data?.pm_counts || {};
   const [enrichmentOpen, setEnrichmentOpen] = useState(false);
-  const [repairOpen, setRepairOpen] = useState(false);
-  const [selectedFinalRefs, setSelectedFinalRefs] = useState<Record<string, boolean>>({});
-  const [finalTarget, setFinalTarget] = useState('highest_transformation_potential');
-  const [finalSendBusy, setFinalSendBusy] = useState(false);
-  const [finalSendMessage, setFinalSendMessage] = useState('');
-  const [recentlySentFinalRefs, setRecentlySentFinalRefs] = useState<Record<string, boolean>>({});
   const enrichmentRows: EnrichmentCandidate[] = groups
     .filter(group => group.key !== 'pending')
     .flatMap(group => group.rows.map((row: any, index: number) => ({
@@ -236,59 +230,13 @@ function CombinedReviewPanel({ data, loading, error, region }: { data: any; load
       pm_comment: String(pick(row, 'comment', 'pm_comment', 'reason') || ''),
       one_line_understanding: String(pick(row, 'one_line_understanding', 'background', 'summary') || ''),
     })));
-
-  const selectedCount = Object.values(selectedFinalRefs).filter(Boolean).length;
-  function toggleFinalRef(ngoRef: string, checked: boolean) {
-    setSelectedFinalRefs(prev => ({ ...prev, [ngoRef]: checked }));
-  }
-  function selectRatingGroup(rows: any[], checked: boolean) {
-    setSelectedFinalRefs(prev => {
-      const next = { ...prev };
-      for (const row of rows) {
-        const ref = String(pick(row, 'ngo_ref', 'id') || '');
-        if (ref) next[ref] = checked;
-      }
-      return next;
-    });
-  }
-  async function sendSelectedToFinal() {
-    const ngo_refs = Object.entries(selectedFinalRefs).filter(([, selected]) => selected).map(([ref]) => ref);
-    if (!ngo_refs.length) { setFinalSendMessage('Select at least one NGO.'); return; }
-    if (!BACKEND) { setFinalSendMessage('Backend URL is not configured.'); return; }
-    setFinalSendBusy(true); setFinalSendMessage('Sending selected NGOs to Final Ranking…');
-    const r = await safeJSON(`${BACKEND}/ranking/final-selection`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ region, ngo_refs, final_bucket: finalTarget }),
-    });
-    setFinalSendBusy(false);
-    if (!r.ok) { setFinalSendMessage(r.error || 'Could not send selected NGOs to Final Ranking.'); return; }
-    const sent = Number(r.data?.sent_count || 0);
-    const updated = Number(r.data?.updated_count || 0);
-    setFinalSendMessage(`${sent + updated || ngo_refs.length} NGO(s) sent to Final Ranking.`);
-    setRecentlySentFinalRefs(prev => ({ ...prev, ...Object.fromEntries(ngo_refs.map(ref => [ref, true])) }));
-    setSelectedFinalRefs({});
-  }
   return <section className="review-board combined-minimal-board">
     {loading && <div className="empty-review">Loading combined review…</div>}
     {error && <div className="error-box">{error}</div>}
     <div className="combined-review-commandbar">
-      <div className="combined-review-copy"><span>Evidence layer</span><b>Research selected NGOs beyond their PM review.</b><small>Official websites + external media + structured GPT/Fable dossiers.</small></div>
-      <div className="deep-enrichment-actions">
-        <button className="deep-enrichment-repair-launch" onClick={() => setRepairOpen(true)}><span>↻</span> Repair existing run</button>
-        <button className="deep-enrichment-launch" onClick={() => setEnrichmentOpen(true)} disabled={!enrichmentRows.length}><span>✦</span> New enrichment</button>
-      </div>
+      <div><span>Evidence layer</span><b>Research selected NGOs beyond their PM review.</b><small>Official websites + external media + structured GPT/Fable dossiers.</small></div>
+      <button className="deep-enrichment-launch" onClick={() => setEnrichmentOpen(true)} disabled={!enrichmentRows.length}><span>✦</span> Deep enrichment</button>
     </div>
-    <div className="combined-final-transferbar">
-      <div><span>Final Ranking</span><b>Select any rated NGOs and send them forward.</b><small>The target tier can be changed before sending.</small></div>
-      <select value={finalTarget} onChange={e => setFinalTarget(e.target.value)} aria-label="Final Ranking tier">
-        <option value="highest_transformation_potential">Highest Transformation Potential</option>
-        <option value="great_ngos">Great NGOs</option>
-        <option value="needs_more_context">Worth a Closer Look</option>
-      </select>
-      <button className="primary-red small-red" disabled={!selectedCount || finalSendBusy} onClick={sendSelectedToFinal}>{finalSendBusy ? 'Sending…' : `Send selected (${selectedCount})`}</button>
-    </div>
-    {finalSendMessage && <div className="pool-message">{finalSendMessage}</div>}
     <div className="review-summary-strip">
       {Object.keys(pmCounts).length ? Object.entries(pmCounts).slice(0,5).map(([name, counts]: any) => <div className="review-summary-card" key={name}><span>{name}</span><b>{counts?.total ?? 0}</b><small>5:{counts?.['5'] ?? 0} · 4:{counts?.['4'] ?? 0} · 3:{counts?.['3'] ?? 0} · 2:{counts?.['2'] ?? 0} · 1:{counts?.['1'] ?? 0}</small></div>) : <>
         <div className="review-summary-card"><span>Total rated</span><b>{data?.total_rated ?? 0}</b></div>
@@ -297,22 +245,19 @@ function CombinedReviewPanel({ data, loading, error, region }: { data: any; load
       </>}
     </div>
     {groups.map(group => <section className="review-band" key={group.key}>
-      <div className="combined-rating-head"><h3>{group.key === 'pending' ? 'Pending' : `Rating ${group.key}`} <small>({group.rows.length})</small></h3>{group.key !== 'pending' && group.rows.length > 0 && <button className="quiet-btn" onClick={() => selectRatingGroup(group.rows, true)}>Select all</button>}</div>
+      <h3>{group.key === 'pending' ? 'Pending' : `Rating ${group.key}`} <small>({group.rows.length})</small></h3>
       <div className="review-list">
         {group.rows.length ? group.rows.slice(0,80).map((row:any, i:number) => {
           const website = safeExternalUrl(pick(row,'website','Website'));
-          const ngoRef = String(pick(row,'ngo_ref','id') || '');
           return <div className="review-row combined-minimal-row" key={pick(row,'ngo_ref','id','ngo_name','name') || i}>
-            {group.key !== 'pending' ? <label className="combined-select-box" title="Select for Final Ranking"><input type="checkbox" checked={!!selectedFinalRefs[ngoRef]} onChange={e => toggleFinalRef(ngoRef, e.target.checked)} /><span /></label> : <span className="combined-select-spacer" />}
             <div><b>{pick(row,'ngo_name','NGO Name','name') || 'Untitled NGO'}</b><small>NGO name</small></div>
             <div>{website ? <a href={website} target="_blank" rel="noreferrer">Open website</a> : <span>—</span>}<small>Website</small></div>
-            <div><small>{pick(row,'comment','pm_comment','reason') || 'No comment yet.'}</small>{(pick(row,'selected_for_final') || recentlySentFinalRefs[ngoRef]) && <em className="sent-final-chip">Already in Final Ranking</em>}</div>
+            <div><small>{pick(row,'comment','pm_comment','reason') || 'No comment yet.'}</small></div>
           </div>;
         }) : <div className="empty-review">No rows here.</div>}
       </div>
     </section>)}
     <DeepEnrichmentModal open={enrichmentOpen} onClose={() => setEnrichmentOpen(false)} region={region} rows={enrichmentRows} />
-    <DeepEnrichmentRepairModal open={repairOpen} onClose={() => setRepairOpen(false)} />
   </section>;
 }
 function defaultFinalCopy(groups: Array<{key:string; label:string; note:string; rows:any[]}>) {
@@ -354,11 +299,6 @@ function FinalOutputPanel({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [expandedBuckets, setExpandedBuckets] = useState<Record<string, boolean>>({});
   const [copy, setCopy] = useState(() => defaultFinalCopy(groups));
-  const [settingsTier, setSettingsTier] = useState('highest_transformation_potential');
-  const [settingsNgoRef, setSettingsNgoRef] = useState('');
-  const [settingsDraft, setSettingsDraft] = useState({ display_name: '', profile_text: '', final_comment: '', final_bucket: 'highest_transformation_potential' });
-  const [settingsBusy, setSettingsBusy] = useState(false);
-  const [settingsMessage, setSettingsMessage] = useState('');
 
   useEffect(() => {
     try {
@@ -391,76 +331,6 @@ function FinalOutputPanel({
   function bucketSendKey(key: string) {
     if (key === 'highest_transformation_potential') return 'shortlist';
     return key;
-  }
-
-  const settingsBucket = groups.find(group => group.key === settingsTier) || groups[0];
-  const settingsRows = settingsBucket?.rows || [];
-
-  function draftFromFinalRow(row: any, fallbackBucket = settingsTier) {
-    return {
-      display_name: String(pick(row, 'ngo_name', 'NGO Name', 'name') || ''),
-      profile_text: String(pick(row, 'one_line_understanding', 'background', 'summary') || ''),
-      final_comment: String(pick(row, 'final_comment', 'pm_comment', 'comment', 'reason') || ''),
-      final_bucket: finalBucketKey(pick(row, 'effective_bucket', 'final_bucket', 'bucket') || fallbackBucket),
-    };
-  }
-
-  useEffect(() => {
-    if (!settingsOpen) return;
-    const available = groups.find(group => group.key === settingsTier && group.rows.length) || groups.find(group => group.rows.length);
-    if (!available) return;
-    if (available.key !== settingsTier) setSettingsTier(available.key);
-    const current = available.rows.find((row: any) => String(pick(row, 'ngo_ref', 'id') || '') === settingsNgoRef) || available.rows[0];
-    const ref = String(pick(current, 'ngo_ref', 'id') || '');
-    if (ref !== settingsNgoRef) setSettingsNgoRef(ref);
-    setSettingsDraft(draftFromFinalRow(current, available.key));
-    setSettingsMessage('');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settingsOpen]);
-
-  function chooseSettingsTier(nextTier: string) {
-    setSettingsTier(nextTier);
-    const bucket = groups.find(group => group.key === nextTier);
-    const row = bucket?.rows?.[0];
-    const ref = String(pick(row, 'ngo_ref', 'id') || '');
-    setSettingsNgoRef(ref);
-    setSettingsDraft(row ? draftFromFinalRow(row, nextTier) : { display_name: '', profile_text: '', final_comment: '', final_bucket: nextTier });
-    setSettingsMessage('');
-  }
-
-  function chooseSettingsNgo(ref: string) {
-    setSettingsNgoRef(ref);
-    const row = settingsRows.find((candidate: any) => String(pick(candidate, 'ngo_ref', 'id') || '') === ref);
-    if (row) setSettingsDraft(draftFromFinalRow(row, settingsTier));
-    setSettingsMessage('');
-  }
-
-  async function saveNgoText() {
-    if (!BACKEND || !settingsNgoRef) { setSettingsMessage('Select an NGO first.'); return; }
-    setSettingsBusy(true); setSettingsMessage('Saving…');
-    const r = await safeJSON(`${BACKEND}/ranking/final-overrides/update`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ region, ngo_ref: settingsNgoRef, ...settingsDraft }),
-    });
-    setSettingsBusy(false);
-    if (!r.ok) { setSettingsMessage(r.error || 'Could not save NGO text.'); return; }
-    setSettingsMessage('Saved across the Final Ranking view.');
-    onRestored();
-  }
-
-  async function resetNgoText() {
-    if (!BACKEND || !settingsNgoRef) return;
-    setSettingsBusy(true); setSettingsMessage('Resetting…');
-    const r = await safeJSON(`${BACKEND}/ranking/final-overrides/update`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ region, ngo_ref: settingsNgoRef, reset: true }),
-    });
-    setSettingsBusy(false);
-    if (!r.ok) { setSettingsMessage(r.error || 'Could not reset NGO text.'); return; }
-    setSettingsMessage('Restored the original ranking text.');
-    onRestored();
   }
 
   return <section className="final-ranking-board final-ranking-editorial final-ranking-v109">
@@ -588,33 +458,13 @@ function FinalOutputPanel({
       <section className="trend-modal final-settings-modal" onClick={e => e.stopPropagation()}>
         <button className="modal-x" onClick={() => setSettingsOpen(false)}>×</button>
         <p className="tracker-kicker compact-kicker">Gearbox</p>
-        <h2>Edit Final Ranking</h2>
-        <p>Choose a tier, then choose any NGO in it. NGO text edits are saved to the backend and appear everywhere on this Final Ranking page.</p>
-
-        <div className="final-ngo-editor">
-          <div className="final-ngo-editor-selects">
-            <label className="admin-field"><span>Tier</span><select value={settingsTier} onChange={e => chooseSettingsTier(e.target.value)}>{groups.map(bucket => <option key={bucket.key} value={bucket.key}>{copy.buckets?.[bucket.key]?.label || bucket.label} ({bucket.rows.length})</option>)}</select></label>
-            <label className="admin-field"><span>NGO</span><select value={settingsNgoRef} onChange={e => chooseSettingsNgo(e.target.value)} disabled={!settingsRows.length}>{settingsRows.map((row:any, i:number) => <option key={pick(row,'ngo_ref','id') || i} value={String(pick(row,'ngo_ref','id') || '')}>{pick(row,'ngo_name','NGO Name','name') || 'Untitled NGO'}</option>)}</select></label>
-          </div>
-          {!settingsRows.length ? <div className="muted-empty">No NGOs are currently in this tier.</div> : <>
-            <label className="admin-field"><span>NGO display name</span><input value={settingsDraft.display_name} onChange={e => setSettingsDraft(prev => ({ ...prev, display_name: e.target.value }))} /></label>
-            <label className="admin-field"><span>Organisation profile</span><textarea value={settingsDraft.profile_text} onChange={e => setSettingsDraft(prev => ({ ...prev, profile_text: e.target.value }))} rows={5} /></label>
-            <label className="admin-field"><span>Final view</span><textarea value={settingsDraft.final_comment} onChange={e => setSettingsDraft(prev => ({ ...prev, final_comment: e.target.value }))} rows={4} /></label>
-            <label className="admin-field"><span>Final tier</span><select value={settingsDraft.final_bucket} onChange={e => setSettingsDraft(prev => ({ ...prev, final_bucket: e.target.value }))}><option value="highest_transformation_potential">Highest Transformation Potential</option><option value="great_ngos">Great NGOs</option><option value="needs_more_context">Worth a Closer Look</option></select></label>
-            {settingsMessage && <div className="pool-message">{settingsMessage}</div>}
-            <div className="button-row"><button className="quiet-btn" disabled={settingsBusy} onClick={resetNgoText}>Restore original NGO text</button><button className="primary-red small-red" disabled={settingsBusy || !settingsNgoRef} onClick={saveNgoText}>{settingsBusy ? 'Saving…' : 'Save NGO text'}</button></div>
-          </>}
-        </div>
-
-        <div className="final-page-copy-editor">
-        <h3>Tier headings</h3>
-        <p>These heading edits remain local to this browser.</p>
+        <h2>Edit page text</h2>
+        <p>These edits are saved in this browser so you can adjust the language while reviewing the final page.</p>
         {groups.map(bucket => <div className="copy-edit-block" key={bucket.key}>
           <label className="admin-field"><span>{bucket.label} title</span><input value={copy.buckets?.[bucket.key]?.label || bucket.label} onChange={e => updateCopy({ ...copy, buckets: { ...copy.buckets, [bucket.key]: { ...(copy.buckets?.[bucket.key] || {}), label: e.target.value } } })} /></label>
           <label className="admin-field"><span>{bucket.label} description</span><input value={copy.buckets?.[bucket.key]?.note || bucket.note} onChange={e => updateCopy({ ...copy, buckets: { ...copy.buckets, [bucket.key]: { ...(copy.buckets?.[bucket.key] || {}), note: e.target.value } } })} /></label>
         </div>)}
         <div className="button-row"><button className="quiet-btn" onClick={() => { const next = defaultFinalCopy(groups); updateCopy(next); }}>Reset text</button><button className="primary-red small-red" onClick={() => setSettingsOpen(false)}>Done</button></div>
-        </div>
       </section>
     </div>}
   </section>;
@@ -712,13 +562,13 @@ export default function ProgressClient({ initialData }: { initialData: AnyObj })
       setRankingError('');
       try {
         if (view === 'combined') {
-          const r = await safeJSON(`${BACKEND}/ranking/compiled-review?region=${encodeURIComponent(state)}`);
+          const r = await safeJSON(`${BACKEND}/ranking/compiled-review`);
           if (!cancelled) {
             if (r.ok) setCompiledReview(r.data || {});
             else setRankingError(r.error || 'Could not load combined review.');
           }
         } else {
-          const r = await safeJSON(`${BACKEND}/ranking/final-board?region=${encodeURIComponent(state)}`);
+          const r = await safeJSON(`${BACKEND}/ranking/final-board`);
           if (!cancelled) {
             if (r.ok) setFinalBoard(r.data || {});
             else setRankingError(r.error || 'Could not load final output.');
@@ -819,6 +669,16 @@ export default function ProgressClient({ initialData }: { initialData: AnyObj })
       />}
 
       <footer className="page-foot">For internal use only</footer>
+      <FloatingPreview
+        title="Preview"
+        kicker="Rankings preview"
+        description="A premium look at the Rankings workflow — cleaner tiers, tactile buttons, and calmer hierarchy across PM Shortlists, Combined Review, and Final Ranking."
+        bullets={[
+          'Muted tier badges so bold red is reserved for actions',
+          'Ambient warm glow behind pure white cards for depth without muddiness',
+          'Sharper hover, focus, and control states across ranking pages',
+        ]}
+      />
     </main>
 
     {sectorOpen && current && <div className="modal-scrim" onClick={() => setSectorOpen(false)}>
