@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import WorkstreamPanel from './WorkstreamPanel';
 import AdminUndoRedo from '@/components/AdminUndoRedo';
-import FloatingPreview from '@/components/FloatingPreview';
 import DeepEnrichmentModal, { EnrichmentCandidate } from '@/components/DeepEnrichmentModal';
 import DeepEnrichmentRepairModal from '@/components/DeepEnrichmentRepairModal';
 import { DEFAULT_DASHBOARD_DATA, PM_PROFILES } from '@/lib/progressData';
@@ -820,16 +819,6 @@ export default function ProgressClient({ initialData }: { initialData: AnyObj })
       />}
 
       <footer className="page-foot">For internal use only</footer>
-      <FloatingPreview
-        title="Preview"
-        kicker="Rankings preview"
-        description="A premium look at the Rankings workflow — cleaner tiers, tactile buttons, and calmer hierarchy across PM Shortlists, Combined Review, and Final Ranking."
-        bullets={[
-          'Muted tier badges so bold red is reserved for actions',
-          'Ambient warm glow behind pure white cards for depth without muddiness',
-          'Sharper hover, focus, and control states across ranking pages',
-        ]}
-      />
     </main>
 
     {sectorOpen && current && <div className="modal-scrim" onClick={() => setSectorOpen(false)}>
