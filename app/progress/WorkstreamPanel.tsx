@@ -77,7 +77,6 @@ type WorkstreamData = {
   pms: Record<string, PmData>;
   global_log?: any[];
   ai_log?: any[];
-  edit_locks?: { all?: boolean; pms?: Record<string, boolean> };
 };
 
 type AiReview = {
@@ -189,7 +188,6 @@ function formatDuration(seconds?: number | null) { if (!seconds) return '—'; r
 function latestSubmitMs(pm?: PmData) { const times = submittedRows(pm).map(([, row]) => new Date(String(row.metric_submitted_at || row.submitted_at)).getTime()).filter(Number.isFinite); return times.length ? Math.max(...times) : 0; }
 function avgPace(pm?: PmData) { const times = submittedRows(pm).map(([, row]) => new Date(String(row.metric_submitted_at || row.submitted_at)).getTime()).filter(Number.isFinite).sort((a, b) => a - b); if (times.length < 2) return '—'; const diffs = times.slice(1).map((time, index) => Math.max(1, Math.round((time - times[index]) / 1000))); const avg = Math.round(diffs.reduce((a, b) => a + b, 0) / diffs.length); return formatDuration(avg); }
 function latestSubmittedIndex(pm?: PmData) { const tasks = pm?.tasks || []; const preferred = pm?.task_type === 'ngo_details' ? (pm as any)?.last_submitted_task_index : (pm as any)?.last_metric_submitted_task_index; const raw = Number(preferred); if (Number.isFinite(raw) && raw >= 0 && raw < tasks.length) return raw; const rows = submittedRows(pm); if (!rows.length) return 0; let best = 0; let bestMs = -1; rows.forEach(([idx, row]) => { const ms = new Date(String(row.metric_submitted_at || row.submitted_at || row.global_saved_at || '')).getTime(); const n = Number(idx); if (Number.isFinite(n) && (Number.isFinite(ms) ? ms : 0) >= bestMs) { best = n; bestMs = Number.isFinite(ms) ? ms : 0; } }); return Math.min(Math.max(best, 0), Math.max(0, tasks.length - 1)); }
-function pmEditLocked(data: WorkstreamData, pmName: string) { const locks = data.edit_locks || {}; return Boolean(locks.all || locks.pms?.[pmName]); }
 function parseCsvLine(line: string) { const cells: string[] = []; let cur = ''; let quoted = false; for (let i = 0; i < line.length; i += 1) { const ch = line[i]; if (ch === '"' && line[i + 1] === '"') { cur += '"'; i += 1; continue; } if (ch === '"') { quoted = !quoted; continue; } if (ch === ',' && !quoted) { cells.push(cur.trim()); cur = ''; continue; } cur += ch; } cells.push(cur.trim()); return cells; }
 function parseTasks(value: string): Task[] { const lines = value.split(/\r?\n/).map(item => item.trim()).filter(Boolean); if (!lines.length) return []; const first = lines[0].toLowerCase(); const hasHeader = /ngo|name|website|source|description|background|details/.test(first); const headers = hasHeader ? parseCsvLine(lines[0]).map(item => item.toLowerCase().trim()) : []; const body = hasHeader ? lines.slice(1) : lines; return body.map(line => { const cells = parseCsvLine(line); let name = cells[0] || ''; let website = cells[1] || ''; let background = cells.slice(2).join(' ').trim(); if (headers.length) { const get = (patterns: RegExp[], fallback: number) => { const idx = headers.findIndex(header => patterns.some(pattern => pattern.test(header))); return (idx >= 0 ? cells[idx] : cells[fallback]) || ''; }; name = get([/ngo.*name/, /^name$/], 0); website = get([/website/, /source/, /url/, /link/], 1); background = get([/description/, /background/, /context/, /note/, /details/], 2) || cells.slice(2).join(' '); } return { ngo_name: name || 'Untitled NGO', website, background }; }).filter(task => task.ngo_name && task.ngo_name !== 'Untitled NGO'); }
 function profileFor(name: string) { return Array.from(PM_PROFILES as unknown as any[]).find(pm => pm.name === name) || { name, tagline: '', role: 'PM', about: 'Details to be added.', img: '' }; }
@@ -236,8 +234,6 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
   const [transferStart, setTransferStart] = useState('1');
   const [transferEnd, setTransferEnd] = useState('1');
   const [transferMoveResponses, setTransferMoveResponses] = useState(true);
-  const [lockAllPms, setLockAllPms] = useState(false);
-  const [lockSelections, setLockSelections] = useState<Record<string, boolean>>({});
   const [adminRules, setAdminRules] = useState(DEFAULT_RULES);
   const [adminDeadline, setAdminDeadline] = useState('');
   const [adminDeadlineNote, setAdminDeadlineNote] = useState('');
@@ -264,7 +260,6 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
   const progress = pct(done, total);
   const time = countdown(pm.deadline);
   const selectedProfile = profileFor(selectedPM);
-  const editLocked = pmEditLocked(data, selectedPM);
   const taskEvidence = normaliseMetricEvidence(task?.metric_evidence || EMPTY_METRIC_EVIDENCE);
   const adminTargetPm = data.pms?.[adminPm] || makeDefaultData().pms[adminPm];
   const adminTaskIndex = Math.max(0, Math.min(Number(adminEvidenceTaskIndex) || 0, Math.max(0, (adminTargetPm.tasks?.length || 1) - 1)));
@@ -345,7 +340,6 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
   function maybeShowMilestone(newDone: number) { const text = milestoneText(selectedPM, newDone, total); if (!text) return; const oldPct = pct(Math.max(0, newDone - 1), total); const newPct = pct(newDone, total); const thresholds = [10, 25, 50, 75, 100]; if (thresholds.some(threshold => oldPct < threshold && newPct >= threshold)) { setMilestoneCopy(text); setMilestoneOpen(true); burstConfetti(newPct >= 100 ? 150 : 80); } }
 
   async function submitDecision() {
-    if (editLocked) { setMsg('Edits are locked for this PM. Admin can unlock from the gear.'); return; }
     const error = validationMessage();
     if (error) { setMsg(error); if (!isDetails) startRerank(); return; }
 
@@ -444,7 +438,6 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
   }
 
   async function deleteResponse() {
-    if (editLocked) { setMsg('Edits are locked for this PM. Admin can unlock from the gear.'); return; }
     const hasSavedWork = isDetails ? Boolean(response.submitted) : metricResponseComplete(response);
     if (!hasSavedWork) return;
     const actionLabel = isDetails ? 'Delete this response?' : 'Clear the three new metric scores and exception override? The previous overall ranking will remain untouched.';
@@ -547,8 +540,6 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
   }
 
   async function transferShortlistItems() { const base = backendBase(); const start = Number(transferStart); const end = Number(transferEnd || transferStart); if (!adminPassword.trim()) { setMsg('Enter admin password first.'); return; } if (!base) { setMsg('Backend URL missing. Transfer needs backend memory.'); return; } if (!Number.isFinite(start) || start < 1 || !Number.isFinite(end) || end < 1) { setMsg('Enter a valid 1-based shortlist range.'); return; } if (transferFromPm === transferToPm) { setMsg('Pick two different PMs.'); return; } const lo = Math.min(start, end); const hi = Math.max(start, end); const count = hi - lo + 1; if (!window.confirm(`Transfer shortlist item${count > 1 ? 's' : ''} ${lo}${hi !== lo ? `–${hi}` : ''} from ${transferFromPm} to ${transferToPm}?`)) return; setMsg('Transferring shortlist assignment…'); try { const result = await backendFetch(`${base}/workstream/admin/transfer-tasks`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: adminPassword, from_pm: transferFromPm, to_pm: transferToPm, start_index: lo, end_index: hi, move_responses: transferMoveResponses }) }); const json = await result.json(); if (json?.ok) { setData(json.data); setMsg(`Transferred ${json.transferred || count} item(s) from ${transferFromPm} to ${transferToPm}.`); } else setMsg(json?.error || 'Transfer failed.'); } catch (errorValue: any) { setMsg(errorValue?.message || 'Transfer failed.'); } }
-  async function applyEditLocks(locked: boolean) { const base = backendBase(); const selected = PM_NAMES.filter(name => lockSelections[name]); if (!adminPassword.trim()) { setMsg('Enter admin password first.'); return; } if (!base) { setMsg('Backend URL missing. Edit lock needs backend memory.'); return; } if (!lockAllPms && !selected.length) { setMsg('Select all PMs or at least one PM.'); return; } const label = lockAllPms ? 'all PMs' : selected.join(', '); if (!window.confirm(`${locked ? 'Lock' : 'Unlock'} edits for ${label}?`)) return; setMsg(`${locked ? 'Locking' : 'Unlocking'} PM edits…`); try { const result = await backendFetch(`${base}/workstream/admin/lock-edits`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: adminPassword, all_pms: lockAllPms, pms: selected, locked }) }); const json = await result.json(); if (json?.ok) { setData(json.data); setMsg(`${locked ? 'Locked' : 'Unlocked'} edits for ${label}.`); } else setMsg(json?.error || 'Lock update failed.'); } catch (errorValue: any) { setMsg(errorValue?.message || 'Lock update failed.'); } }
-  function toggleLockSelection(name: string) { setLockSelections(old => ({ ...old, [name]: !old[name] })); }
   function nextTask() { setCurrentIndex(index => Math.min((pm.tasks?.length || 1) - 1, index + 1)); }
   function prevTask() { setCurrentIndex(index => Math.max(0, index - 1)); }
   function handleTaskFile(file?: File | null) { if (!file) return; const reader = new FileReader(); reader.onload = () => { const tasks = parseTasks(String(reader.result || '')); setAdminTasks(tasks); setMsg(`${tasks.length} tasks ready to add.`); }; reader.readAsText(file); }
@@ -603,7 +594,6 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
               {mode === 'task' && (
                 <>
                   <div className="game-strip"><span>🔥 Streak {streak}</span><span>{lastQuality || 'Quality —'}</span><span>{lastBadge ? `${lastBadge} · ${formatDuration(lastPaceSeconds)}` : 'Pace —'}</span><span>{reviewerMode(pm)}</span></div>
-                  {editLocked && <div className="lock-banner">🔒 Edits locked by admin. Existing rankings are view-only until unlocked from the gear.</div>}
                   {task ? (
                     <div className="workstream-task-card pm-ranking-task-card">
                       <div className="task-nav-row"><button className="quiet-btn" onClick={prevTask} disabled={currentIndex === 0}>← Previous</button><span>NGO {currentIndex + 1} of {total}</span><button className="quiet-btn" onClick={nextTask} disabled={currentIndex >= total - 1}>Next →</button></div>
@@ -659,7 +649,7 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
                                   metricKey={metric.key}
                                   score={metricScores[metric.key]}
                                   evidence={taskEvidence[metric.key]}
-                                  disabled={editLocked}
+                                 
                                   onChange={next => updateMetricScore(metric.key, next)}
                                   onOpenReferences={() => setReferenceMetric(metric.key)}
                                 />
@@ -670,7 +660,7 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
                                 <input
                                   type="checkbox"
                                   checked={exceptionOverride.enabled}
-                                  disabled={editLocked}
+                                 
                                   onChange={event => setExceptionOverride(current => ({
                                     ...current,
                                     enabled: event.target.checked,
@@ -685,28 +675,29 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
 
                               {exceptionOverride.enabled && (
                                 <div className="metric-exception-content">
-                                  <div className="metric-rank-panel metric-exception-rank">
+                                  <div className="metric-rank-panel metric-exception-rank metric-choice-panel">
                                     <div className="metric-rank-value"><strong>{exceptionOverride.rank}</strong><span>Overall exception rank</span></div>
-                                    <input
-                                      className={`rank-slider metric-rank-slider rank-${exceptionOverride.rank}`}
-                                      type="range"
-                                      min="1"
-                                      max="5"
-                                      step="1"
-                                      value={exceptionOverride.rank}
-                                      disabled={editLocked}
-                                      aria-label="Exception override overall rank"
-                                      onChange={event => setExceptionOverride(current => ({ ...current, rank: Number(event.target.value) }))}
-                                    />
-                                    <div className="metric-rank-scale">
-                                      {[1, 2, 3, 4, 5].map(value => <span key={value}><b>{value}</b></span>)}
+                                    <div className="metric-score-choices metric-exception-choices" role="radiogroup" aria-label="Exception override overall rank">
+                                      {[1, 2, 3, 4, 5].map(value => (
+                                        <button
+                                          key={value}
+                                          type="button"
+                                          className={value === exceptionOverride.rank ? 'active' : ''}
+                                          role="radio"
+                                          aria-checked={value === exceptionOverride.rank}
+                                          onClick={() => setExceptionOverride(current => ({ ...current, rank: value }))}
+                                        >
+                                          <b>{value}</b>
+                                          <span>{['', 'Minimal', 'Limited', 'Meaningful', 'Strong', 'Benchmark-level'][value]}</span>
+                                        </button>
+                                      ))}
                                     </div>
                                   </div>
                                   <label className="metric-reason-field metric-exception-reason">
                                     <span>Why is this an exception? <b>Required</b></span>
                                     <textarea
                                       value={exceptionOverride.reason}
-                                      disabled={editLocked}
+                                     
                                       minLength={100}
                                       onChange={event => setExceptionOverride(current => ({ ...current, reason: event.target.value }))}
                                       placeholder="Explain what the three metric scores fail to capture and why the NGO should receive this overall exception rank."
@@ -721,20 +712,20 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
                       ) : (
                         <>
                           <input className="workstream-input" value={task.ngo_name} readOnly placeholder="NGO name" />
-                          <textarea className="workstream-textarea" value={description} disabled={editLocked} onChange={event => setDescription(event.target.value)} placeholder="Details of NGO" />
-                          <input className="workstream-input" value={contactNumber} disabled={editLocked} onChange={event => setContactNumber(event.target.value)} placeholder="POC contact number" />
-                          <input className="workstream-input" value={referralSource} disabled={editLocked} onChange={event => setReferralSource(event.target.value)} placeholder="Referral came from which NGO?" />
+                          <textarea className="workstream-textarea" value={description} onChange={event => setDescription(event.target.value)} placeholder="Details of NGO" />
+                          <input className="workstream-input" value={contactNumber} onChange={event => setContactNumber(event.target.value)} placeholder="POC contact number" />
+                          <input className="workstream-input" value={referralSource} onChange={event => setReferralSource(event.target.value)} placeholder="Referral came from which NGO?" />
                           <div className="word-helper">No minimum length. Just capture what is available.</div>
                         </>
                       )}
 
                       <div className="workstream-actions">
-                        <button className="primary-red glow-action" onClick={submitDecision} disabled={editLocked}>{isDetails ? (response.submitted ? 'Update details' : 'Submit') : (metricComplete ? 'Save assessment' : 'Submit assessment')}</button>
+                        <button className="primary-red glow-action" onClick={submitDecision}>{isDetails ? (response.submitted ? 'Update details' : 'Submit') : (metricComplete ? 'Save assessment' : 'Submit assessment')}</button>
                         {!isDetails && metricComplete && <button className="ghost-btn" type="button" onClick={startRerank}>Edit assessment</button>}
                         <button className="ghost-btn" onClick={() => runReview('selected')} disabled={isDetails ? !response.submitted : !metricComplete}>Response review</button>
-                        <button className="ghost-btn" onClick={deleteResponse} disabled={(isDetails ? !response.submitted : !metricComplete) || editLocked}>{isDetails ? 'Delete response' : 'Clear assessment'}</button>
+                        <button className="ghost-btn" onClick={deleteResponse} disabled={isDetails ? !response.submitted : !metricComplete}>{isDetails ? 'Delete response' : 'Clear assessment'}</button>
                       </div>
-                      <div className="live-reaction"><b>{isDetails ? 'Saved' : 'Three-metric assessment'}</b><span>{msg || (isDetails ? (response.submitted ? `Saved at ${niceTime(response.submitted_at)}.` : 'Submit to save globally.') : (metricComplete ? `Saved at ${niceTime(response.metric_submitted_at)}. Previous overall ranking remains locked.` : 'Complete all three scores and rationales to save. The exception override is optional.'))}</span></div>
+                      <div className="live-reaction"><b>{isDetails ? 'Saved' : 'Three-metric assessment'}</b><span>{msg || (isDetails ? (response.submitted ? `Saved at ${niceTime(response.submitted_at)}.` : 'Submit to save globally.') : (metricComplete ? `Saved at ${niceTime(response.metric_submitted_at)}. Previous overall ranking remains read-only.` : 'Complete all three scores and rationales to save. The exception override is optional.'))}</span></div>
                     </div>
                   ) : <div className="workstream-task-card"><h3>No task added</h3><p>Add tasks from the PM view gear.</p></div>}
                   {progress >= 100 && <EndSummary pm={pm} name={selectedPM} />}
@@ -805,7 +796,6 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
               <div className="admin-inline"><button className="ghost-btn" type="button" onClick={csvSample}>Download sample CSV</button><span>{adminTasks.length ? `${adminTasks.length} task(s) ready to add` : 'CSV adds tasks only'}</span></div>
 
               <div className="admin-subsection"><b>Transfer shortlist assignment</b><p>Move one item or a 1-based range from one PM to another. Example: 15 to 27.</p><div className="admin-mini-grid"><label className="admin-field"><span>From PM</span><select value={transferFromPm} onChange={event => setTransferFromPm(event.target.value)}>{PM_NAMES.map(name => <option key={name} value={name}>{name}</option>)}</select></label><label className="admin-field"><span>To PM</span><select value={transferToPm} onChange={event => setTransferToPm(event.target.value)}>{PM_NAMES.map(name => <option key={name} value={name}>{name}</option>)}</select></label><FieldLike label="Start #" value={transferStart} onChange={setTransferStart} /><FieldLike label="End #" value={transferEnd} onChange={setTransferEnd} /></div><label className="admin-check"><input type="checkbox" checked={transferMoveResponses} onChange={event => setTransferMoveResponses(event.target.checked)} /> Move submitted response also, if any</label><button className="ghost-btn" type="button" onClick={transferShortlistItems}>Transfer range</button></div>
-              <div className="admin-subsection"><b>Lock PM edits</b><p>Lock all PM shortlists or selected PMs. Locked PMs can view their page but cannot submit, edit, or delete responses.</p><label className="admin-check"><input type="checkbox" checked={lockAllPms} onChange={event => setLockAllPms(event.target.checked)} /> Apply to all PMs</label>{!lockAllPms && <div className="admin-check-grid">{PM_NAMES.map(name => <label className="admin-check" key={name}><input type="checkbox" checked={Boolean(lockSelections[name])} onChange={() => toggleLockSelection(name)} /> {name}{pmEditLocked(data, name) ? ' · locked' : ''}</label>)}</div>}<div className="admin-inline"><button className="ghost-btn" type="button" onClick={() => applyEditLocks(true)}>Lock edits</button><button className="ghost-btn" type="button" onClick={() => applyEditLocks(false)}>Unlock edits</button></div><small>Current global lock: {data.edit_locks?.all ? 'ON' : 'OFF'}</small></div>
               <FieldLike label="Admin password" value={adminPassword} onChange={setAdminPassword} />
               <p className="drawer-msg">{msg}</p>
             </div>

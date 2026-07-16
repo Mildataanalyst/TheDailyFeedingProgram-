@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, type CSSProperties } from 'react';
+import { useMemo } from 'react';
 
 export type MetricKey = 'child_progression' | 'learning_model' | 'development_ecosystem';
 export type MetricScore = { rank: number; reason: string };
@@ -332,7 +332,6 @@ export function MetricScoringCard({
   const hasEvidence = facts.length > 0 || links.length > 0 || Boolean(normalisedEvidence.ceiling_rank || normalisedEvidence.ceiling_reason);
   const ceilingRank = normalisedEvidence.ceiling_rank || 0;
   const exceedsCeiling = Boolean(ceilingRank && score.rank > ceilingRank);
-  const sliderStyle = { '--metric-progress': `${((score.rank - 1) / 4) * 100}%` } as CSSProperties;
 
   return (
     <article className={`metric-score-card metric-score-${score.rank} ${exceedsCeiling ? 'metric-score-over-ceiling' : ''}`}>
@@ -381,26 +380,27 @@ export function MetricScoringCard({
         </div>
       </details>
 
-      <div className="metric-rank-panel">
+      <div className="metric-rank-panel metric-choice-panel">
         <div className="metric-rank-value"><strong>{score.rank}</strong><span>{METRIC_SCALE[score.rank]}</span></div>
-        <input
-          className="rank-slider metric-rank-slider"
-          style={sliderStyle}
-          type="range"
-          min="1"
-          max="5"
-          step="1"
-          value={score.rank}
-          disabled={disabled}
-          aria-label={`${metric.title} rank`}
-          onChange={event => onChange({ ...score, rank: Number(event.target.value) })}
-        />
-        <div className="metric-rank-scale">
-          {Object.entries(METRIC_SCALE).map(([rank, label]) => (
-            <span key={rank} className={Number(rank) === score.rank ? 'active' : ''} aria-current={Number(rank) === score.rank ? 'true' : undefined}>
-              <b>{rank}</b><em>{label}</em>
-            </span>
-          ))}
+        <div className="metric-score-choices" role="radiogroup" aria-label={`${metric.title} rank`}>
+          {Object.entries(METRIC_SCALE).map(([rank, label]) => {
+            const value = Number(rank);
+            const active = value === score.rank;
+            return (
+              <button
+                key={rank}
+                type="button"
+                className={active ? 'active' : ''}
+                role="radio"
+                aria-checked={active}
+                disabled={disabled}
+                onClick={() => onChange({ ...score, rank: value })}
+              >
+                <b>{rank}</b>
+                <span>{label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
