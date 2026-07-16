@@ -5,8 +5,6 @@ import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import WorkstreamPanel from './WorkstreamPanel';
 import AdminUndoRedo from '@/components/AdminUndoRedo';
-import FloatingPreview from '@/components/FloatingPreview';
-import DeepEnrichmentModal, { EnrichmentCandidate } from '@/components/DeepEnrichmentModal';
 import { DEFAULT_DASHBOARD_DATA, PM_PROFILES } from '@/lib/progressData';
 import { safeExternalUrl } from '@/lib/urlSafety';
 import { BACKEND, safeJSON } from '@/lib/backendClient';
@@ -215,28 +213,12 @@ function groupsFromFinal(data: any) {
   }
   return order.map(key => ({ key, label: labels[key], note: notes[key], rows: buckets[key] || [] }));
 }
-function CombinedReviewPanel({ data, loading, error, region }: { data: any; loading: boolean; error: string; region: string }) {
+function CombinedReviewPanel({ data, loading, error }: { data: any; loading: boolean; error: string }) {
   const groups = groupsFromCompiled(data);
   const pmCounts = data?.pm_counts || {};
-  const [enrichmentOpen, setEnrichmentOpen] = useState(false);
-  const enrichmentRows: EnrichmentCandidate[] = groups
-    .filter(group => group.key !== 'pending')
-    .flatMap(group => group.rows.map((row: any, index: number) => ({
-      id: String(pick(row, 'ngo_ref', 'id') || `${pick(row, 'reviewer') || 'pm'}-${pick(row, 'task_index') || index}-${pick(row, 'ngo_name', 'name') || 'ngo'}`),
-      ngo_name: String(pick(row, 'ngo_name', 'NGO Name', 'name') || 'Untitled NGO'),
-      website: String(pick(row, 'website', 'Website') || ''),
-      pm_reviewer: String(pick(row, 'reviewer', 'pm_reviewer', 'pm') || ''),
-      pm_rating: Number(pick(row, 'rating', 'pm_rating') || group.key) || null,
-      pm_comment: String(pick(row, 'comment', 'pm_comment', 'reason') || ''),
-      one_line_understanding: String(pick(row, 'one_line_understanding', 'background', 'summary') || ''),
-    })));
   return <section className="review-board combined-minimal-board">
     {loading && <div className="empty-review">Loading combined review…</div>}
     {error && <div className="error-box">{error}</div>}
-    <div className="combined-review-commandbar">
-      <div><span>Evidence layer</span><b>Research selected NGOs beyond their PM review.</b><small>Official websites + external media + structured GPT/Fable dossiers.</small></div>
-      <button className="deep-enrichment-launch" onClick={() => setEnrichmentOpen(true)} disabled={!enrichmentRows.length}><span>✦</span> Deep enrichment</button>
-    </div>
     <div className="review-summary-strip">
       {Object.keys(pmCounts).length ? Object.entries(pmCounts).slice(0,5).map(([name, counts]: any) => <div className="review-summary-card" key={name}><span>{name}</span><b>{counts?.total ?? 0}</b><small>5:{counts?.['5'] ?? 0} · 4:{counts?.['4'] ?? 0} · 3:{counts?.['3'] ?? 0} · 2:{counts?.['2'] ?? 0} · 1:{counts?.['1'] ?? 0}</small></div>) : <>
         <div className="review-summary-card"><span>Total rated</span><b>{data?.total_rated ?? 0}</b></div>
@@ -257,7 +239,6 @@ function CombinedReviewPanel({ data, loading, error, region }: { data: any; load
         }) : <div className="empty-review">No rows here.</div>}
       </div>
     </section>)}
-    <DeepEnrichmentModal open={enrichmentOpen} onClose={() => setEnrichmentOpen(false)} region={region} rows={enrichmentRows} />
   </section>;
 }
 function defaultFinalCopy(groups: Array<{key:string; label:string; note:string; rows:any[]}>) {
@@ -658,7 +639,7 @@ export default function ProgressClient({ initialData }: { initialData: AnyObj })
 
 
       {state && view === 'pm' && <><div className="source-topline ranking-subtop"><button className="quiet-btn" onClick={() => setView('hub')}>← Back</button><span>PM Shortlists · {state}</span></div><AdminUndoRedo region={state} context="PM shortlisting recovery" onRestored={() => setRestoreTick(x => x + 1)} /><WorkstreamPanel key={restoreTick} stateName={state} /></>}
-      {state && view === 'combined' && <><div className="source-topline ranking-subtop"><button className="quiet-btn" onClick={() => setView('hub')}>← Back</button><span>Combined Review · {state}</span></div><AdminUndoRedo region={state} context="Combined review recovery" onRestored={() => setRestoreTick(x => x + 1)} /><CombinedReviewPanel data={compiledReview} loading={rankingLoading} error={rankingError} region={state} /></>}
+      {state && view === 'combined' && <><div className="source-topline ranking-subtop"><button className="quiet-btn" onClick={() => setView('hub')}>← Back</button><span>Combined Review · {state}</span></div><AdminUndoRedo region={state} context="Combined review recovery" onRestored={() => setRestoreTick(x => x + 1)} /><CombinedReviewPanel data={compiledReview} loading={rankingLoading} error={rankingError} /></>}
       {state && view === 'final' && <FinalOutputPanel
         data={finalBoard}
         loading={rankingLoading}
@@ -669,16 +650,6 @@ export default function ProgressClient({ initialData }: { initialData: AnyObj })
       />}
 
       <footer className="page-foot">For internal use only</footer>
-      <FloatingPreview
-        title="Preview"
-        kicker="Rankings preview"
-        description="A premium look at the Rankings workflow — cleaner tiers, tactile buttons, and calmer hierarchy across PM Shortlists, Combined Review, and Final Ranking."
-        bullets={[
-          'Muted tier badges so bold red is reserved for actions',
-          'Ambient warm glow behind pure white cards for depth without muddiness',
-          'Sharper hover, focus, and control states across ranking pages',
-        ]}
-      />
     </main>
 
     {sectorOpen && current && <div className="modal-scrim" onClick={() => setSectorOpen(false)}>
