@@ -35,6 +35,22 @@ export async function safeJSON(url: string, opts?: RequestInit): Promise<SafeRes
   }
 }
 
+export async function safeSearchJSON(url: string, opts?: RequestInit): Promise<SafeResponse> {
+  if (!SEARCH_BACKEND) return { ok: false, status: 0, data: null, error: SEARCH_BACKEND_CONFIG_ERROR };
+  const method = (opts?.method || 'GET').toUpperCase();
+  const headers = backendHeaders(opts?.headers, method);
+  try {
+    const res = await fetch(url, { ...opts, headers });
+    const text = await res.text();
+    let data: any = null;
+    try { data = text ? JSON.parse(text) : null; }
+    catch { return { ok: false, status: res.status, data: null, error: 'Worker did not return JSON' + (text ? ' — ' + text.slice(0, 120) : '') }; }
+    return { ok: res.ok, status: res.status, data, error: res.ok ? null : (data?.error || 'Worker error ' + res.status) };
+  } catch (err: any) {
+    return { ok: false, status: 0, data: null, error: 'Could not reach the search worker — ' + (err?.message || 'network error') };
+  }
+}
+
 export async function backendFetch(url: string, opts?: RequestInit): Promise<Response> {
   const method = (opts?.method || 'GET').toUpperCase();
   const headers = backendHeaders(opts?.headers, method);
