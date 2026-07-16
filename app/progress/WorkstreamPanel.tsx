@@ -10,6 +10,7 @@ import {
   METRIC_DEFINITIONS,
   MetricEvidence,
   MetricKey,
+  MetricReferenceLibraryModal,
   MetricReferenceModal,
   MetricScore,
   MetricScoringCard,
@@ -27,6 +28,17 @@ type Task = {
   [key: string]: any;
 };
 
+type ExceptionOverride = { enabled: boolean; rank: number; reason: string };
+const DEFAULT_EXCEPTION_OVERRIDE: ExceptionOverride = { enabled: false, rank: 3, reason: '' };
+
+function normaliseExceptionOverride(value: unknown): ExceptionOverride {
+  const raw = value && typeof value === 'object' ? value as Record<string, any> : {};
+  const rankValue = Number(raw.rank ?? raw.score ?? raw.override_rank ?? 3);
+  const rank = Number.isFinite(rankValue) ? Math.min(5, Math.max(1, Math.round(rankValue))) : 3;
+  const enabled = raw.enabled === true || ['1', 'true', 'yes', 'on'].includes(String(raw.enabled ?? raw.active ?? raw.override ?? '').trim().toLowerCase());
+  return { enabled, rank, reason: String(raw.reason ?? raw.override_reason ?? '') };
+}
+
 type ResponseRow = {
   decision?: string;
   rank?: number;
@@ -36,6 +48,7 @@ type ResponseRow = {
   metric_submitted?: boolean;
   metric_submitted_at?: string;
   metric_scoring_version?: string;
+  exception_override?: ExceptionOverride;
   ngo_description?: string;
   contact_number?: string;
   referral_source?: string;
@@ -145,20 +158,20 @@ function metricResponseComplete(row?: ResponseRow) {
   if (!row) return false;
   if (row.metric_submitted) return true;
   const scores = normaliseMetricScores(row.metric_scores);
-  return METRIC_DEFINITIONS.every(metric => {
+  const exception = normaliseExceptionOverride(row.exception_override);
+  const metricsValid = METRIC_DEFINITIONS.every(metric => {
     const item = scores[metric.key];
-    const overrideValid = !item.override || String(item.override_reason || '').trim().length >= 100;
-    return item.rank >= 1 && item.rank <= 5 && String(item.reason || '').trim().length >= 100 && overrideValid;
+    return item.rank >= 1 && item.rank <= 5 && String(item.reason || '').trim().length >= 100;
   });
+  const exceptionValid = !exception.enabled || (exception.rank >= 1 && exception.rank <= 5 && String(exception.reason || '').trim().length >= 100);
+  return metricsValid && exceptionValid;
 }
 function responseText(row?: ResponseRow) {
   if (!row) return '';
   const scores = normaliseMetricScores(row.metric_scores);
-  const metricText = METRIC_DEFINITIONS.flatMap(metric => {
-    const score = scores[metric.key];
-    return [score.reason, score.override ? score.override_reason : ''];
-  }).filter(Boolean).join(' ');
-  return metricText || row.reason || row.ngo_description || '';
+  const metricText = METRIC_DEFINITIONS.map(metric => scores[metric.key].reason).filter(Boolean).join(' ');
+  const exception = normaliseExceptionOverride(row.exception_override);
+  return [metricText, exception.enabled ? exception.reason : ''].filter(Boolean).join(' ') || row.reason || row.ngo_description || '';
 }
 function submittedRows(pm?: PmData) {
   const details = pm?.task_type === 'ngo_details';
@@ -197,7 +210,9 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
   const [rank, setRank] = useState(3);
   const [reason, setReason] = useState('');
   const [metricScores, setMetricScores] = useState<Record<MetricKey, MetricScore>>(() => structuredClone(DEFAULT_METRIC_SCORES));
+  const [exceptionOverride, setExceptionOverride] = useState<ExceptionOverride>(() => ({ ...DEFAULT_EXCEPTION_OVERRIDE }));
   const [referenceMetric, setReferenceMetric] = useState<MetricKey | null>(null);
+  const [referenceLibraryOpen, setReferenceLibraryOpen] = useState(false);
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const metricSectionRef = useRef<HTMLDivElement>(null);
   const [reranking, setReranking] = useState(false);
@@ -272,6 +287,7 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
     setRank(Number.isFinite(stored) ? Math.min(5, Math.max(1, stored)) : 3);
     setReason(saved.reason || '');
     setMetricScores(normaliseMetricScores(saved.metric_scores));
+    setExceptionOverride(normaliseExceptionOverride(saved.exception_override));
     setReranking(false);
     setDescription(saved.ngo_description || '');
     setContactNumber(saved.contact_number || saved.referral_poc || '');
@@ -319,9 +335,9 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
       const ceiling = Number(taskEvidence[metric.key]?.ceiling_rank || 0);
       if (!row?.rank) return `Select a rank for ${metric.title}.`;
       if (String(row.reason || '').trim().length < 100) return `${metric.title}: rationale must be at least 100 characters.`;
-      if (ceiling && row.rank > ceiling && !row.override) return `${metric.title}: score ${row.rank} is above the recommended ceiling of ${ceiling}. Select “Override this metric” and explain why.`;
-      if (row.override && String(row.override_reason || '').trim().length < 100) return `${metric.title}: override reason must be at least 100 characters.`;
+      if (ceiling && row.rank > ceiling) return `${metric.title}: score ${row.rank} is above the recommended ceiling of ${ceiling}. Keep the metric at or below the ceiling; use the single exception override below for the overall NGO judgement.`;
     }
+    if (exceptionOverride.enabled && String(exceptionOverride.reason || '').trim().length < 100) return 'Exception override reason must be at least 100 characters.';
     return '';
   }
   function compactJoke(delta: number, words: number, remaining: number) { const lines = PM_LINES[selectedPM] || ['Saved. The spreadsheet lost one round.']; let line = lines[Math.floor(Math.random() * lines.length)]; if (words <= 2) line = 'Minimalist review; future people will still manage.'; if (words >= 30) line = 'Long review. Either deep judgement or caffeine possession.'; if (delta && delta < 35) line = line.replace('.', '') + ' — speedrun edition.'; if (delta >= 180) line = line.replace('.', '') + ' — thoughtful, or WhatsApp won for a bit.'; return `${line} ${remaining} left.`; }
@@ -336,10 +352,10 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
     const prevMs = latestSubmitMs(pm);
     const nowIso = new Date().toISOString();
     const wasComplete = isDetails ? Boolean(response.submitted) : metricResponseComplete(response);
-    const metricReasonText = METRIC_DEFINITIONS.flatMap(metric => {
-      const score = metricScores[metric.key];
-      return [score.reason, score.override ? score.override_reason : ''];
-    }).filter(Boolean).join(' ');
+    const metricReasonText = [
+      ...METRIC_DEFINITIONS.map(metric => metricScores[metric.key].reason),
+      exceptionOverride.enabled ? exceptionOverride.reason : '',
+    ].filter(Boolean).join(' ');
 
     const localResponse: ResponseRow = isDetails ? {
       ...response,
@@ -358,7 +374,8 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
       metric_scores: metricScores,
       metric_submitted: true,
       metric_submitted_at: nowIso,
-      metric_scoring_version: 'v1.1',
+      metric_scoring_version: 'v1.2',
+      exception_override: exceptionOverride,
     };
 
     const newDone = wasComplete ? done : done + 1;
@@ -371,7 +388,7 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
     setReranking(false);
     setMsg(isDetails
       ? (wasComplete ? 'NGO details updated.' : reactionText(prevMs, newDone))
-      : (wasComplete ? 'Three metric scores updated. The previous overall ranking remains unchanged.' : 'Three metric scores saved. The previous overall ranking remains unchanged.'));
+      : (wasComplete ? 'Assessment updated. The previous overall ranking remains unchanged.' : 'Assessment saved. The previous overall ranking remains unchanged.'));
     burstConfetti(newDone === 1 ? 130 : newDone === 5 ? 180 : newDone === total ? 170 : 55);
     maybeShowMilestone(newDone);
 
@@ -392,7 +409,8 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
           pm: selectedPM,
           task_index: currentIndex,
           metric_scores: metricScores,
-          metric_scoring_version: 'v1.1',
+          metric_scoring_version: 'v1.2',
+      exception_override: exceptionOverride,
         };
         const result = await backendFetch(`${base}${endpoint}`, {
           method: 'POST',
@@ -429,7 +447,7 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
     if (editLocked) { setMsg('Edits are locked for this PM. Admin can unlock from the gear.'); return; }
     const hasSavedWork = isDetails ? Boolean(response.submitted) : metricResponseComplete(response);
     if (!hasSavedWork) return;
-    const actionLabel = isDetails ? 'Delete this response?' : 'Clear the three new metric scores? The previous overall ranking will remain untouched.';
+    const actionLabel = isDetails ? 'Delete this response?' : 'Clear the three new metric scores and exception override? The previous overall ranking will remain untouched.';
     if (!window.confirm(actionLabel)) return;
 
     setData(old => {
@@ -442,12 +460,14 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
         delete row.metric_submitted;
         delete row.metric_submitted_at;
         delete row.metric_scoring_version;
+        delete row.exception_override;
         next.pms[selectedPM].responses[String(currentIndex)] = row;
       }
       return next;
     });
     setMetricScores(structuredClone(DEFAULT_METRIC_SCORES));
-    setMsg(isDetails ? 'Response deleted.' : 'Three metric scores cleared. Previous overall ranking preserved.');
+    setExceptionOverride({ ...DEFAULT_EXCEPTION_OVERRIDE });
+    setMsg(isDetails ? 'Response deleted.' : 'Three metric scores and exception override cleared. Previous overall ranking preserved.');
     setLastBadge('');
     setLastQuality('');
 
@@ -620,11 +640,12 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
                               <div>
                                 <span className="workstream-kicker">New assessment</span>
                                 <h3>Score the NGO on three separate dimensions</h3>
-                                <p>Open each evidence pack, use the 1–5 slider, and write a rationale of at least 100 characters. The old overall score above cannot be changed.</p>
+                                <p>Open each evidence pack, use the 1–5 slider, and write a rationale of at least 100 characters. For rare exception cases, one separate overall override is available below the three metrics. The old overall score above cannot be changed.</p>
                               </div>
                               <div className="metric-intro-actions">
+                                <button type="button" className="metric-reference-library-btn" onClick={() => setReferenceLibraryOpen(true)}>Reference examples</button>
                                 <button type="button" className="metric-tutorial-btn" onClick={() => setTutorialOpen(true)}>▶ Kalkeri scoring tutorial</button>
-                                {metricComplete && <button type="button" className="metric-rerank-btn" onClick={startRerank}>↻ Edit three scores</button>}
+                                {metricComplete && <button type="button" className="metric-rerank-btn" onClick={startRerank}>↻ Edit assessment</button>}
                               </div>
                             </div>
                             <div className="metric-method-strip">
@@ -644,6 +665,57 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
                                 />
                               ))}
                             </div>
+                            <section className={`metric-exception-override ${exceptionOverride.enabled ? 'active' : ''}`}>
+                              <label className="metric-exception-toggle">
+                                <input
+                                  type="checkbox"
+                                  checked={exceptionOverride.enabled}
+                                  disabled={editLocked}
+                                  onChange={event => setExceptionOverride(current => ({
+                                    ...current,
+                                    enabled: event.target.checked,
+                                    reason: event.target.checked ? current.reason : '',
+                                  }))}
+                                />
+                                <span>
+                                  <b>Exception override</b>
+                                  <small>Use only when the three metric scores do not capture your overall judgement of this NGO.</small>
+                                </span>
+                              </label>
+
+                              {exceptionOverride.enabled && (
+                                <div className="metric-exception-content">
+                                  <div className="metric-rank-panel metric-exception-rank">
+                                    <div className="metric-rank-value"><strong>{exceptionOverride.rank}</strong><span>Overall exception rank</span></div>
+                                    <input
+                                      className={`rank-slider metric-rank-slider rank-${exceptionOverride.rank}`}
+                                      type="range"
+                                      min="1"
+                                      max="5"
+                                      step="1"
+                                      value={exceptionOverride.rank}
+                                      disabled={editLocked}
+                                      aria-label="Exception override overall rank"
+                                      onChange={event => setExceptionOverride(current => ({ ...current, rank: Number(event.target.value) }))}
+                                    />
+                                    <div className="metric-rank-scale">
+                                      {[1, 2, 3, 4, 5].map(value => <span key={value}><b>{value}</b></span>)}
+                                    </div>
+                                  </div>
+                                  <label className="metric-reason-field metric-exception-reason">
+                                    <span>Why is this an exception? <b>Required</b></span>
+                                    <textarea
+                                      value={exceptionOverride.reason}
+                                      disabled={editLocked}
+                                      minLength={100}
+                                      onChange={event => setExceptionOverride(current => ({ ...current, reason: event.target.value }))}
+                                      placeholder="Explain what the three metric scores fail to capture and why the NGO should receive this overall exception rank."
+                                    />
+                                    <small className={exceptionOverride.reason.trim().length >= 100 ? 'complete' : ''}>{exceptionOverride.reason.length}/100 characters minimum{exceptionOverride.reason.trim().length >= 100 ? ' · complete' : ''}</small>
+                                  </label>
+                                </div>
+                              )}
+                            </section>
                           </section>
                         </>
                       ) : (
@@ -657,12 +729,12 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
                       )}
 
                       <div className="workstream-actions">
-                        <button className="primary-red glow-action" onClick={submitDecision} disabled={editLocked}>{isDetails ? (response.submitted ? 'Update details' : 'Submit') : (metricComplete ? 'Save three scores' : 'Submit three scores')}</button>
-                        {!isDetails && metricComplete && <button className="ghost-btn" type="button" onClick={startRerank}>Edit three scores</button>}
+                        <button className="primary-red glow-action" onClick={submitDecision} disabled={editLocked}>{isDetails ? (response.submitted ? 'Update details' : 'Submit') : (metricComplete ? 'Save assessment' : 'Submit assessment')}</button>
+                        {!isDetails && metricComplete && <button className="ghost-btn" type="button" onClick={startRerank}>Edit assessment</button>}
                         <button className="ghost-btn" onClick={() => runReview('selected')} disabled={isDetails ? !response.submitted : !metricComplete}>Response review</button>
-                        <button className="ghost-btn" onClick={deleteResponse} disabled={(isDetails ? !response.submitted : !metricComplete) || editLocked}>{isDetails ? 'Delete response' : 'Clear three scores'}</button>
+                        <button className="ghost-btn" onClick={deleteResponse} disabled={(isDetails ? !response.submitted : !metricComplete) || editLocked}>{isDetails ? 'Delete response' : 'Clear assessment'}</button>
                       </div>
-                      <div className="live-reaction"><b>{isDetails ? 'Saved' : 'Three-metric assessment'}</b><span>{msg || (isDetails ? (response.submitted ? `Saved at ${niceTime(response.submitted_at)}.` : 'Submit to save globally.') : (metricComplete ? `Saved at ${niceTime(response.metric_submitted_at)}. Previous overall ranking remains locked.` : 'Complete all three scores and rationales to save.'))}</span></div>
+                      <div className="live-reaction"><b>{isDetails ? 'Saved' : 'Three-metric assessment'}</b><span>{msg || (isDetails ? (response.submitted ? `Saved at ${niceTime(response.submitted_at)}.` : 'Submit to save globally.') : (metricComplete ? `Saved at ${niceTime(response.metric_submitted_at)}. Previous overall ranking remains locked.` : 'Complete all three scores and rationales to save. The exception override is optional.'))}</span></div>
                     </div>
                   ) : <div className="workstream-task-card"><h3>No task added</h3><p>Add tasks from the PM view gear.</p></div>}
                   {progress >= 100 && <EndSummary pm={pm} name={selectedPM} />}
@@ -680,6 +752,7 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
       )}
 
       {referenceMetric && <MetricReferenceModal activeMetric={referenceMetric} documentUrl={data.scoring_reference_url} onClose={() => setReferenceMetric(null)} />}
+      {referenceLibraryOpen && <MetricReferenceLibraryModal onClose={() => setReferenceLibraryOpen(false)} />}
       {tutorialOpen && (
         <div className="metric-tutorial-scrim" onClick={() => setTutorialOpen(false)}>
           <section className="metric-tutorial-modal" onClick={event => event.stopPropagation()}>

@@ -19,42 +19,73 @@ export function backendHeaders(init?: HeadersInit, method = 'GET'): Headers {
   return headers;
 }
 
-export async function safeJSON(url: string, opts?: RequestInit): Promise<SafeResponse> {
-  if (!BACKEND) return { ok: false, status: 0, data: null, error: BACKEND_CONFIG_ERROR };
+function serviceUrl(base: string, url: string): string {
+  if (/^https?:\/\//i.test(url)) return url;
+  return `${base}/${url.replace(/^\/+/, '')}`;
+}
+
+async function safeServiceJSON(
+  base: string,
+  configError: string,
+  url: string,
+  opts?: RequestInit,
+): Promise<SafeResponse> {
+  if (!base) return { ok: false, status: 0, data: null, error: configError };
+
   const method = (opts?.method || 'GET').toUpperCase();
   const headers = backendHeaders(opts?.headers, method);
+
   try {
-    const res = await fetch(url, { ...opts, headers });
+    const res = await fetch(serviceUrl(base, url), { ...opts, headers });
     const text = await res.text();
     let data: any = null;
-    try { data = text ? JSON.parse(text) : null; }
-    catch { return { ok: false, status: res.status, data: null, error: 'Server did not return JSON' + (text ? ' — ' + text.slice(0, 120) : '') }; }
-    return { ok: res.ok, status: res.status, data, error: res.ok ? null : (data?.error || 'Server error ' + res.status) };
+
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      return {
+        ok: false,
+        status: res.status,
+        data: null,
+        error: 'Server did not return JSON' + (text ? ' — ' + text.slice(0, 120) : ''),
+      };
+    }
+
+    return {
+      ok: res.ok,
+      status: res.status,
+      data,
+      error: res.ok ? null : (data?.error || data?.detail || `Server error ${res.status}`),
+    };
   } catch (err: any) {
-    return { ok: false, status: 0, data: null, error: 'Could not reach the server — ' + (err?.message || 'network error') };
+    return {
+      ok: false,
+      status: 0,
+      data: null,
+      error: 'Could not reach the server — ' + (err?.message || 'network error'),
+    };
   }
 }
 
+/** Call the core backend safely. `url` may be absolute or a service-relative path. */
+export async function safeJSON(url: string, opts?: RequestInit): Promise<SafeResponse> {
+  return safeServiceJSON(BACKEND, BACKEND_CONFIG_ERROR, url, opts);
+}
+
+/** Call the search worker safely. `url` may be absolute or a service-relative path. */
 export async function safeSearchJSON(url: string, opts?: RequestInit): Promise<SafeResponse> {
-  if (!SEARCH_BACKEND) return { ok: false, status: 0, data: null, error: SEARCH_BACKEND_CONFIG_ERROR };
-  const method = (opts?.method || 'GET').toUpperCase();
-  const headers = backendHeaders(opts?.headers, method);
-  try {
-    const res = await fetch(url, { ...opts, headers });
-    const text = await res.text();
-    let data: any = null;
-    try { data = text ? JSON.parse(text) : null; }
-    catch { return { ok: false, status: res.status, data: null, error: 'Worker did not return JSON' + (text ? ' — ' + text.slice(0, 120) : '') }; }
-    return { ok: res.ok, status: res.status, data, error: res.ok ? null : (data?.error || 'Worker error ' + res.status) };
-  } catch (err: any) {
-    return { ok: false, status: 0, data: null, error: 'Could not reach the search worker — ' + (err?.message || 'network error') };
-  }
+  return safeServiceJSON(SEARCH_BACKEND, SEARCH_BACKEND_CONFIG_ERROR, url, opts);
+}
+
+/** Call the story/AI worker safely. `url` may be absolute or a service-relative path. */
+export async function safeStoryJSON(url: string, opts?: RequestInit): Promise<SafeResponse> {
+  return safeServiceJSON(STORY_BACKEND, STORY_BACKEND_CONFIG_ERROR, url, opts);
 }
 
 export async function backendFetch(url: string, opts?: RequestInit): Promise<Response> {
   const method = (opts?.method || 'GET').toUpperCase();
   const headers = backendHeaders(opts?.headers, method);
-  return fetch(url, { ...opts, headers });
+  return fetch(serviceUrl(BACKEND, url), { ...opts, headers });
 }
 
 export function isTerminalReady(data: any) {
