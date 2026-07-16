@@ -338,7 +338,7 @@ export function MetricScoringCard({
     <article className={`metric-score-card metric-score-${score.rank} ${exceedsCeiling ? 'metric-score-over-ceiling' : ''}`}>
       <div className="metric-score-head">
         <div>
-          <span className="metric-letter"><i />{metric.letter}</span>
+          <span className="metric-letter">{metric.letter}</span>
           <div>
             <h4>{metric.title}</h4>
             <p>{metric.question}</p>
@@ -396,7 +396,11 @@ export function MetricScoringCard({
           onChange={event => onChange({ ...score, rank: Number(event.target.value) })}
         />
         <div className="metric-rank-scale">
-          {Object.entries(METRIC_SCALE).map(([rank, label]) => <span key={rank}><b>{rank}</b><em>{label}</em></span>)}
+          {Object.entries(METRIC_SCALE).map(([rank, label]) => (
+            <span key={rank} className={Number(rank) === score.rank ? 'active' : ''} aria-current={Number(rank) === score.rank ? 'true' : undefined}>
+              <b>{rank}</b><em>{label}</em>
+            </span>
+          ))}
         </div>
       </div>
 
@@ -478,7 +482,7 @@ export function MetricReferenceLibraryModal({ onClose }: { onClose: () => void }
         <div className="metric-library-sections">
           {METRIC_DEFINITIONS.map(metric => (
             <section className="metric-library-section" key={metric.key}>
-              <div className="metric-library-section-head"><span className="metric-letter"><i />{metric.letter}</span><div><h3>{metric.title}</h3><p>{metric.question}</p></div></div>
+              <div className="metric-library-section-head"><span className="metric-letter">{metric.letter}</span><div><h3>{metric.title}</h3><p>{metric.question}</p></div></div>
               <GuideTable metric={metric} />
             </section>
           ))}
