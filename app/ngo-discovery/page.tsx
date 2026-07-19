@@ -153,11 +153,13 @@ function jobModule(job: AnyRow): RunModule | null {
   if(id.startsWith('run_')||kind==='repository'||kind==='dedupe_recheck')return 'repository';
   return null;
 }
-function runLabel(module: RunModule){ return module==='recovery'?'Smart Recovery':module==='presence'?'NGO Presence Check':module==='discovery'?'General Discovery':'Bulk Discovery'; }
-function runLocation(module: RunModule){ return module==='recovery'?'NGO Discovery › Advanced › Smart Recovery':module==='presence'?'NGO Discovery › Advanced › Presence Check':module==='discovery'?'NGO Discovery › General Discovery':'NGO Discovery › Bulk Discovery'; }
-function activeWord(value: unknown){ return ['queued','starting','running','resuming','pause_requested','stop_requested','cancelling','searching','fetching','reading_articles','ai_batch_running','resume_started'].includes(String(value||'').toLowerCase()); }
+function recoveryStrategyLabel(value: unknown){ const strategy=String(value||'').toLowerCase(); return strategy==='fast'?'Fast Recovery':strategy==='deep'?'Deep Review':strategy==='firecrawl'?'Firecrawl Review':'Smart Recovery'; }
+function runLabel(module: RunModule, status?:AnyRow){ return module==='recovery'?recoveryStrategyLabel(status?.strategy):module==='presence'?'NGO Presence Check':module==='discovery'?'General Discovery':'Bulk Discovery'; }
+function runLocation(module: RunModule, status?:AnyRow){ return module==='recovery'?`NGO Discovery › Advanced › ${recoveryStrategyLabel(status?.strategy)}`:module==='presence'?'NGO Discovery › Advanced › Presence Check':module==='discovery'?'NGO Discovery › General Discovery':'NGO Discovery › Bulk Discovery'; }
+function activeWord(value: unknown){ return ['queued','starting','running','resuming','pause_requested','stop_requested','cancel_requested','cancelling','searching','fetching','reading_articles','ai_batch_running','resume_started'].includes(String(value||'').toLowerCase()); }
 function pausedWord(value: unknown){ return ['paused','pause_requested'].includes(String(value||'').toLowerCase()); }
-function terminalWord(value: unknown){ return ['complete','completed','done','finished','success','succeeded','partial','error','failed','fatal_error','cancelled','canceled','stopped','stopped_partial','results_ready','partial_results_ready'].includes(String(value||'').toLowerCase()); }
+function terminalWord(value: unknown){ return ['complete','completed','done','finished','success','succeeded','partial','error','failed','fatal_error','cancelled','canceled','cancelled_partial','stopped','stopped_partial','results_ready','partial_results_ready'].includes(String(value||'').toLowerCase()); }
+function deepReviewReady(status:any){ const run=String(status?.run_status||'').toLowerCase(); const stage=String(status?.stage||'').toLowerCase(); return ['complete','stopped','cancelled','canceled'].includes(run)||['results_ready','results_ready_partial','stopped_partial','cancelled_partial'].includes(stage); }
 function runIsLive(run: ActiveRun){ const s=run.status; if(terminalWord(s?.run_status)||terminalWord(s?.stage)||pausedWord(s?.run_status)||pausedWord(s?.stage))return false; if(String(s?.process_state||'').toLowerCase()==='running'||activeWord(s?.run_status)||activeWord(s?.stage))return true; return s===run.job&&(String(run.job?.live_state||'').toLowerCase()==='running'||activeWord(run.job?.status)||activeWord(run.job?.stage)); }
 function runIsPaused(run: ActiveRun){ const s=run.status; if(terminalWord(s?.run_status)||terminalWord(s?.stage))return false; return pausedWord(s?.run_status)||pausedWord(s?.stage)||(s===run.job&&(pausedWord(run.job?.status)||pausedWord(run.job?.stage))); }
 function runProgressPct(run: ActiveRun){ const direct=finiteNumber(run.status?.progress_pct); if(direct!==null)return Math.max(0,Math.min(100,direct)); const done=finiteNumber(run.status?.processed??run.job?.processed); const total=finiteNumber(run.status?.total??run.job?.total); return done!==null&&total&&total>0?Math.max(0,Math.min(100,done/total*100)):null; }
@@ -298,18 +300,27 @@ export default function NgoDiscoveryPage(){
   const [discArchiveLoaded,setDiscArchiveLoaded]=useState(false);
   const [discArchiveError,setDiscArchiveError]=useState('');
   const [disk,setDisk]=useState<AnyRow|null>(null);
-  const [recoveryCSV,setRecoveryCSV]=useState<File|null>(null);
-  const recoveryRef=useRef<HTMLInputElement|null>(null);
+  const [fastRecoveryCSV,setFastRecoveryCSV]=useState<File|null>(null);
+  const fastRecoveryRef=useRef<HTMLInputElement|null>(null);
+  const [deepRecoveryCSV,setDeepRecoveryCSV]=useState<File|null>(null);
+  const deepRecoveryRef=useRef<HTMLInputElement|null>(null);
+  const [deepSourceRunId,setDeepSourceRunId]=useState('');
   const [recoveryRunId,setRecoveryRunId]=useState('');
   const [recoveryStatus,setRecoveryStatus]=useState<any>(null);
   const [recoveryBusy,setRecoveryBusy]=useState(false);
+  const [deepReviewBusy,setDeepReviewBusy]=useState(false);
   const [recoveryError,setRecoveryError]=useState('');
+  const [recoveryConnectionError,setRecoveryConnectionError]=useState('');
+  const [recoveryLastContactAt,setRecoveryLastContactAt]=useState<number|null>(null);
+  const [statusClock,setStatusClock]=useState(()=>Date.now());
   const recoveryTimer=useRef<any>(null);
 
   const [runsOpen,setRunsOpen]=useState(false);
   const [activeRuns,setActiveRuns]=useState<ActiveRun[]>([]);
   const [runsLoading,setRunsLoading]=useState(false);
   const [runsError,setRunsError]=useState('');
+  const [runsLastContactAt,setRunsLastContactAt]=useState<number|null>(null);
+  const [runsConnectionLost,setRunsConnectionLost]=useState(false);
   const [runActionBusy,setRunActionBusy]=useState('');
   const activeRunsTimer=useRef<any>(null);
 
@@ -379,7 +390,15 @@ export default function NgoDiscoveryPage(){
     setRunsError('');
     const jobs=await safeSearchJSON('/jobs?limit=100');
     const rows=archiveRowsFromPayload(jobs.data);
-    if(!jobs.ok||!rows){ setRunsError(jobs.error||'Could not read the worker job registry.'); if(!quiet)setRunsLoading(false); return; }
+    if(!jobs.ok||!rows){
+      setRunsConnectionLost(true);
+      setRunsError('Worker connection interrupted. The last known run state is shown below; reconnecting automatically.');
+      if(!quiet)setRunsLoading(false);
+      return;
+    }
+    setRunsConnectionLost(false);
+    setRunsError('');
+    setRunsLastContactAt(Date.now());
     const candidates=rows.filter(job=>{
       const runKind=jobModule(job);
       if(!runKind)return false;
@@ -392,7 +411,7 @@ export default function NgoDiscoveryPage(){
       const path=runKind==='recovery'?`/repository/recheck/status/${encodeURIComponent(id)}`:runKind==='presence'?`/repository/presence/status/${encodeURIComponent(id)}`:runKind==='repository'?`/repository/status/${encodeURIComponent(id)}`:`/discovery/status/${encodeURIComponent(id)}`;
       const response=runKind==='discovery'?await safeStoryJSON(path):await safeSearchJSON(path);
       const status=response.ok&&isRecord(response.data)?response.data:job;
-      const run:ActiveRun={run_id:id,module:runKind,label:runLabel(runKind),location:runLocation(runKind),service:'Railway search worker',job,status};
+      const run:ActiveRun={run_id:id,module:runKind,label:runLabel(runKind,status),location:runLocation(runKind,status),service:'Railway search worker',job,status};
       return runIsLive(run)||runIsPaused(run)||Boolean(status?.can_resume)?run:null;
     }))).filter((run):run is ActiveRun=>!!run);
     detailed.sort((a,b)=>Number(runIsLive(b))-Number(runIsLive(a))||String(b.job.updated_at||b.status.updated_at||'').localeCompare(String(a.job.updated_at||a.status.updated_at||'')));
@@ -410,7 +429,7 @@ export default function NgoDiscoveryPage(){
 
   useEffect(()=>{
     let stopped=false;
-    async function tick(){ if(stopped)return; await loadActiveRuns(true); if(!stopped)activeRunsTimer.current=setTimeout(tick,3000); }
+    async function tick(){ if(stopped)return; await loadActiveRuns(true); if(!stopped)activeRunsTimer.current=setTimeout(tick,5000); }
     tick();
     return()=>{stopped=true;if(activeRunsTimer.current)clearTimeout(activeRunsTimer.current);};
   },[loadActiveRuns]);
@@ -448,6 +467,11 @@ export default function NgoDiscoveryPage(){
   useEffect(()=>{
     if(typeof window==='undefined'||!recoveryRunId)return;
     window.localStorage.setItem(RECOVERY_RUN_STORAGE_KEY,recoveryRunId);
+  },[recoveryRunId]);
+  useEffect(()=>{
+    if(!recoveryRunId)return;
+    const timer=window.setInterval(()=>setStatusClock(Date.now()),1000);
+    return()=>window.clearInterval(timer);
   },[recoveryRunId]);
   useEffect(()=>{
     try {
@@ -735,8 +759,9 @@ export default function NgoDiscoveryPage(){
     window.setTimeout(()=>document.getElementById(`run-panel-${run.module}`)?.scrollIntoView({behavior:'smooth',block:'center'}),80);
   }
 
-  async function controlRun(run:ActiveRun,action:'pause'|'resume'|'end'){
-    if(action==='end'&&!window.confirm(`End ${run.label}? Progress and available outputs will be preserved where supported.`))return;
+  async function controlRun(run:ActiveRun,action:'pause'|'resume'|'cancel'|'end'){
+    if(action==='end'&&!window.confirm(`End ${run.label} and finalise the rows completed so far? Downloads will remain available.`))return;
+    if(action==='cancel'&&!window.confirm(`Cancel ${run.label}? The current bounded NGO operation may take a short while to stop. Completed checkpoints will be preserved.`))return;
     const key=`${run.run_id}:${action}`; setRunActionBusy(key); setRunsError('');
     let path='';
     if(run.module==='recovery')path=`/repository/recheck/${action==='end'?'stop':action}/${encodeURIComponent(run.run_id)}`;
@@ -784,23 +809,72 @@ export default function NgoDiscoveryPage(){
   async function stopRepository(){ if(!SEARCH_BACKEND||!repoRunId)return; await safeJSON(`${SEARCH_BACKEND}/repository/cancel/${encodeURIComponent(repoRunId)}`,{method:'POST'}); setRepoPolling(false); loadRepositoryArchive(); }
   useEffect(()=>{ if(!repoPolling||!repoRunId)return; let stopped=false; async function tick(){ if(stopped)return; const s=await safeJSON(`${SEARCH_BACKEND}/repository/status/${encodeURIComponent(repoRunId)}`); if(s.ok&&s.data)setRepoStatus(s.data); else if(s.error)setRepoError(s.error); const rr=await safeJSON(`${SEARCH_BACKEND}/repository/results/${encodeURIComponent(repoRunId)}?limit=80`); if(rr.ok&&rr.data){setRepoResults(rr.data); if(repositoryResultsReady(rr.data)){setRepoPolling(false); loadRepositoryArchive(); return;}} if(isFailureStatus(s.data)){setRepoPolling(false); return;} repoTimer.current=setTimeout(tick,POLL_MS);} tick(); return()=>{stopped=true; if(repoTimer.current)clearTimeout(repoTimer.current);};},[repoPolling,repoRunId,loadRepositoryArchive]);
 
-  async function startRecovery(){
+  async function startRecovery(strategy:'fast'|'deep', file:File|null){
     setRecoveryError(''); setRecoveryStatus(null);
     if(!SEARCH_BACKEND){setRecoveryError(SEARCH_BACKEND_CONFIG_ERROR); return;}
-    if(!recoveryCSV){setRecoveryError('Upload a CSV first.'); return;}
+    if(!file){setRecoveryError(`Upload a CSV for ${strategy==='fast'?'Fast Recovery':'Deep Recovery'} first.`); return;}
     const fd = new FormData();
-    fd.append('file', recoveryCSV);
+    fd.append('file', file);
     setRecoveryBusy(true);
-    const r=await safeJSON(`${SEARCH_BACKEND}/repository/recheck/start?strategy=smart`,{method:'POST',body:fd});
+    const r=await safeSearchJSON(`/repository/recheck/start?strategy=${strategy}`,{method:'POST',body:fd});
     setRecoveryBusy(false);
-    if(!r.ok||!r.data){setRecoveryError(r.error||'Could not start rerun.'); return;}
-    setRecoveryRunId(r.data.run_id);
-    if(typeof window!=='undefined')window.localStorage.setItem(RECOVERY_RUN_STORAGE_KEY,String(r.data.run_id||''));
+    if(!r.ok||!r.data){setRecoveryError(r.error||`Could not start ${strategy==='fast'?'Fast Recovery':'Deep Recovery'}.`); return;}
+    const runId=String(r.data.run_id||'');
+    setRecoveryRunId(runId);
+    setRecoveryStatus({run_status:'starting',stage:'queued',strategy,processed:0,total:r.data.total||0});
+    if(typeof window!=='undefined')window.localStorage.setItem(RECOVERY_RUN_STORAGE_KEY,runId);
+    loadRepositoryArchive();
   }
-  async function pauseRecovery(){ if(!SEARCH_BACKEND||!recoveryRunId)return; const r=await safeJSON(`${SEARCH_BACKEND}/repository/recheck/pause/${encodeURIComponent(recoveryRunId)}`,{method:'POST'}); if(!r.ok)setRecoveryError(r.error||'Could not pause.'); }
-  async function resumeRecovery(){ if(!SEARCH_BACKEND||!recoveryRunId)return; const r=await safeJSON(`${SEARCH_BACKEND}/repository/recheck/resume/${encodeURIComponent(recoveryRunId)}`,{method:'POST'}); if(!r.ok)setRecoveryError(r.error||'Could not resume.'); }
-  async function stopRecovery(){ if(!SEARCH_BACKEND||!recoveryRunId)return; if(!window.confirm('End this Smart Recovery run? Progress so far is saved and downloadable.'))return; const r=await safeJSON(`${SEARCH_BACKEND}/repository/recheck/stop/${encodeURIComponent(recoveryRunId)}`,{method:'POST'}); if(!r.ok)setRecoveryError(r.error||'Could not stop.'); loadRepositoryArchive(); }
-  useEffect(()=>{ if(!recoveryRunId)return; let stopped=false; async function tick(){ if(stopped)return; const s=await safeJSON(`${SEARCH_BACKEND}/repository/recheck/status/${encodeURIComponent(recoveryRunId)}`); if(s.ok&&s.data)setRecoveryStatus(s.data); else if(s.error)setRecoveryError(s.error); const rs=String(s.data?.run_status||'').toLowerCase(); if(isFailureStatus(s.data)||String(s.data?.stage||'').toLowerCase().startsWith('results_ready')||rs==='completed'||rs==='stopped'||rs==='cancelled'||rs==='canceled'){loadRepositoryArchive(); return;} recoveryTimer.current=setTimeout(tick,POLL_MS);} tick(); return()=>{stopped=true; if(recoveryTimer.current)clearTimeout(recoveryTimer.current);};},[recoveryRunId,loadRepositoryArchive]);
+  async function pauseRecovery(){ if(!SEARCH_BACKEND||!recoveryRunId)return; const r=await safeSearchJSON(`/repository/recheck/pause/${encodeURIComponent(recoveryRunId)}`,{method:'POST'}); if(!r.ok)setRecoveryError(r.error||'Could not pause.'); }
+  async function resumeRecovery(strategyOverride=''){
+    if(!SEARCH_BACKEND||!recoveryRunId)return;
+    const query=strategyOverride?`?strategy_override=${encodeURIComponent(strategyOverride)}`:'';
+    const r=await safeSearchJSON(`/repository/recheck/resume/${encodeURIComponent(recoveryRunId)}${query}`,{method:'POST'});
+    if(!r.ok){setRecoveryError(r.error||'Could not resume.');return;}
+    setRecoveryError('');
+    setRecoveryStatus((prev:any)=>({...prev,run_status:'resuming',stage:'resume_started',strategy:strategyOverride||prev?.strategy}));
+  }
+  async function startDeepReview(sourceRunId=recoveryRunId){
+    if(!SEARCH_BACKEND||!sourceRunId)return;
+    setDeepReviewBusy(true); setRecoveryError('');
+    const r=await safeSearchJSON(`/repository/recheck/deep-review/start/${encodeURIComponent(sourceRunId)}`,{method:'POST'});
+    setDeepReviewBusy(false);
+    if(!r.ok||!r.data){setRecoveryError(r.error||'Could not start Deep Review. Pause or finish the active Fast Recovery first.');return;}
+    const childId=String(r.data.run_id||'');
+    setRecoveryRunId(childId); setRecoveryStatus({run_status:'starting',stage:'queued',strategy:'deep',processed:0,total:r.data.total||0,parent_run_id:sourceRunId});
+    if(typeof window!=='undefined')window.localStorage.setItem(RECOVERY_RUN_STORAGE_KEY,childId);
+    loadRepositoryArchive();
+  }
+  async function stopRecovery(){ if(!SEARCH_BACKEND||!recoveryRunId)return; if(!window.confirm(`End this ${recoveryStrategyLabel(recoveryStatus?.strategy)} run and finalise the rows completed so far? Downloads will remain available.`))return; const r=await safeSearchJSON(`/repository/recheck/stop/${encodeURIComponent(recoveryRunId)}`,{method:'POST'}); if(!r.ok)setRecoveryError(r.error||'Could not end the run.'); loadRepositoryArchive(); }
+  async function cancelRecovery(){ if(!SEARCH_BACKEND||!recoveryRunId)return; if(!window.confirm(`Cancel this ${recoveryStrategyLabel(recoveryStatus?.strategy)} run? The current bounded NGO operation may take a short while to stop. Completed checkpoints will be preserved.`))return; const r=await safeSearchJSON(`/repository/recheck/cancel/${encodeURIComponent(recoveryRunId)}`,{method:'POST'}); if(!r.ok)setRecoveryError(r.error||'Could not cancel the run.'); loadRepositoryArchive(); }
+  useEffect(()=>{
+    if(!recoveryRunId)return;
+    let stopped=false;
+    let consecutiveFailures=0;
+    async function tick(){
+      if(stopped)return;
+      const response=await safeSearchJSON(`/repository/recheck/status/${encodeURIComponent(recoveryRunId)}`);
+      if(response.ok&&response.data){
+        consecutiveFailures=0;
+        setRecoveryStatus(response.data);
+        setRecoveryLastContactAt(Date.now());
+        setRecoveryConnectionError('');
+        setRecoveryError('');
+      }else{
+        consecutiveFailures+=1;
+        setRecoveryConnectionError('Status connection interrupted. The run may still be active on Railway; retrying automatically.');
+      }
+      const rs=String(response.data?.run_status||'').toLowerCase();
+      if(isFailureStatus(response.data)||String(response.data?.stage||'').toLowerCase().startsWith('results_ready')||rs==='completed'||rs==='stopped'||rs==='cancelled'||rs==='canceled'){
+        loadRepositoryArchive();
+        return;
+      }
+      const retryDelay=consecutiveFailures>=3?10000:consecutiveFailures?5000:POLL_MS;
+      recoveryTimer.current=setTimeout(tick,retryDelay);
+    }
+    tick();
+    return()=>{stopped=true; if(recoveryTimer.current)clearTimeout(recoveryTimer.current);};
+  },[recoveryRunId,loadRepositoryArchive]);
 
   function downloadPresenceSampleCsv(){
     downloadText('ngo_presence_check_sample.csv', 'ngo_name,state,center_name\nHumana People to People India,Delhi,Learning Centre 1\nHumana People to People India,Delhi,Learning Centre 2\nSparsha Trust,Karnataka,\n');
@@ -881,6 +955,17 @@ export default function NgoDiscoveryPage(){
   const recoveryEtaSeconds=finiteNumber(recoveryStatus?.eta_seconds);
   const recoveryRate=finiteNumber(recoveryStatus?.throughput_rows_per_min);
   const recoveryProgress=finiteNumber(recoveryStatus?.progress_pct);
+  const recoveryStrategy=String(recoveryStatus?.strategy||'fast').toLowerCase();
+  const recoveryStrategyName=recoveryStrategyLabel(recoveryStrategy);
+  const deepReviewCount=Math.max(0,Number(recoveryStatus?.deep_review_count??recoveryStatus?.file_counts?.deep_review_input??recoveryStatus?.summary?.deep_review_rows??0)||0);
+  const recoveryIsLive=String(recoveryStatus?.process_state||'').toLowerCase()==='running'||activeWord(recoveryStatus?.run_status)||activeWord(recoveryStatus?.stage);
+  const recoveryDeepReviewReady=recoveryStrategy==='fast'&&deepReviewCount>0&&deepReviewReady(recoveryStatus);
+  const deepSourceRuns=repoArchive.filter(raw=>{
+    const row=isRecord(raw)?raw:{};
+    return String(row.module||'').toLowerCase()==='no_website_recheck'&&String(row.strategy||'').toLowerCase()==='fast'&&Math.max(0,Number(row.deep_review_count||0)||0)>0&&deepReviewReady(row);
+  });
+  const recoveryLastContactAge=recoveryLastContactAt==null?null:Math.max(0,Math.floor((statusClock-recoveryLastContactAt)/1000));
+  const runsLastContactAge=runsLastContactAt==null?null:Math.max(0,Math.floor((statusClock-runsLastContactAt)/1000));
   const curationOf = (r:AnyRow) => String(field(r,'curation_status','Curation Status') || 'pending_review').toLowerCase();
   const approvedLeads = leadPool.filter(r => ['approved_for_ranking','approved_with_comment'].includes(curationOf(r)));
   const pendingLeads = leadPool.filter(r => !['approved_for_ranking','approved_with_comment','needs_follow_up'].includes(curationOf(r)));
@@ -908,7 +993,34 @@ export default function NgoDiscoveryPage(){
           {!repoArchiveLoaded&&<div className="muted-empty">Loading bulk and recovery runs…</div>}
           {repoArchiveError&&<div className="muted-empty">Could not load bulk runs: {repoArchiveError}</div>}
           {repoArchiveLoaded&&!repoArchiveError&&repoArchive.length===0&&<div className="muted-empty">No bulk runs found yet.</div>}
-          {repoArchive.slice(0,100).map((raw,i)=>{const r=isRecord(raw)?raw:{}; const id=displayScalar(r.run_id,''); const dl=isRecord(r.downloads)?r.downloads:{}; const moduleName=displayScalar(r.module,''); const isPresence=moduleName==='ngo_presence_check'; const title=isPresence?'NGO Presence Check':moduleName==='no_website_recheck'?'Recovery rerun':(r.run_type==='dedupe_recheck'?'Deduped NGO re-check':'Bulk Discovery'); return <div className="archive-row" key={`${id||'repository'}-${i}`}><div><b>{sentRunIds[id]&&<span className="sent-star" title="Sent to Lead Pool">★</span>}{title}</b><small>{displayScalar(r.updated_at)} · {id||'unknown run'} · {displayScalar(r.stage||r.run_status)} · rows {displayScalar(r.results_count||r.repository_count,'0')} · audit {displayScalar(r.audit_count,'0')} · rejected {displayScalar(r.rejected_count,'0')}</small></div><div className="archive-links">{!!dl.repository&&id&&<a href={archiveDownload(r,'repository')}>Shortlist</a>}{!!dl.results&&id&&<a href={archiveDownload(r,'results')}>{isPresence?'Presence CSV':'Results'}</a>}{!isPresence&&<button disabled={poolBusy||!id} onClick={()=>id&&sendRunToLeadPool(id,moduleName==='no_website_recheck'?'no_website_recheck':'repository','Archive Import')}>Send to Lead Pool</button>}{!!dl.summary&&id&&<a href={archiveDownload(r,'summary')}>Summary</a>}{!!dl.skipped&&id&&<a href={archiveDownload(r,'skipped')}>Skipped</a>}{!!dl.audit&&id&&<a href={archiveDownload(r,'audit')}>Audit</a>}{!!dl.rejected&&id&&<a href={archiveDownload(r,'rejected')}>Rejected</a>}{!!dl.duplicates&&id&&<a href={archiveDownload(r,'duplicates')}>Dedupe audit</a>}{!!dl.errors&&id&&<a href={archiveDownload(r,'errors')}>Errors</a>}{!!dl.history&&id&&<a href={archiveDownload(r,'history')}>History</a>}<button className="archive-del" title="Delete run to free disk" disabled={!id} onClick={()=>id&&deleteRun(id)}>Delete</button></div></div>;})}
+          {repoArchive.slice(0,100).map((raw,i)=>{
+            const r=isRecord(raw)?raw:{};
+            const id=displayScalar(r.run_id,'');
+            const dl=isRecord(r.downloads)?r.downloads:{};
+            const moduleName=displayScalar(r.module,'');
+            const isPresence=moduleName==='ngo_presence_check';
+            const isRecovery=moduleName==='no_website_recheck';
+            const archivedDeepCount=Math.max(0,Number(r.deep_review_count||0)||0);
+            const title=isPresence?'NGO Presence Check':isRecovery?recoveryStrategyLabel(r.strategy):(r.run_type==='dedupe_recheck'?'Deduped NGO re-check':'Bulk Discovery');
+            return <div className="archive-row" key={`${id||'repository'}-${i}`}>
+              <div><b>{sentRunIds[id]&&<span className="sent-star" title="Sent to Lead Pool">★</span>}{title}</b><small>{displayScalar(r.updated_at)} · {id||'unknown run'} · {displayScalar(r.stage||r.run_status)} · rows {displayScalar(r.results_count||r.repository_count,'0')} · audit {displayScalar(r.audit_count,'0')}{isRecovery&&archivedDeepCount>0?` · deep review ${archivedDeepCount}`:''}</small></div>
+              <div className="archive-links">
+                {!!dl.repository&&id&&<a href={archiveDownload(r,'repository')}>Shortlist</a>}
+                {!!dl.results&&id&&<a href={archiveDownload(r,'results')}>{isPresence?'Presence CSV':isRecovery?(String(r.strategy||'').toLowerCase()==='deep'?'Deep Results':'Fast Results'):'Results'}</a>}
+                {!isPresence&&<button disabled={poolBusy||!id} onClick={()=>id&&sendRunToLeadPool(id,isRecovery?'no_website_recheck':'repository','Archive Import')}>Send to Lead Pool</button>}
+                {isRecovery&&String(r.strategy||'').toLowerCase()==='fast'&&archivedDeepCount>0&&id&&<button disabled={deepReviewBusy||recoveryIsLive||!deepReviewReady(r)} title={!deepReviewReady(r)?'Finish or end the Fast Recovery pass first':recoveryIsLive?'Wait for the active recovery run to finish':''} onClick={()=>startDeepReview(id)}>Send to Deep Review ({archivedDeepCount})</button>}
+                {isRecovery&&String(r.strategy||'').toLowerCase()==='fast'&&archivedDeepCount>0&&!!dl.deep_review_input&&id&&<a href={archiveDownload(r,'deep_review_input')}>Deep queue</a>}
+                {!!dl.summary&&id&&<a href={archiveDownload(r,'summary')}>Summary</a>}
+                {!!dl.skipped&&id&&<a href={archiveDownload(r,'skipped')}>Skipped</a>}
+                {!!dl.audit&&id&&<a href={archiveDownload(r,'audit')}>Audit</a>}
+                {!!dl.rejected&&id&&<a href={archiveDownload(r,'rejected')}>Rejected</a>}
+                {!!dl.duplicates&&id&&<a href={archiveDownload(r,'duplicates')}>Dedupe audit</a>}
+                {!!dl.errors&&id&&<a href={archiveDownload(r,'errors')}>Errors</a>}
+                {!!dl.history&&id&&<a href={archiveDownload(r,'history')}>History</a>}
+                <button className="archive-del" title="Delete run to free disk" disabled={!id} onClick={()=>id&&deleteRun(id)}>Delete</button>
+              </div>
+            </div>;
+          })}
         </div>
       </ArchiveListBoundary>
     </div>;
@@ -987,26 +1099,53 @@ export default function NgoDiscoveryPage(){
       </section>
 
       {advancedOpen&&<section className="advanced-shell"><div className="advanced-head"><b>Advanced settings</b><button className="quiet-btn" onClick={()=>setHistoryOpen(!historyOpen)}>{historyOpen?'Hide History':'History'}</button></div>
-        <div id="run-panel-recovery" className="recovery-panel"><b>Smart Recovery rerun</b>
-          <input ref={recoveryRef} type="file" accept=".csv" hidden onChange={e=>setRecoveryCSV(e.target.files?.[0]||null)}/>
-          <button className="ghost-btn" onClick={()=>recoveryRef.current?.click()}>{recoveryCSV?recoveryCSV.name:'Upload CSV'}</button>
-          <button className="primary-red small-red" disabled={recoveryBusy||!recoveryCSV} onClick={startRecovery}>{recoveryBusy?'Starting…':'Run Smart Recovery'}</button>
-          {recoveryStatus?.can_pause&&<button className="ghost-btn" onClick={pauseRecovery}>Pause</button>}
-          {recoveryStatus?.can_resume&&<button className="ghost-btn" onClick={resumeRecovery}>Resume</button>}
-          {recoveryRunId&&recoveryStatus?.can_stop&&<button className="ghost-btn danger" onClick={stopRecovery}>End run</button>}
-          {recoveryRunId&&(recoveryStatus?.partial_outputs_available||recoveryStatus?.downloads?.results)&&<button className="dark-download ready" disabled={poolBusy} onClick={()=>sendRunToLeadPool(recoveryRunId,'no_website_recheck','Smart Recovery')}>Send to Lead Pool</button>}
-          {recoveryRunId&&recoveryStatus?.downloads?.results&&<a className="dark-download ready" href={recheckDownload(recoveryRunId,'results')}>Results (partial)</a>}
-          {recoveryRunId&&recoveryStatus?.downloads?.audit&&<a className="dark-download ready" href={recheckDownload(recoveryRunId,'audit')}>Audit</a>}
-          {recoveryRunId&&recoveryStatus?.downloads?.summary&&<a className="dark-download ready" href={recheckDownload(recoveryRunId,'summary')}>Summary</a>}
-          {recoveryRunId&&recoveryStatus?.downloads?.skipped&&<a className="dark-download ready" href={recheckDownload(recoveryRunId,'skipped')}>Skipped</a>}
-          {recoveryRunId&&SEARCH_BACKEND&&<a className="dark-download ready" href={`${SEARCH_BACKEND}/repository/recheck/remaining/${encodeURIComponent(recoveryRunId)}`}>Remaining</a>}
-          {recoveryStatus&&<small className="recovery-stat">{recoveryStatus.run_status||recoveryStatus.stage} · {recoveryStatus.processed||0}/{recoveryStatus.total||0} done · {recoveryStatus.remaining??Math.max(0,(recoveryStatus.total||0)-(recoveryStatus.processed||0))} left{recoveryProgress!=null?` · ${recoveryProgress.toFixed(1)}%`:''}</small>}
-          {recoveryStatus&&<small className="recovery-stat">Active elapsed: {formatDuration(recoveryActiveElapsed)}{recoveryRate!=null&&recoveryRate>0?` · ${recoveryRate.toFixed(2)} rows/min`:''}{recoveryEtaSeconds!=null?` · about ${formatDuration(recoveryEtaSeconds)} remaining`:''}</small>}
-          {recoveryStatus?.current_item_started_at_epoch&&<small className="recovery-stat">Current NGO: {recoveryStatus.current_item||'Processing'} · {formatDuration(recoveryStatus.current_item_elapsed_sec)}{recoveryStatus.row_near_deadline&&recoveryStatus.row_deadline_remaining_sec!=null?` · watchdog skips in ≤${Math.ceil(Number(recoveryStatus.row_deadline_remaining_sec))}s`:''}</small>}
-          {Number(recoveryStatus?.row_timeouts||0)>0&&<small className="recovery-stat">{recoveryStatus.row_timeouts} slow NGO{Number(recoveryStatus.row_timeouts)===1?'':'s'} safely skipped and saved for retry.</small>}
-          {recoveryStatus&&<small className="recovery-credits">Serper {recoveryStatus.queries_used||0}{recoveryStatus.firecrawl_credits||recoveryStatus.firecrawl_credits_used?` · Firecrawl ${recoveryStatus.firecrawl_credits||recoveryStatus.firecrawl_credits_used||0}`:''}{recoveryStatus.eta_at?` · ETA ${new Date(recoveryStatus.eta_at).toLocaleTimeString()}`:''}</small>}
-          {recoveryRunId&&<small className="recovery-stat">Runs in the worker background. Shortlisting, changing pages, refreshing, or closing this tab will not stop it. Do not redeploy or restart the search worker while it is active.</small>}
-          {recoveryError&&<span className="mini-error">{recoveryError}</span>}
+        <div id="run-panel-recovery" className="recovery-panel recovery-workspace">
+          <div className="recovery-workspace-head"><div><b>Website Recovery</b><span className="advanced-help">Choose Fast or Deep before uploading. Each run is independent, checkpointed, pausable, resumable and immediately downloadable.</span></div>{recoveryRunId&&<span className="tag">Active view: {recoveryStrategyName}</span>}</div>
+          <div className="recovery-mode-grid">
+            <div className="recovery-mode-card fast-mode">
+              <div><span className="recovery-mode-kicker">Mode 1</span><h4>Fast Recovery</h4><p>Broad first pass for the full CSV. Two searches, bounded verification and selective Firecrawl only when the strongest candidate cannot be read directly.</p></div>
+              <input ref={fastRecoveryRef} type="file" accept=".csv" hidden onChange={e=>setFastRecoveryCSV(e.target.files?.[0]||null)}/>
+              <div className="recovery-mode-actions"><button className="ghost-btn" onClick={()=>fastRecoveryRef.current?.click()}>{fastRecoveryCSV?fastRecoveryCSV.name:'Upload Fast CSV'}</button><button className="primary-red small-red" disabled={recoveryBusy||!fastRecoveryCSV||recoveryIsLive} onClick={()=>startRecovery('fast',fastRecoveryCSV)}>{recoveryBusy?'Starting…':'Start Fast Recovery'}</button></div>
+              <small>Fast results remain separate and can be downloaded while the run is active, after Pause, after Cancel, after End, or on completion.</small>
+            </div>
+            <div className="recovery-mode-card deep-mode">
+              <div><span className="recovery-mode-kicker">Mode 2</span><h4>Deep Recovery</h4><p>Full-depth verification with more candidates, more identity pages, rename recovery and selective Firecrawl. Start from a new CSV or eligible rows from an earlier Fast run.</p></div>
+              <input ref={deepRecoveryRef} type="file" accept=".csv" hidden onChange={e=>setDeepRecoveryCSV(e.target.files?.[0]||null)}/>
+              <div className="recovery-mode-actions"><button className="ghost-btn" onClick={()=>deepRecoveryRef.current?.click()}>{deepRecoveryCSV?deepRecoveryCSV.name:'Upload Deep CSV'}</button><button className="primary-red small-red" disabled={recoveryBusy||!deepRecoveryCSV||recoveryIsLive} onClick={()=>startRecovery('deep',deepRecoveryCSV)}>{recoveryBusy?'Starting…':'Start Deep Recovery'}</button></div>
+              <div className="deep-source-row"><span>or use a previous Fast run</span><select value={deepSourceRunId} onChange={e=>setDeepSourceRunId(e.target.value)}><option value="">Select eligible Fast run</option>{deepSourceRuns.map((raw,i)=>{const row=isRecord(raw)?raw:{};const id=displayScalar(row.run_id,'');const count=Math.max(0,Number(row.deep_review_count||0)||0);return id?<option value={id} key={`${id}-${i}`}>{id} · {count} eligible</option>:null;})}</select><button className="ghost-btn" disabled={deepReviewBusy||!deepSourceRunId||recoveryIsLive} onClick={()=>startDeepReview(deepSourceRunId)}>{deepReviewBusy?'Starting…':'Start eligible Deep Review'}</button></div>
+              <small>Only rows explicitly set aside by Fast Recovery are sent. The original Fast result file remains unchanged and downloadable.</small>
+            </div>
+          </div>
+          {recoveryRunId&&<div className="recovery-live-strip">
+            <div className="recovery-live-title"><b>{recoveryStrategyName}</b><code>{recoveryRunId}</code></div>
+            <div className="recovery-live-actions">
+              {recoveryStatus?.can_pause&&<button className="ghost-btn" onClick={pauseRecovery}>Pause</button>}
+              {recoveryStatus?.can_resume&&recoveryStrategy==='smart'&&<><button className="primary-red small-red" onClick={()=>resumeRecovery('fast')}>Resume Fast</button><button className="ghost-btn" onClick={()=>resumeRecovery('deep')}>Resume Deep</button></>}
+              {recoveryStatus?.can_resume&&recoveryStrategy!=='smart'&&<button className="ghost-btn" onClick={()=>resumeRecovery(recoveryStrategy)}>Resume {recoveryStrategy==='deep'?'Deep Recovery':'Fast Recovery'}</button>}
+              {recoveryStatus?.can_cancel&&<button className="ghost-btn danger" onClick={cancelRecovery}>Cancel</button>}
+              {recoveryStatus?.can_stop&&<button className="ghost-btn danger" onClick={stopRecovery}>End &amp; save</button>}
+            </div>
+            <div className="recovery-downloads">
+              {(recoveryStatus?.partial_outputs_available||recoveryStatus?.downloads?.results)&&<a className="dark-download ready" href={recheckDownload(recoveryRunId,'results')}>Download {recoveryStrategy==='deep'?'Deep':'Fast'} Results</a>}
+              {(recoveryStatus?.partial_outputs_available||recoveryStatus?.downloads?.results)&&<button className="dark-download ready" disabled={poolBusy} onClick={()=>sendRunToLeadPool(recoveryRunId,'no_website_recheck',recoveryStrategyName)}>Send current results to Lead Pool</button>}
+              {recoveryStrategy==='fast'&&deepReviewCount>0&&recoveryDeepReviewReady&&<button className="primary-red small-red" disabled={deepReviewBusy||recoveryIsLive} onClick={()=>startDeepReview(recoveryRunId)}>{deepReviewBusy?'Starting Deep Review…':`Send eligible to Deep Review (${deepReviewCount})`}</button>}
+              {recoveryStrategy==='fast'&&deepReviewCount>0&&recoveryStatus?.downloads?.deep_review_input&&<a className="dark-download ready" href={recheckDownload(recoveryRunId,'deep_review_input')}>Eligible Deep CSV</a>}
+              {recoveryStatus?.downloads?.audit&&<a className="dark-download ready" href={recheckDownload(recoveryRunId,'audit')}>Audit</a>}
+              {recoveryStatus?.downloads?.summary&&<a className="dark-download ready" href={recheckDownload(recoveryRunId,'summary')}>Summary</a>}
+              {recoveryStatus?.downloads?.skipped&&<a className="dark-download ready" href={recheckDownload(recoveryRunId,'skipped')}>Skipped</a>}
+              {recoveryStatus?.downloads?.errors&&<a className="dark-download ready" href={recheckDownload(recoveryRunId,'errors')}>Errors</a>}
+            </div>
+            {recoveryStatus&&<small className="recovery-stat">{recoveryStatus.run_status||recoveryStatus.stage} · {recoveryStatus.processed||0}/{recoveryStatus.total||0} done · {recoveryStatus.remaining??Math.max(0,(recoveryStatus.total||0)-(recoveryStatus.processed||0))} left{recoveryProgress!=null?` · ${recoveryProgress.toFixed(1)}%`:''}</small>}
+            {recoveryStatus&&<small className="recovery-stat">Active elapsed: {formatDuration(recoveryActiveElapsed)}{recoveryRate!=null&&recoveryRate>0?` · ${recoveryRate.toFixed(2)} rows/min`:''}{recoveryEtaSeconds!=null?` · about ${formatDuration(recoveryEtaSeconds)} remaining`:''}</small>}
+            {recoveryStatus?.current_item_started_at_epoch&&<small className="recovery-stat">Current NGO: {recoveryStatus.current_item||'Processing'} · {formatDuration(recoveryStatus.current_item_elapsed_sec)}{recoveryStatus.row_near_deadline&&recoveryStatus.row_deadline_remaining_sec!=null?` · watchdog skips in ≤${Math.ceil(Number(recoveryStatus.row_deadline_remaining_sec))}s`:''}</small>}
+            {recoveryStrategy==='fast'&&deepReviewCount>0&&<small className="recovery-stat">{deepReviewCount} NGO{deepReviewCount===1?'':'s'} set aside for optional Deep Review. This does not delay or replace the Fast results.</small>}
+            {Number(recoveryStatus?.row_timeouts||0)>0&&<small className="recovery-stat">{recoveryStatus.row_timeouts} slow NGO{Number(recoveryStatus.row_timeouts)===1?'':'s'} safely checkpointed for review.</small>}
+            {recoveryStatus&&<small className="recovery-credits">Serper {recoveryStatus.queries_used||0}{recoveryStatus.firecrawl_credits||recoveryStatus.firecrawl_credits_used?` · Firecrawl ${recoveryStatus.firecrawl_credits||recoveryStatus.firecrawl_credits_used||0}`:''}{recoveryStatus.eta_at?` · ETA ${new Date(recoveryStatus.eta_at).toLocaleTimeString()}`:''}</small>}
+            <small className="recovery-stat">Runs in the Railway worker. Refreshing, shortlisting, changing pages or closing this tab does not stop them.</small>
+            {recoveryConnectionError&&<span className="connection-warning">{recoveryConnectionError}{recoveryLastContactAge!=null?` Last successful update ${formatDuration(recoveryLastContactAge)} ago.`:''}</span>}
+            {recoveryError&&<span className="mini-error">{recoveryError}</span>}
+          </div>}
+          {!recoveryRunId&&recoveryError&&<span className="mini-error">{recoveryError}</span>}
         </div>
         <div id="run-panel-presence" className="recovery-panel"><b>NGO Presence Check</b><span className="advanced-help">CSV columns: ngo_name, state, center_name optional. Checks only correct official website identity + digital presence strength. No child/program-fit scoring.</span><input ref={presenceRef} type="file" accept=".csv" hidden onChange={e=>setPresenceCSV(e.target.files?.[0]||null)}/><button className="ghost-btn" onClick={()=>presenceRef.current?.click()}>{presenceCSV?presenceCSV.name:'Upload CSV'}</button><button className="ghost-btn" onClick={downloadPresenceSampleCsv}>Sample CSV</button><button className="primary-red small-red" disabled={presenceBusy||!presenceCSV} onClick={startPresenceCheck}>{presenceBusy?'Starting…':'Run Presence Check'}</button>{presenceRunId&&<button className="ghost-btn" onClick={cancelPresenceCheck}>Cancel</button>}{presenceRunId&&<a className="dark-download ready" href={presenceDownload(presenceRunId,'results')}>Presence CSV</a>}{presenceRunId&&<a className="dark-download ready" href={presenceDownload(presenceRunId,'summary')}>Summary</a>}{presenceRunId&&<a className="dark-download ready" href={presenceDownload(presenceRunId,'audit')}>Audit</a>}{presenceStatus&&<small>{presenceStatus.stage||presenceStatus.run_status} · {presenceStatus.processed||0}/{presenceStatus.total||0} NGOs · rows {presenceStatus.rows_ready||presenceRows.length||0} · queries {presenceStatus.queries_used||0}</small>}{presenceError&&<span className="mini-error">{presenceError}</span>}</div>
         {presenceRows.length>0&&<div className="scroll-table presence-preview-table"><table><thead><tr><th>NGO</th><th>Center</th><th>State</th><th>Website</th><th>Confidence</th><th>Strength</th><th>Assessment</th></tr></thead><tbody>{presenceRows.slice(0,30).map((r,i)=><tr key={i}><td>{rowName(r)||field(r,'NGO Name')}</td><td>{field(r,'Center Name')||'—'}</td><td>{field(r,'State')||'—'}</td><td><ExternalLink value={field(r,'Official Website','Website')}>open</ExternalLink></td><td><span className={confidenceClass(field(r,'Website Confidence'))}>{field(r,'Website Confidence')||'—'}</span></td><td>{field(r,'Website Strength')||'—'}</td><td>{field(r,'Digital Presence Assessment')||'—'}</td></tr>)}</tbody></table></div>}
@@ -1037,16 +1176,16 @@ export default function NgoDiscoveryPage(){
     </>}
 
     <button className={`active-runs-fab ${activeRuns.some(runIsLive)?'live':''}`} onClick={()=>{setRunsOpen(true);loadActiveRuns(false);}} aria-label="Show active runs">
-      <span className="active-runs-dot"/><b>{activeRuns.length?`${activeRuns.length} run${activeRuns.length===1?'':'s'}`:'Runs'}</b><small>{activeRuns.some(runIsLive)?'live':'check status'}</small>
+      <span className="active-runs-dot"/><b>{activeRuns.length?`${activeRuns.length} run${activeRuns.length===1?'':'s'}`:'Runs'}</b><small>{runsConnectionLost?'connection lost':activeRuns.some(runIsLive)?'live':'check status'}</small>
     </button>
     {runsOpen&&<div className="active-runs-overlay" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setRunsOpen(false);}}>
       <aside className="active-runs-drawer" role="dialog" aria-modal="true" aria-label="Active runs">
         <div className="active-runs-head"><div><span>Worker activity</span><h3>Active and paused runs</h3></div><button onClick={()=>setRunsOpen(false)} aria-label="Close active runs">×</button></div>
-        <div className="active-runs-subhead"><span>Live state is read directly from Railway after refresh.</span><button className="quiet-btn" disabled={runsLoading} onClick={()=>loadActiveRuns(false)}>{runsLoading?'Checking…':'Refresh'}</button></div>
-        {runsError&&<div className="mini-error active-runs-error">{runsError}</div>}
-        {!runsLoading&&!activeRuns.length&&<div className="active-runs-empty"><b>No active runs</b><span>Nothing is currently running or paused on the search worker.</span></div>}
+        <div className="active-runs-subhead"><span>{runsConnectionLost?'Showing the last known state while Railway reconnects.':`Live state is read directly from Railway${runsLastContactAge!=null?` · updated ${formatDuration(runsLastContactAge)} ago`:''}.`}</span><button className="quiet-btn" disabled={runsLoading} onClick={()=>loadActiveRuns(false)}>{runsLoading?'Checking…':runsConnectionLost?'Reconnect':'Refresh'}</button></div>
+        {runsError&&<div className="connection-warning active-runs-error">{runsError}</div>}
+        {!runsLoading&&!runsConnectionLost&&!activeRuns.length&&<div className="active-runs-empty"><b>No active runs</b><span>Nothing is currently running or paused on the search worker.</span></div>}
         <div className="active-runs-list">{activeRuns.map(run=>{
-          const status=run.status; const pct=runProgressPct(run); const done=finiteNumber(status.processed??run.job.processed)??0; const total=finiteNumber(status.total??run.job.total); const live=runIsLive(run); const paused=runIsPaused(run); const canPause=live&&(run.module==='recovery'||run.module==='discovery')&&Boolean(status.can_pause??true); const canResume=!live&&(run.module==='recovery'||run.module==='discovery'||run.module==='repository')&&(paused||Boolean(status.can_resume));
+          const status=run.status; const pct=runProgressPct(run); const done=finiteNumber(status.processed??run.job.processed)??0; const total=finiteNumber(status.total??run.job.total); const live=runIsLive(run); const paused=runIsPaused(run); const canPause=live&&(run.module==='recovery'||run.module==='discovery')&&Boolean(status.can_pause??true); const canResume=!live&&(run.module==='recovery'||run.module==='discovery'||run.module==='repository')&&(paused||Boolean(status.can_resume)); const canCancel=live&&run.module==='recovery'&&Boolean(status.can_cancel??true);
           return <article className="active-run-card" key={run.run_id}>
             <div className="active-run-title"><div><span className={`run-state ${live?'running':paused?'paused':'idle'}`}>{live?'Running':paused?'Paused':'Available'}</span><h4>{run.label}</h4></div><small>{run.service}</small></div>
             <div className="active-run-location">{run.location}</div>
@@ -1054,7 +1193,7 @@ export default function NgoDiscoveryPage(){
             <div className="active-run-metrics"><span><b>{done.toLocaleString()}</b>{total!==null?` / ${total.toLocaleString()}`:''} completed</span><span><b>{formatDuration(runElapsedSeconds(run))}</b> elapsed</span></div>
             <div className="active-run-current">{displayScalar(status.current_item||status.current_search||status.current_url||status.stage||status.run_status,'Waiting for status')}</div>
             <code>{run.run_id}</code>
-            <div className="active-run-actions"><button className="primary-red small-red" onClick={()=>goToRun(run)}>Go to run</button>{canPause&&<button className="ghost-btn" disabled={!!runActionBusy} onClick={()=>controlRun(run,'pause')}>{runActionBusy===`${run.run_id}:pause`?'Pausing…':'Pause'}</button>}{canResume&&<button className="ghost-btn" disabled={!!runActionBusy} onClick={()=>controlRun(run,'resume')}>{runActionBusy===`${run.run_id}:resume`?'Resuming…':'Resume'}</button>}{(live||run.module==='recovery')&&<button className="ghost-btn danger" disabled={!!runActionBusy} onClick={()=>controlRun(run,'end')}>{runActionBusy===`${run.run_id}:end`?'Ending…':'End run'}</button>}</div>
+            <div className="active-run-actions"><button className="primary-red small-red" onClick={()=>goToRun(run)}>Go to run</button>{canPause&&<button className="ghost-btn" disabled={!!runActionBusy} onClick={()=>controlRun(run,'pause')}>{runActionBusy===`${run.run_id}:pause`?'Pausing…':'Pause'}</button>}{canResume&&<button className="ghost-btn" disabled={!!runActionBusy} onClick={()=>controlRun(run,'resume')}>{runActionBusy===`${run.run_id}:resume`?'Resuming…':'Resume'}</button>}{canCancel&&<button className="ghost-btn danger" disabled={!!runActionBusy} onClick={()=>controlRun(run,'cancel')}>{runActionBusy===`${run.run_id}:cancel`?'Cancelling…':'Cancel'}</button>}{(live||run.module==='recovery')&&<button className="ghost-btn danger" disabled={!!runActionBusy} onClick={()=>controlRun(run,'end')}>{runActionBusy===`${run.run_id}:end`?'Ending…':'End & save'}</button>}</div>
           </article>;
         })}</div>
       </aside>
