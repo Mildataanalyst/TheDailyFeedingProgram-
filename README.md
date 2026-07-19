@@ -26,4 +26,4 @@ npm run dev
 
 ## Required deployment configuration
 
-Keep the existing frontend environment variables configured in Railway/Vercel, including the deployed backend URL and any Redis/admin variables already used by the project.
+Keep the existing frontend environment variables configured in Railway/Vercel, including the deployed backend URL and any Redis/admin variables already used by the project.!
