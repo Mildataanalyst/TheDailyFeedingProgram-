@@ -91,6 +91,7 @@ type AiReview = {
 type AdminEvidenceDraft = Record<MetricKey, { text: string; linksText: string; ceilingRank: string; ceilingReason: string }>;
 
 const PM_NAMES = ['Milan', 'Rachit', 'Ipshita', 'Avika', 'Kamran', 'Piyush', 'Tanishq'];
+const SHORTLIST_PM_NAMES = PM_NAMES.filter(name => name !== 'Tanishq');
 const LEADERBOARD_NAMES = PM_NAMES.filter(name => name !== 'Milan' && name !== 'Tanishq');
 const DEFAULT_RULES = 'Review only expression quality: length, clarity, and whether the PM captured their thought process. Do not critique the NGO, the rank, the source, the pathway, or whether the PM is right. Do not ask for contact, referral, POC, source, geography, cohort, operational proof, or extra NGO facts. Hinglish, fragments, spelling mistakes, no punctuation and stream of consciousness are fine. Encourage people to type more of what went through their head.';
 const DEFAULT_DEADLINE_NOTE = 'Once everyone submits, we compare rankings, identify strong cohorts, resolve overlaps, and move to human lead follow-ups. This needs to close by Wednesday so the lead list can be wrapped by the end of the week.';
@@ -234,6 +235,9 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
   const [transferStart, setTransferStart] = useState('1');
   const [transferEnd, setTransferEnd] = useState('1');
   const [transferMoveResponses, setTransferMoveResponses] = useState(true);
+  const [deletePm, setDeletePm] = useState('Avika');
+  const [deleteStart, setDeleteStart] = useState('1');
+  const [deleteEnd, setDeleteEnd] = useState('1');
   const [adminRules, setAdminRules] = useState(DEFAULT_RULES);
   const [adminDeadline, setAdminDeadline] = useState('');
   const [adminDeadlineNote, setAdminDeadlineNote] = useState('');
@@ -263,6 +267,10 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
   const taskEvidence = normaliseMetricEvidence(task?.metric_evidence || EMPTY_METRIC_EVIDENCE);
   const adminTargetPm = data.pms?.[adminPm] || makeDefaultData().pms[adminPm];
   const adminTaskIndex = Math.max(0, Math.min(Number(adminEvidenceTaskIndex) || 0, Math.max(0, (adminTargetPm.tasks?.length || 1) - 1)));
+  const shortlistCohort = Object.values(data.pms || {}).filter(target => target?.task_type !== 'ngo_details') as PmData[];
+  const cohortTotal = shortlistCohort.reduce((sum, target) => sum + (target.tasks?.length || 0), 0);
+  const cohortDone = shortlistCohort.reduce((sum, target) => sum + submittedCount(target), 0);
+  const cohortLeft = Math.max(0, cohortTotal - cohortDone);
 
   useEffect(() => { const id = window.setInterval(() => setTick(value => value + 1), 1000); return () => window.clearInterval(id); }, []);
   useEffect(() => {
@@ -319,7 +327,7 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
 
   function taskLabel(name = selectedPM) { const target = data.pms?.[name]; return (target?.task_type === 'ngo_details' || name === 'Tanishq') ? 'NGO Details' : 'Shortlist'; }
   function openWorkspace(name: string) { const target = data.pms?.[name]; const idx = latestSubmittedIndex(target); setSelectedPM(name); setCurrentIndex(idx); setMode('task'); setMsg(idx > 0 || target?.responses?.[String(idx)]?.submitted ? `Opened last submitted NGO #${idx + 1}.` : 'Opened first assigned NGO.'); setLastBadge(''); setLastQuality(''); setLastPaceSeconds(null); setStreak(0); setScreen('workspace'); }
-  function startAdmin(name = selectedPM) { setAdminPm(name); setTransferFromPm(name); if (name === transferToPm) setTransferToPm(PM_NAMES.find(pmName => pmName !== name) || 'Milan'); setAdminPassword(''); setShowAdmin(true); }
+  function startAdmin(name = selectedPM) { const shortlistName = SHORTLIST_PM_NAMES.includes(name) ? name : 'Avika'; setAdminPm(name); setTransferFromPm(name); setDeletePm(shortlistName); setDeleteStart(name === selectedPM ? String(currentIndex + 1) : '1'); setDeleteEnd(name === selectedPM ? String(currentIndex + 1) : '1'); if (name === transferToPm) setTransferToPm(PM_NAMES.find(pmName => pmName !== name) || 'Milan'); setAdminPassword(''); setShowAdmin(true); }
   function patchLocalResponse(patch: Partial<ResponseRow>) { setData(old => { const next = JSON.parse(JSON.stringify(old)); next.pms[selectedPM].responses[String(currentIndex)] = { ...(next.pms[selectedPM].responses[String(currentIndex)] || {}), ...patch }; return next; }); }
   function updateMetricScore(metricKey: MetricKey, nextScore: MetricScore) { setMetricScores(old => ({ ...old, [metricKey]: nextScore })); }
   function startRerank() { setReranking(true); window.setTimeout(() => metricSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 20); }
@@ -540,6 +548,44 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
   }
 
   async function transferShortlistItems() { const base = backendBase(); const start = Number(transferStart); const end = Number(transferEnd || transferStart); if (!adminPassword.trim()) { setMsg('Enter admin password first.'); return; } if (!base) { setMsg('Backend URL missing. Transfer needs backend memory.'); return; } if (!Number.isFinite(start) || start < 1 || !Number.isFinite(end) || end < 1) { setMsg('Enter a valid 1-based shortlist range.'); return; } if (transferFromPm === transferToPm) { setMsg('Pick two different PMs.'); return; } const lo = Math.min(start, end); const hi = Math.max(start, end); const count = hi - lo + 1; if (!window.confirm(`Transfer shortlist item${count > 1 ? 's' : ''} ${lo}${hi !== lo ? `–${hi}` : ''} from ${transferFromPm} to ${transferToPm}?`)) return; setMsg('Transferring shortlist assignment…'); try { const result = await backendFetch(`${base}/workstream/admin/transfer-tasks`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: adminPassword, from_pm: transferFromPm, to_pm: transferToPm, start_index: lo, end_index: hi, move_responses: transferMoveResponses }) }); const json = await result.json(); if (json?.ok) { setData(json.data); setMsg(`Transferred ${json.transferred || count} item(s) from ${transferFromPm} to ${transferToPm}.`); } else setMsg(json?.error || 'Transfer failed.'); } catch (errorValue: any) { setMsg(errorValue?.message || 'Transfer failed.'); } }
+
+  async function deleteShortlistItems() {
+    const base = backendBase();
+    const start = Number(deleteStart);
+    const end = Number(deleteEnd || deleteStart);
+    if (!adminPassword.trim()) { setMsg('Enter admin password first.'); return; }
+    if (!base) { setMsg('Backend URL missing. Permanent deletion needs backend memory.'); return; }
+    if (!Number.isFinite(start) || start < 1 || !Number.isFinite(end) || end < 1) { setMsg('Enter a valid 1-based delete range.'); return; }
+    const target = data.pms?.[deletePm];
+    const taskCount = target?.tasks?.length || 0;
+    const lo = Math.min(start, end);
+    const hi = Math.max(start, end);
+    if (hi > taskCount) { setMsg(`${deletePm} has ${taskCount} shortlisted NGO${taskCount === 1 ? '' : 's'}.`); return; }
+    const names = (target?.tasks || []).slice(lo - 1, hi).map(item => item.ngo_name).filter(Boolean);
+    const count = hi - lo + 1;
+    const preview = names.slice(0, 4).join(', ');
+    const extra = names.length > 4 ? ` and ${names.length - 4} more` : '';
+    if (!window.confirm(`Permanently delete shortlist item${count > 1 ? 's' : ''} ${lo}${hi !== lo ? `–${hi}` : ''} from ${deletePm}?${preview ? `\n\n${preview}${extra}` : ''}\n\nAny saved three-metric assessments for these NGOs will also be deleted.`)) return;
+    setMsg('Deleting shortlist assignment…');
+    try {
+      const result = await backendFetch(`${base}/workstream/admin/delete-tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword, pm: deletePm, start_index: lo, end_index: hi }),
+      });
+      const json = await result.json();
+      if (json?.ok) {
+        setData(json.data);
+        const remaining = json.data?.pms?.[deletePm]?.tasks?.length || 0;
+        if (selectedPM === deletePm) setCurrentIndex(index => Math.max(0, Math.min(index, remaining - 1)));
+        setDeleteStart('1');
+        setDeleteEnd('1');
+        setMsg(`Deleted ${json.deleted || count} shortlisted NGO${(json.deleted || count) === 1 ? '' : 's'} from ${deletePm}.`);
+      } else setMsg(json?.error || 'Delete failed.');
+    } catch (errorValue: any) {
+      setMsg(errorValue?.message || 'Delete failed.');
+    }
+  }
   function nextTask() { setCurrentIndex(index => Math.min((pm.tasks?.length || 1) - 1, index + 1)); }
   function prevTask() { setCurrentIndex(index => Math.max(0, index - 1)); }
   function handleTaskFile(file?: File | null) { if (!file) return; const reader = new FileReader(); reader.onload = () => { const tasks = parseTasks(String(reader.result || '')); setAdminTasks(tasks); setMsg(`${tasks.length} tasks ready to add.`); }; reader.readAsText(file); }
@@ -551,23 +597,31 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
     <section className="pmu-workstream pm-view-workstream">
       {screen === 'board' && (
         <>
-          <section className="pmu-board-head source-row"><div><h2>PM view</h2><p>{stateName} responsibilities and review progress.</p></div><a className="ghost-btn" href={exportHref()}>Export CSV</a></section>
-          <section className="pmu-card-grid" aria-label="PM cards">
-            {PM_NAMES.map(name => {
-              const cardPm = data.pms?.[name] || makeDefaultData().pms[name];
-              const cardDone = submittedCount(cardPm);
-              const cardTotal = cardPm.tasks?.length || 0;
-              const profile = profileFor(name);
-              return (
-                <article className="pm-score-card pmu-card" key={name}>
-                  <h3>{name}</h3>
-                  <p>{cardPm.responsibility}</p>
-                  <div className="pmu-card-count">{cardDone}/{cardTotal}</div>
-                  <button className="pmu-primary-action glow-action" onClick={() => { openWorkspace(name); setMode('task'); }}>{taskLabel(name)}</button>
-                  <button onClick={() => setAboutPM(profile)}><span>About PM</span><strong>→</strong></button>
-                </article>
-              );
-            })}
+          <section className="pmu-board-layout">
+            <div className="pmu-board-main">
+              <section className="pmu-board-head source-row"><div><h2>PM view</h2><p>{stateName} responsibilities and new-metric shortlisting.</p></div><a className="ghost-btn" href={exportHref()}>Export CSV</a></section>
+              <section className="pmu-card-grid" aria-label="PM cards">
+                {PM_NAMES.map(name => {
+                  const cardPm = data.pms?.[name] || makeDefaultData().pms[name];
+                  const profile = profileFor(name);
+                  return (
+                    <article className="pm-score-card pmu-card" key={name}>
+                      <h3>{name}</h3>
+                      <p>{cardPm.responsibility}</p>
+                      <button className="pmu-primary-action glow-action" onClick={() => { openWorkspace(name); setMode('task'); }}>{taskLabel(name)}</button>
+                      <button onClick={() => setAboutPM(profile)}><span>About PM</span><strong>→</strong></button>
+                    </article>
+                  );
+                })}
+              </section>
+            </div>
+            <aside className="pm-cohort-status" aria-label="Shortlisting new metrics status">
+              <h3>Shortlisting new metrics</h3>
+              <table><tbody>
+                <tr><th>Total to be done</th><td>{cohortTotal}</td></tr>
+                <tr><th>Left in this cohort</th><td>{cohortLeft}</td></tr>
+              </tbody></table>
+            </aside>
           </section>
           <button className="config-gear workstream-gear" onClick={() => startAdmin(selectedPM)}>⚙</button>
         </>
@@ -734,8 +788,11 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
               )}
             </div>
             <aside className="workstream-side pmu-compact-side">
-              <div className="mini-panel pm-mini-leaderboard"><h3>Leaderboard</h3>{leaderboard.map((row, index) => <div className="mini-row" key={row.name}><span>{index === 0 && row.done > 0 ? '🏆 ' : ''}{row.name}</span><b>{row.done}/{row.total}</b></div>)}</div>
-              <div className="mini-panel pm-mini-summary"><h3>Summary</h3>{!isDetails ? [1, 2, 3, 4, 5].map(rankValue => <div className="mini-row" key={rankValue}><span>Rank {rankValue}</span><b>{rankCounts[rankValue] || 0}</b></div>) : <div className="mini-row"><span>Details</span><b>{done}</b></div>}<div className="mini-row"><span>Avg pace</span><b>{avgPace(pm)}</b></div></div>
+              <div className="mini-panel pm-workspace-cohort-status">
+                <h3>Shortlisting new metrics</h3>
+                <div className="mini-row"><span>Total to be done</span><b>{cohortTotal}</b></div>
+                <div className="mini-row"><span>Left in this cohort</span><b>{cohortLeft}</b></div>
+              </div>
             </aside>
           </div>
           <button className="config-gear workstream-gear" onClick={() => startAdmin(selectedPM)}>⚙</button>
@@ -796,6 +853,7 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
               <div className="admin-inline"><button className="ghost-btn" type="button" onClick={csvSample}>Download sample CSV</button><span>{adminTasks.length ? `${adminTasks.length} task(s) ready to add` : 'CSV adds tasks only'}</span></div>
 
               <div className="admin-subsection"><b>Transfer shortlist assignment</b><p>Move one item or a 1-based range from one PM to another. Example: 15 to 27.</p><div className="admin-mini-grid"><label className="admin-field"><span>From PM</span><select value={transferFromPm} onChange={event => setTransferFromPm(event.target.value)}>{PM_NAMES.map(name => <option key={name} value={name}>{name}</option>)}</select></label><label className="admin-field"><span>To PM</span><select value={transferToPm} onChange={event => setTransferToPm(event.target.value)}>{PM_NAMES.map(name => <option key={name} value={name}>{name}</option>)}</select></label><FieldLike label="Start #" value={transferStart} onChange={setTransferStart} /><FieldLike label="End #" value={transferEnd} onChange={setTransferEnd} /></div><label className="admin-check"><input type="checkbox" checked={transferMoveResponses} onChange={event => setTransferMoveResponses(event.target.checked)} /> Move submitted response also, if any</label><button className="ghost-btn" type="button" onClick={transferShortlistItems}>Transfer range</button></div>
+              <div className="admin-subsection admin-delete-shortlist"><b>Delete shortlisted NGO(s)</b><p>Permanently remove one assigned NGO or a 1-based range. Saved metric assessments inside the selected range are deleted too.</p><div className="admin-mini-grid"><label className="admin-field"><span>PM shortlist</span><select value={deletePm} onChange={event => { setDeletePm(event.target.value); setDeleteStart('1'); setDeleteEnd('1'); }}>{SHORTLIST_PM_NAMES.map(name => <option key={name} value={name}>{name} · {data.pms?.[name]?.tasks?.length || 0} NGOs</option>)}</select></label><div/><FieldLike label="Start #" value={deleteStart} onChange={setDeleteStart} /><FieldLike label="End #" value={deleteEnd} onChange={setDeleteEnd} /></div><button className="danger-btn" type="button" onClick={deleteShortlistItems}>Delete selected range</button></div>
               <FieldLike label="Admin password" value={adminPassword} onChange={setAdminPassword} />
               <p className="drawer-msg">{msg}</p>
             </div>

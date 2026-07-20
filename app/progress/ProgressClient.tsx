@@ -214,33 +214,68 @@ function groupsFromFinal(data: any) {
   return order.map(key => ({ key, label: labels[key], note: notes[key], rows: buckets[key] || [] }));
 }
 function CombinedReviewPanel({ data, loading, error }: { data: any; loading: boolean; error: string }) {
-  const groups = groupsFromCompiled(data);
-  const pmCounts = data?.pm_counts || {};
-  return <section className="review-board combined-minimal-board">
-    {loading && <div className="empty-review">Loading combined review…</div>}
+  type SortKey = 'combined_score' | 'child_progression' | 'learning_model' | 'development_ecosystem' | 'ngo_name';
+  const [sortKey, setSortKey] = useState<SortKey>('combined_score');
+  const [sortDirection, setSortDirection] = useState<'desc' | 'asc'>('desc');
+  const rows = asRows(data?.rows);
+  const sortedRows = useMemo(() => [...rows].sort((left: any, right: any) => {
+    if (sortKey === 'ngo_name') {
+      const result = String(pick(left, 'ngo_name', 'name')).localeCompare(String(pick(right, 'ngo_name', 'name')));
+      return sortDirection === 'asc' ? result : -result;
+    }
+    const result = n(right?.[sortKey]) - n(left?.[sortKey]);
+    return sortDirection === 'desc' ? result : -result;
+  }), [rows, sortKey, sortDirection]);
+  const averageScore = n(data?.average_combined_score);
+
+  function chooseSort(next: SortKey) {
+    if (next === sortKey) setSortDirection(current => current === 'desc' ? 'asc' : 'desc');
+    else {
+      setSortKey(next);
+      setSortDirection(next === 'ngo_name' ? 'asc' : 'desc');
+    }
+  }
+  function sortLabel(key: SortKey, label: string) {
+    return <button type="button" className={sortKey === key ? 'active' : ''} onClick={() => chooseSort(key)}>{label}{sortKey === key ? (sortDirection === 'desc' ? ' ↓' : ' ↑') : ''}</button>;
+  }
+
+  return <section className="review-board combined-minimal-board combined-metric-board">
+    {loading && <div className="empty-review">Loading combined shortlisting…</div>}
     {error && <div className="error-box">{error}</div>}
-    <div className="review-summary-strip">
-      {Object.keys(pmCounts).length ? Object.entries(pmCounts).slice(0,5).map(([name, counts]: any) => <div className="review-summary-card" key={name}><span>{name}</span><b>{counts?.total ?? 0}</b><small>5:{counts?.['5'] ?? 0} · 4:{counts?.['4'] ?? 0} · 3:{counts?.['3'] ?? 0} · 2:{counts?.['2'] ?? 0} · 1:{counts?.['1'] ?? 0}</small></div>) : <>
-        <div className="review-summary-card"><span>Total rated</span><b>{data?.total_rated ?? 0}</b></div>
-        <div className="review-summary-card"><span>Total assigned</span><b>{data?.total_assigned ?? 0}</b></div>
-        <div className="review-summary-card"><span>Pending</span><b>{data?.pending_count ?? 0}</b></div>
-      </>}
+    <div className="combined-metric-summary">
+      <div><span>Shortlisted NGOs</span><b>{data?.total_shortlisted ?? rows.length}</b><small>Completed new-metric assessments only</small></div>
+      <div><span>Completed assessments</span><b>{data?.completed_assessments ?? rows.length}</b><small>Duplicate NGO reviews are averaged</small></div>
+      <div><span>Average combined score</span><b>{averageScore.toFixed(2)}</b><small>{(averageScore * 100).toFixed(1)}% of the 15-point maximum</small></div>
     </div>
-    {groups.map(group => <section className="review-band" key={group.key}>
-      <h3>{group.key === 'pending' ? 'Pending' : `Rating ${group.key}`} <small>({group.rows.length})</small></h3>
-      <div className="review-list">
-        {group.rows.length ? group.rows.slice(0,80).map((row:any, i:number) => {
-          const website = safeExternalUrl(pick(row,'website','Website'));
-          return <div className="review-row combined-minimal-row" key={pick(row,'ngo_ref','id','ngo_name','name') || i}>
-            <div><b>{pick(row,'ngo_name','NGO Name','name') || 'Untitled NGO'}</b><small>NGO name</small></div>
-            <div>{website ? <a href={website} target="_blank" rel="noreferrer">Open website</a> : <span>—</span>}<small>Website</small></div>
-            <div><small>{pick(row,'comment','pm_comment','reason') || 'No comment yet.'}</small></div>
-          </div>;
-        }) : <div className="empty-review">No rows here.</div>}
-      </div>
-    </section>)}
+    <div className="combined-metric-toolbar">
+      <div><h2>Combined shortlisting</h2><p>Combined score = (Child Progression + Learning Model + Development Ecosystem) ÷ 15.</p></div>
+      <label><span>Sort by</span><select value={sortKey} onChange={event => { const next = event.target.value as SortKey; setSortKey(next); setSortDirection(next === 'ngo_name' ? 'asc' : 'desc'); }}><option value="combined_score">Highest combined score</option><option value="child_progression">Highest child progression</option><option value="learning_model">Highest learning model</option><option value="development_ecosystem">Highest development ecosystem</option><option value="ngo_name">NGO name</option></select></label>
+    </div>
+    <div className="combined-metric-table-wrap">
+      <table className="combined-metric-table">
+        <thead><tr><th>#</th><th>NGO</th><th>{sortLabel('child_progression', 'Child progression')}</th><th>{sortLabel('learning_model', 'Learning model')}</th><th>{sortLabel('development_ecosystem', 'Development ecosystem')}</th><th>{sortLabel('combined_score', 'Combined score')}</th><th>Website</th></tr></thead>
+        <tbody>
+          {sortedRows.length ? sortedRows.map((row: any, index: number) => {
+            const website = safeExternalUrl(pick(row, 'website', 'Website'));
+            const reviewers = Array.isArray(row.reviewers) ? row.reviewers.join(', ') : String(row.reviewer || '');
+            const points = n(row.combined_points);
+            const combined = n(row.combined_score);
+            return <tr key={pick(row, 'ngo_ref', 'id', 'ngo_name', 'name') || index}>
+              <td className="combined-rank-cell">{index + 1}</td>
+              <td><b>{pick(row, 'ngo_name', 'NGO Name', 'name') || 'Untitled NGO'}</b><small>{reviewers ? `Reviewed by ${reviewers}` : 'New metric assessment'}{n(row.assessment_count) > 1 ? ` · ${n(row.assessment_count)} assessments averaged` : ''}</small></td>
+              <td><strong>{n(row.child_progression).toFixed(2)}</strong><small>/ 5</small></td>
+              <td><strong>{n(row.learning_model).toFixed(2)}</strong><small>/ 5</small></td>
+              <td><strong>{n(row.development_ecosystem).toFixed(2)}</strong><small>/ 5</small></td>
+              <td className="combined-score-cell"><strong>{combined.toFixed(2)}</strong><small>{points.toFixed(2)}/15 · {(combined * 100).toFixed(1)}%</small></td>
+              <td>{website ? <a href={website} target="_blank" rel="noreferrer">Open website ↗</a> : <span>—</span>}</td>
+            </tr>;
+          }) : <tr><td colSpan={7}><div className="empty-review">No completed three-metric shortlist assessments yet.</div></td></tr>}
+        </tbody>
+      </table>
+    </div>
   </section>;
 }
+
 function defaultFinalCopy(groups: Array<{key:string; label:string; note:string; rows:any[]}>) {
   const base: Record<string, { label: string; note: string }> = {};
   for (const group of groups) base[group.key] = { label: group.label, note: group.note };
@@ -543,7 +578,7 @@ export default function ProgressClient({ initialData }: { initialData: AnyObj })
       setRankingError('');
       try {
         if (view === 'combined') {
-          const r = await safeJSON(`${BACKEND}/ranking/compiled-review`);
+          const r = await safeJSON(`${BACKEND}/ranking/compiled-review?region=${encodeURIComponent(state)}`);
           if (!cancelled) {
             if (r.ok) setCompiledReview(r.data || {});
             else setRankingError(r.error || 'Could not load combined review.');
@@ -570,11 +605,11 @@ export default function ProgressClient({ initialData }: { initialData: AnyObj })
   }
 
   const ngoEditCount = Math.max(8, draftState?.ngos?.length || 0);
-  const rankingHeaderTitle = view === 'final' ? 'Final Ranking' : view === 'combined' ? 'Combined Review' : view === 'pm' ? 'PM Shortlists' : 'Ranking Center';
+  const rankingHeaderTitle = view === 'final' ? 'Final Ranking' : view === 'combined' ? 'Combined Shortlisting' : view === 'pm' ? 'PM Shortlists' : 'Ranking Center';
   const rankingHeaderSubtitle = view === 'final'
     ? 'A curated view of the NGOs most worth moving forward.'
     : view === 'combined'
-      ? 'Review PM comments and rating bands before finalising judgement tiers.'
+      ? 'Compare completed three-metric assessments and sort by the strongest combined or individual metric scores.'
       : view === 'pm'
         ? 'Open reviewer shortlists and complete one NGO at a time.'
         : 'Select a state, review PM shortlists, combine ratings, and finalise the best NGOs.';
@@ -599,7 +634,7 @@ export default function ProgressClient({ initialData }: { initialData: AnyObj })
 
       {state && view === 'hub' && <section className="source-choice-grid three-choice ranking-journey-grid">
         <button className="source-choice-card" onClick={() => setView('pm')}><span>01</span><b>PM Shortlists</b><small>Open reviewer shortlists and complete one NGO at a time.</small></button>
-        <button className="source-choice-card" onClick={() => setView('combined')}><span>02</span><b>Combined Review</b><small>See every PM rating grouped by 5, 4, 3, 2, 1, and pending.</small></button>
+        <button className="source-choice-card" onClick={() => setView('combined')}><span>02</span><b>Combined Shortlisting</b><small>Rank completed shortlists by combined score or any of the three new metrics.</small></button>
         <button className="source-choice-card leadpool-entry" onClick={() => setView('final')}><span>03</span><b>Final Ranking</b><small>View the final buckets and move selected NGOs to the tracker.</small></button>
       </section>}
 
@@ -639,7 +674,7 @@ export default function ProgressClient({ initialData }: { initialData: AnyObj })
 
 
       {state && view === 'pm' && <><div className="source-topline ranking-subtop"><button className="quiet-btn" onClick={() => setView('hub')}>← Back</button><span>PM Shortlists · {state}</span></div><AdminUndoRedo region={state} context="PM shortlisting recovery" onRestored={() => setRestoreTick(x => x + 1)} /><WorkstreamPanel key={restoreTick} stateName={state} /></>}
-      {state && view === 'combined' && <><div className="source-topline ranking-subtop"><button className="quiet-btn" onClick={() => setView('hub')}>← Back</button><span>Combined Review · {state}</span></div><AdminUndoRedo region={state} context="Combined review recovery" onRestored={() => setRestoreTick(x => x + 1)} /><CombinedReviewPanel data={compiledReview} loading={rankingLoading} error={rankingError} /></>}
+      {state && view === 'combined' && <><div className="source-topline ranking-subtop"><button className="quiet-btn" onClick={() => setView('hub')}>← Back</button><span>Combined Shortlisting · {state}</span></div><AdminUndoRedo region={state} context="Combined shortlisting recovery" onRestored={() => setRestoreTick(x => x + 1)} /><CombinedReviewPanel data={compiledReview} loading={rankingLoading} error={rankingError} /></>}
       {state && view === 'final' && <FinalOutputPanel
         data={finalBoard}
         loading={rankingLoading}
