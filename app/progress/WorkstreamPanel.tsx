@@ -92,7 +92,7 @@ type AdminEvidenceDraft = Record<MetricKey, { text: string; linksText: string; c
 
 const PM_NAMES = ['Milan', 'Rachit', 'Ipshita', 'Avika', 'Kamran', 'Piyush', 'Tanishq'];
 const SHORTLIST_PM_NAMES = PM_NAMES.filter(name => name !== 'Tanishq');
-const LEADERBOARD_NAMES = PM_NAMES.filter(name => name !== 'Milan' && name !== 'Tanishq');
+const LEADERBOARD_NAMES = SHORTLIST_PM_NAMES;
 const DEFAULT_RULES = 'Review only expression quality: length, clarity, and whether the PM captured their thought process. Do not critique the NGO, the rank, the source, the pathway, or whether the PM is right. Do not ask for contact, referral, POC, source, geography, cohort, operational proof, or extra NGO facts. Hinglish, fragments, spelling mistakes, no punctuation and stream of consciousness are fine. Encourage people to type more of what went through their head.';
 const DEFAULT_DEADLINE_NOTE = 'Once everyone submits, we compare rankings, identify strong cohorts, resolve overlaps, and move to human lead follow-ups. This needs to close by Wednesday so the lead list can be wrapped by the end of the week.';
 const DEFAULT_TASKS: Task[] = [
@@ -617,10 +617,26 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
             </div>
             <aside className="pm-cohort-status" aria-label="Shortlisting new metrics status">
               <h3>Shortlisting new metrics</h3>
-              <table><tbody>
+              <table className="pm-cohort-totals"><tbody>
                 <tr><th>Total to be done</th><td>{cohortTotal}</td></tr>
                 <tr><th>Left in this cohort</th><td>{cohortLeft}</td></tr>
               </tbody></table>
+              <section className="pm-progress-leaderboard" aria-label="PM shortlisting progress leaderboard">
+                <div className="pm-progress-leaderboard-head">
+                  <h4>PM progress</h4>
+                  <span>Completed</span>
+                </div>
+                <div className="pm-progress-leaderboard-list">
+                  {leaderboard.map((row, index) => (
+                    <button type="button" key={row.name} onClick={() => { openWorkspace(row.name); setMode('task'); }}>
+                      <span className="pm-progress-rank">{index + 1}</span>
+                      <strong>{row.name}</strong>
+                      <b>{row.done}</b>
+                      <small>of {row.total}</small>
+                    </button>
+                  ))}
+                </div>
+              </section>
             </aside>
           </section>
           <button className="config-gear workstream-gear" onClick={() => startAdmin(selectedPM)}>⚙</button>
@@ -788,10 +804,11 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
               )}
             </div>
             <aside className="workstream-side pmu-compact-side">
-              <div className="mini-panel pm-workspace-cohort-status">
-                <h3>Shortlisting new metrics</h3>
-                <div className="mini-row"><span>Total to be done</span><b>{cohortTotal}</b></div>
-                <div className="mini-row"><span>Left in this cohort</span><b>{cohortLeft}</b></div>
+              <div className="mini-panel pm-workspace-pm-status">
+                <h3>{selectedPM}{selectedPM.endsWith('s') ? '’' : '’s'} progress</h3>
+                <div className="mini-row"><span>Total assigned</span><b>{total}</b></div>
+                <div className="mini-row"><span>Completed</span><b>{done}</b></div>
+                <div className="mini-row"><span>Left</span><b>{Math.max(0, total - done)}</b></div>
               </div>
             </aside>
           </div>
