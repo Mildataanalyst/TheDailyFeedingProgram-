@@ -33,7 +33,7 @@ export const METRIC_SCALE: Record<number, string> = {
   5: 'Benchmark-level',
 };
 
-export const METRIC_DEFINITIONS: Array<{
+export const METRICS: Array<{
   key: MetricKey;
   letter: string;
   title: string;
@@ -167,6 +167,8 @@ export const METRIC_DEFINITIONS: Array<{
     },
   },
 ];
+
+export const METRIC_DEFINITIONS = METRICS;
 
 export const NGO_REFERENCE_ROWS = [
   { name: 'Shanti Bhavan', model: 'Long-horizon residential', outcomes: 5, learning: 4, environment: 5, basis: 'Impact page and reported college and employment outcomes.' },

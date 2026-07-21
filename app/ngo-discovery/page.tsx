@@ -89,7 +89,7 @@ const MAX_DISCOVERY_BUDGET = 5500;
 const states = [
   'Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Andaman and Nicobar Islands','Chandigarh','Dadra and Nagar Haveli and Daman and Diu','Delhi','Jammu and Kashmir','Ladakh','Lakshadweep','Puducherry'
 ];
-const PM_NAMES = ['Milan','Avika','Piyush','Kamran','Ipshita','Rachit','Tanishq'];
+const PM_NAMES = ['Milan','Avika','Piyush','Kamran','Ipshita','Rachit','Tanishq','Guest'];
 
 const runModes = [
   { key: 'test', label: 'Test Run', budget: 200, note: 'Small run to check the search logic.' },

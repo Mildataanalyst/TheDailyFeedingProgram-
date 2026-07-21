@@ -19,7 +19,7 @@
 
 ## Tutorial
 
-`public/tutorials/kalkeri-alumni-outcomes.html`
+the original standalone Kalkeri tutorial file
 
 The PM can open it from the three-metric assessment header. It demonstrates:
 

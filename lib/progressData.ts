@@ -5,6 +5,7 @@ export const PM_PROFILES = [
   { name:'Rachit', tagline:'SoGa Representative', role:'Networker-in-chief', about:'Networker-in-chief. Whoever you know, Rachit probably knows them too — and will somehow say hello to them tomorrow. Most days include a request for banana chips. Most days, that request is not fulfilled.', img:'/pm/rachit.jpg' },
   { name:'Ipshita', tagline:'Green Tea Loyalist', role:'DFP nutrition expert', about:'DFP’s nutrition expert. Loves food so much that when she is not thinking about food, she is watching food reels. Drives every day from Faridabad to office, probably daydreaming about the next meal on the way. Veteran of the team, green tea loyalist, and experienced enough that she may have personally fed the program’s first beneficiary.', img:'/pm/ipshita.jpg' },
   { name:'Kamran', tagline:'Drama Allergy Certified', role:'Unofficial Ministry of Travel', about:'Super experienced, brutally practical, and the unofficial Ministry of Travel. Very allergic to unnecessary drama. Calm operator, straight talker, and the person you want around when a plan needs to survive contact with reality.', img:'/pm/kamran.jpg' },
+  { name:'Tanishq', tagline:'South India Desk', role:'Program shortlisting', about:'Supports NGO shortlisting and review across the South India workstream.', img:'' },
 ] as const;
 
 export const DEFAULT_DASHBOARD_DATA = {

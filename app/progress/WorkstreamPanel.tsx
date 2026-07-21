@@ -4,6 +4,7 @@ import { backendFetch } from '@/lib/backendClient';
 import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PM_PROFILES } from '@/lib/progressData';
+import ScoringTutorial from '@/components/ScoringTutorial';
 import {
   DEFAULT_METRIC_SCORES,
   EMPTY_METRIC_EVIDENCE,
@@ -20,11 +21,23 @@ import {
   parseEvidenceLinks,
 } from '@/components/MetricScoring';
 
+type GuestReferenceReview = {
+  reviewer?: string;
+  metric_scores?: Partial<Record<MetricKey, MetricScore>>;
+  exception_override?: ExceptionOverride;
+  rank?: number | string;
+  decision?: number | string;
+  rank_label?: string;
+  reason?: string;
+  submitted_at?: string;
+};
+
 type Task = {
   ngo_name: string;
   website?: string;
   background?: string;
   metric_evidence?: Partial<Record<MetricKey, MetricEvidence>>;
+  guest_reference_review?: GuestReferenceReview;
   [key: string]: any;
 };
 
@@ -90,20 +103,15 @@ type AiReview = {
 
 type AdminEvidenceDraft = Record<MetricKey, { text: string; linksText: string; ceilingRank: string; ceilingReason: string }>;
 
-const PM_NAMES = ['Milan', 'Rachit', 'Ipshita', 'Avika', 'Kamran', 'Piyush', 'Tanishq'];
-const SHORTLIST_PM_NAMES = PM_NAMES.filter(name => name !== 'Tanishq');
-const LEADERBOARD_NAMES = SHORTLIST_PM_NAMES.filter(name => name !== 'Milan');
+const PM_NAMES = ['Milan', 'Rachit', 'Ipshita', 'Avika', 'Kamran', 'Piyush', 'Tanishq', 'Guest'];
+const SHORTLIST_PM_NAMES = PM_NAMES;
+const LEADERBOARD_NAMES = SHORTLIST_PM_NAMES.filter(name => name !== 'Milan' && name !== 'Guest');
 const DEFAULT_RULES = 'Review only expression quality: length, clarity, and whether the PM captured their thought process. Do not critique the NGO, the rank, the source, the pathway, or whether the PM is right. Do not ask for contact, referral, POC, source, geography, cohort, operational proof, or extra NGO facts. Hinglish, fragments, spelling mistakes, no punctuation and stream of consciousness are fine. Encourage people to type more of what went through their head.';
 const DEFAULT_DEADLINE_NOTE = 'Once everyone submits, we compare rankings, identify strong cohorts, resolve overlaps, and move to human lead follow-ups. This needs to close by Wednesday so the lead list can be wrapped by the end of the week.';
 const DEFAULT_TASKS: Task[] = [
   { ngo_name: 'Aina Trust', website: 'www.ainatrust.in/about-aina.html', background: 'Early childhood care centres, anganwadi strengthening, nutrition support and education programs for vulnerable young children.' },
   { ngo_name: 'Cerebloom Academy', website: 'https://cerebloom.org/', background: 'Rural science education and mentorship program for underserved students. Review regularity and depth.' },
   { ngo_name: 'Don Bosco Child Labour Mission', website: 'dbclm.org', background: 'Child labour rehabilitation, bridge schooling, open shelter and prevention work.' },
-];
-const DEFAULT_DETAILS: Task[] = [
-  { ngo_name: 'Referral NGO 1', background: 'Capture NGO details, contact number, and referral source.' },
-  { ngo_name: 'Referral NGO 2', background: 'Capture NGO details, contact number, and referral source.' },
-  { ngo_name: 'Referral NGO 3', background: 'Capture NGO details, contact number, and referral source.' },
 ];
 
 const RANKS: Record<number, { short: string; line: string; tone: string }> = {
@@ -113,7 +121,7 @@ const RANKS: Record<number, { short: string; line: string; tone: string }> = {
   4: { short: 'Strong fit', line: 'More than ordinary — clear extra layer or distinctive pathway.', tone: 'high' },
   5: { short: 'Transformative', line: 'Highest potential: being part of this could change a child’s trajectory.', tone: 'top' },
 };
-const PM_ICONS: Record<string, string> = { Milan: '◆', Rachit: '◌', Ipshita: '✦', Avika: '★', Kamran: '▣', Piyush: '✚', Tanishq: '' };
+const PM_ICONS: Record<string, string> = { Milan: '◆', Rachit: '◌', Ipshita: '✦', Avika: '★', Kamran: '▣', Piyush: '✚', Tanishq: 'T', Guest: '' };
 const PM_LINES: Record<string, string[]> = {
   Milan: ['Gurgaon has produced signal. Strange but welcome.', 'Minimalist review; future people will still manage.', 'This was shorter than a meeting invite and more useful.'],
   Rachit: ['Banana chips moved one step closer.', 'Networking speed, but with actual notes.', 'More useful than a WhatsApp forward. Low bar, cleared.'],
@@ -121,7 +129,8 @@ const PM_LINES: Record<string, string[]> = {
   Avika: ['Orange Lays energy, but somehow productive.', 'Crisp enough. Food-sharing policy remains unresolved.', 'This shortlist has texture now. Slightly alarming.'],
   Kamran: ['Drama avoided. Historic.', 'Brutally practical. Spreadsheet warned.', 'No field visit required for this sentence.'],
   Piyush: ['Karma points credited, audit pending.', 'Angel Faridabad has filed judgement.', 'Desk helicopters have cleared this row.'],
-  Tanishq: ['Mr. South India has saved one more follow-up from becoming archaeology.', 'Data hygiene briefly defeated chaos.', 'This row may actually be usable later. Miracles happen.'],
+  Tanishq: ['One more shortlist judgement saved.', 'South India desk, now with an actual score.', 'Useful review captured. Spreadsheet briefly satisfied.'],
+  Guest: ['Guest assessment saved.'],
 };
 const PM_HALF_MILESTONE: Record<string, string> = {
   Avika: 'Avika, halfway done. Orange Lays checkpoint unlocked.',
@@ -129,7 +138,7 @@ const PM_HALF_MILESTONE: Record<string, string> = {
   Rachit: 'Rachit, banana chips have been spiritually approved.',
   Kamran: 'Kamran, may you avoid more drama. Halfway done.',
   Piyush: 'More karma points credited. Halfway done.',
-  Tanishq: 'Mr. South India is halfway through the details desk.',
+  Tanishq: 'Tanishq is halfway through the shortlist.',
   Milan: 'Halfway done. The spreadsheet has not won yet.',
 };
 
@@ -141,18 +150,55 @@ function emptyAdminEvidence(): AdminEvidenceDraft { return { child_progression: 
 function makeDefaultData(): WorkstreamData {
   const pms: Record<string, PmData> = {};
   PM_NAMES.forEach((name, index) => {
-    const details = name === 'Tanishq';
     pms[name] = {
       name,
       deadline: defaultDeadline(18 + index),
       deadline_note: DEFAULT_DEADLINE_NOTE,
-      responsibility: details ? 'Capture NGO details, contact number and referral source clearly.' : 'Review assigned NGOs and capture judgement clearly. Stream of consciousness is fine.',
-      task_type: details ? 'ngo_details' : 'shortlisting',
-      tasks: details ? DEFAULT_DETAILS : DEFAULT_TASKS,
+      responsibility: name === 'Guest' ? '' : 'Review assigned NGOs and capture judgement clearly. Stream of consciousness is fine.',
+      task_type: 'shortlisting',
+      tasks: name === 'Guest' || name === 'Tanishq' ? [] : DEFAULT_TASKS,
       responses: {},
     };
   });
   return { review_rules: DEFAULT_RULES, scoring_reference_url: '', pms, global_log: [], ai_log: [] };
+}
+
+function normaliseWorkstreamData(value: any): WorkstreamData {
+  const base = makeDefaultData();
+  const next: WorkstreamData = value && typeof value === 'object' ? structuredClone(value) : base;
+  next.review_rules = next.review_rules || DEFAULT_RULES;
+  next.scoring_reference_url = next.scoring_reference_url || '';
+  next.pms = next.pms && typeof next.pms === 'object' ? next.pms : {};
+  next.global_log = Array.isArray(next.global_log) ? next.global_log : [];
+  next.ai_log = Array.isArray(next.ai_log) ? next.ai_log : [];
+  for (const name of PM_NAMES) {
+    const fallback = base.pms[name];
+    const current = next.pms[name] || structuredClone(fallback);
+    current.name = name;
+    current.deadline = current.deadline || fallback.deadline;
+    current.deadline_note = current.deadline_note || fallback.deadline_note;
+    current.responsibility = name === 'Guest' ? '' : (current.responsibility || fallback.responsibility);
+    current.tasks = Array.isArray(current.tasks) ? current.tasks : [];
+    current.responses = current.responses && typeof current.responses === 'object' ? current.responses : {};
+    if (name === 'Tanishq' && current.task_type === 'ngo_details') {
+      const migratedTasks: Task[] = [];
+      current.tasks.forEach((task: Task, index: number) => {
+        const oldResponse = current.responses?.[String(index)] || {};
+        const placeholder = /^Referral NGO [123]$/i.test(String(task?.ngo_name || '').trim());
+        const details = String(oldResponse.ngo_description || '').trim();
+        const contact = String(oldResponse.contact_number || oldResponse.referral_poc || '').trim();
+        const referral = String(oldResponse.referral_source || '').trim();
+        if (placeholder && !details && !contact && !referral && !task?.website) return;
+        const extra = [details && `NGO details: ${details}`, contact && `POC: ${contact}`, referral && `Referral source: ${referral}`].filter(Boolean).join(' | ');
+        migratedTasks.push({ ...task, background: [task.background, extra].filter(Boolean).join(' | ') });
+      });
+      current.tasks = migratedTasks;
+      current.responses = {};
+    }
+    current.task_type = 'shortlisting';
+    next.pms[name] = current;
+  }
+  return next;
 }
 function metricResponseComplete(row?: ResponseRow) {
   if (!row) return false;
@@ -192,6 +238,20 @@ function latestSubmittedIndex(pm?: PmData) { const tasks = pm?.tasks || []; cons
 function parseCsvLine(line: string) { const cells: string[] = []; let cur = ''; let quoted = false; for (let i = 0; i < line.length; i += 1) { const ch = line[i]; if (ch === '"' && line[i + 1] === '"') { cur += '"'; i += 1; continue; } if (ch === '"') { quoted = !quoted; continue; } if (ch === ',' && !quoted) { cells.push(cur.trim()); cur = ''; continue; } cur += ch; } cells.push(cur.trim()); return cells; }
 function parseTasks(value: string): Task[] { const lines = value.split(/\r?\n/).map(item => item.trim()).filter(Boolean); if (!lines.length) return []; const first = lines[0].toLowerCase(); const hasHeader = /ngo|name|website|source|description|background|details/.test(first); const headers = hasHeader ? parseCsvLine(lines[0]).map(item => item.toLowerCase().trim()) : []; const body = hasHeader ? lines.slice(1) : lines; return body.map(line => { const cells = parseCsvLine(line); let name = cells[0] || ''; let website = cells[1] || ''; let background = cells.slice(2).join(' ').trim(); if (headers.length) { const get = (patterns: RegExp[], fallback: number) => { const idx = headers.findIndex(header => patterns.some(pattern => pattern.test(header))); return (idx >= 0 ? cells[idx] : cells[fallback]) || ''; }; name = get([/ngo.*name/, /^name$/], 0); website = get([/website/, /source/, /url/, /link/], 1); background = get([/description/, /background/, /context/, /note/, /details/], 2) || cells.slice(2).join(' '); } return { ngo_name: name || 'Untitled NGO', website, background }; }).filter(task => task.ngo_name && task.ngo_name !== 'Untitled NGO'); }
 function profileFor(name: string) { return Array.from(PM_PROFILES as unknown as any[]).find(pm => pm.name === name) || { name, tagline: '', role: 'PM', about: 'Details to be added.', img: '' }; }
+function guestReference(value: unknown): GuestReferenceReview | null {
+  if (!value || typeof value !== 'object') return null;
+  const raw = value as GuestReferenceReview;
+  const rawScores = raw.metric_scores && typeof raw.metric_scores === 'object' ? raw.metric_scores : undefined;
+  const hasMetrics = Boolean(rawScores && METRIC_DEFINITIONS.every(metric => {
+    const row = (rawScores as Partial<Record<MetricKey, MetricScore>>)[metric.key];
+    const rank = Number(row?.rank || 0);
+    return Number.isFinite(rank) && rank >= 1 && rank <= 5;
+  }));
+  const scores = hasMetrics ? normaliseMetricScores(rawScores) : undefined;
+  const legacyRank = Number(raw.rank || raw.decision || 0);
+  if (!hasMetrics && (!Number.isFinite(legacyRank) || legacyRank < 1 || legacyRank > 5)) return null;
+  return { ...raw, metric_scores: scores };
+}
 function qualityLabel(text: string, isDetails: boolean) { const w = wordCount(text); if (isDetails) { if (w >= 18) return 'Clear'; if (w >= 7) return 'Usable'; return 'Short'; } if (w >= 30) return 'Deep'; if (w >= 12) return 'Clear'; if (w >= 3) return 'Usable'; return 'Short'; }
 function paceBadge(delta: number) { if (!delta) return 'First'; if (delta < 35) return 'Fast'; if (delta < 90) return 'Efficient'; if (delta < 180) return 'Thoughtful'; if (delta < 360) return 'Taking time'; return 'Slow burn'; }
 function countsByRank(pm?: PmData) { const rows = submittedRows(pm).map(([, row]) => Number(row.rank || row.decision || 0)); return [1, 2, 3, 4, 5].reduce((acc, rank) => ({ ...acc, [rank]: rows.filter(rowRank => rowRank === rank).length }), {} as Record<number, number>); }
@@ -287,13 +347,15 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
   const [aboutPM, setAboutPM] = useState<any>(null);
   const [milestoneOpen, setMilestoneOpen] = useState(false);
   const [milestoneCopy, setMilestoneCopy] = useState('');
+  const [guestThanks, setGuestThanks] = useState<{ reference: GuestReferenceReview | null; advance: boolean } | null>(null);
 
   const pm = data.pms?.[selectedPM] || makeDefaultData().pms[selectedPM];
-  const isDetails = pm.task_type === 'ngo_details' || selectedPM === 'Tanishq';
+  const isGuest = selectedPM === 'Guest';
+  const isDetails = false;
   const task = pm.tasks?.[currentIndex] || null;
   const response = pm.responses?.[String(currentIndex)] || {};
   const metricComplete = metricResponseComplete(response);
-  const hasLegacyRanking = Boolean(response.submitted || response.rank || response.decision || response.reason);
+  const hasLegacyRanking = !isGuest && Boolean(response.submitted || response.rank || response.decision || response.reason);
   const done = submittedCount(pm);
   const total = pm.tasks?.length || 0;
   const progress = pct(done, total);
@@ -307,11 +369,11 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
   useEffect(() => {
     const base = backendBase();
     const saved = typeof window !== 'undefined' ? window.localStorage.getItem('dfp-workstream-fallback') : '';
-    if (saved) { try { setData(JSON.parse(saved)); } catch { /* ignore bad local cache */ } }
+    if (saved) { try { setData(normaliseWorkstreamData(JSON.parse(saved))); } catch { /* ignore bad local cache */ } }
     if (!base) return;
     backendFetch(`${base}/workstream`, { cache: 'no-store' })
       .then(result => result.json())
-      .then(json => { if (json?.ok && json?.data) setData(json.data); })
+      .then(json => { if (json?.ok && json?.data) setData(normaliseWorkstreamData(json.data)); })
       .catch(() => setMsg('Backend not reachable. Local mode only.'));
   }, []);
   useEffect(() => { try { window.localStorage.setItem('dfp-workstream-fallback', JSON.stringify(data)); } catch { /* ignore quota */ } }, [data]);
@@ -356,7 +418,7 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
 
   const leaderboard = useMemo(() => LEADERBOARD_NAMES.map(name => ({ name, done: submittedCount(data.pms?.[name]), total: data.pms?.[name]?.tasks?.length || 0 })).sort((a, b) => b.done - a.done || a.name.localeCompare(b.name)), [data]);
 
-  function taskLabel(name = selectedPM) { const target = data.pms?.[name]; return (target?.task_type === 'ngo_details' || name === 'Tanishq') ? 'NGO Details' : 'Shortlist'; }
+  function taskLabel(_name = selectedPM) { return 'Shortlist'; }
   function openWorkspace(name: string) { const target = data.pms?.[name]; const idx = latestSubmittedIndex(target); setSelectedPM(name); setCurrentIndex(idx); setMode('task'); setMsg(idx > 0 || target?.responses?.[String(idx)]?.submitted ? `Opened last submitted NGO #${idx + 1}.` : 'Opened first assigned NGO.'); setLastBadge(''); setLastQuality(''); setLastPaceSeconds(null); setStreak(0); setScreen('workspace'); }
   function startAdmin(name = selectedPM) { const shortlistName = SHORTLIST_PM_NAMES.includes(name) ? name : 'Avika'; setAdminPm(name); setTransferFromPm(name); setDeletePm(shortlistName); setDeleteStart(name === selectedPM ? String(currentIndex + 1) : '1'); setDeleteEnd(name === selectedPM ? String(currentIndex + 1) : '1'); if (name === transferToPm) setTransferToPm(PM_NAMES.find(pmName => pmName !== name) || 'Milan'); setAdminPassword(''); setShowAdmin(true); }
   function patchLocalResponse(patch: Partial<ResponseRow>) { setData(old => { const next = JSON.parse(JSON.stringify(old)); next.pms[selectedPM].responses[String(currentIndex)] = { ...(next.pms[selectedPM].responses[String(currentIndex)] || {}), ...patch }; return next; }); }
@@ -421,9 +483,9 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
     setReranking(false);
     setMsg(isDetails
       ? (wasComplete ? 'NGO details updated.' : reactionText(prevMs, newDone))
-      : (wasComplete ? 'Assessment updated. The previous overall ranking remains unchanged.' : 'Assessment saved. The previous overall ranking remains unchanged.'));
+      : isGuest ? (wasComplete ? 'Assessment updated.' : 'Assessment saved.') : (wasComplete ? 'Assessment updated. The previous overall ranking remains unchanged.' : 'Assessment saved. The previous overall ranking remains unchanged.'));
     burstConfetti(newDone === 1 ? 130 : newDone === 5 ? 180 : newDone === total ? 170 : 55);
-    maybeShowMilestone(newDone);
+    if (!isGuest) maybeShowMilestone(newDone);
 
     const base = backendBase();
     if (base) {
@@ -451,14 +513,16 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
           body: JSON.stringify(payload),
         });
         const json = await result.json();
-        if (json?.ok && json?.data) setData(json.data);
+        if (json?.ok && json?.data) { setData(normaliseWorkstreamData(json.data)); if (isGuest) setGuestThanks({ reference: guestReference(json.guest_reference_review || task?.guest_reference_review), advance: !wasComplete && currentIndex < total - 1 }); }
         else setMsg(json?.error || 'Submit failed on backend. Kept locally.');
       } catch (errorValue: any) {
         setMsg(errorValue?.message || 'Submit failed on backend. Kept locally.');
       }
     }
 
-    const autoReview = newDone <= 5 && !wasComplete;
+    if (isGuest && !base) setGuestThanks({ reference: guestReference(task?.guest_reference_review), advance: !wasComplete && currentIndex < total - 1 });
+
+    const autoReview = !isGuest && newDone <= 5 && !wasComplete;
     if (autoReview) {
       const reviewRow = {
         pm: selectedPM,
@@ -473,7 +537,7 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
       };
       window.setTimeout(() => runReview('selected', true, [reviewRow]), 450);
     }
-    if (!wasComplete) window.setTimeout(() => { if (currentIndex < total - 1) setCurrentIndex(index => Math.min(total - 1, index + 1)); }, 900);
+    if (!isGuest && !wasComplete) window.setTimeout(() => { if (currentIndex < total - 1) setCurrentIndex(index => Math.min(total - 1, index + 1)); }, 900);
   }
 
   async function deleteResponse() {
@@ -513,12 +577,12 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
           body: JSON.stringify({ pm: selectedPM, task_index: currentIndex }),
         });
         const json = await result.json();
-        if (json?.ok && json?.data) setData(json.data);
+        if (json?.ok && json?.data) setData(normaliseWorkstreamData(json.data));
       } catch { /* local deletion remains */ }
     }
   }
 
-  async function runReview(kind: 'selected' | 'so-far' | 'admin', mandatory = false, overrideRows?: any[]) { const existingRows = kind === 'selected' ? submittedRows(pm).filter(([index]) => Number(index) === currentIndex) : submittedRows(pm); const effectiveRows = overrideRows && overrideRows.length ? overrideRows : existingRows.map(([index, row]) => ({ task_index: Number(index), ...row, reason: responseText(row) })); if (kind !== 'admin' && effectiveRows.length === 0) { setMsg('Submit first, then response review will open.'); return; } setAiOpen(true); setAiHelpful(null); setAiFeedbackText(''); setAiLoading(true); setAiTitle(kind === 'selected' ? (mandatory ? 'Mandatory expression check' : 'Expression check') : kind === 'admin' ? 'Saved expression check' : 'Expression check so far'); const base = backendBase(); if (!base) { setAiReview(localReviewFromRows(effectiveRows)); setAiLoading(false); return; } try { const result = await backendFetch(`${base}/workstream/ai/review`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: kind, pm: selectedPM, task_index: currentIndex, submitted_rows: overrideRows || undefined }) }); const json = await result.json(); if (json?.ok) { setAiReview(json.review || null); if (json.data) setData(json.data); } else setAiReview({ headline: json?.error || 'Review failed.', quality_flags: ['No backend review returned.'], suggestions: ['Continue manually.'] }); } catch { setAiReview(localReviewFromRows(effectiveRows)); } finally { setAiLoading(false); } }
+  async function runReview(kind: 'selected' | 'so-far' | 'admin', mandatory = false, overrideRows?: any[]) { const existingRows = kind === 'selected' ? submittedRows(pm).filter(([index]) => Number(index) === currentIndex) : submittedRows(pm); const effectiveRows = overrideRows && overrideRows.length ? overrideRows : existingRows.map(([index, row]) => ({ task_index: Number(index), ...row, reason: responseText(row) })); if (kind !== 'admin' && effectiveRows.length === 0) { setMsg('Submit first, then response review will open.'); return; } setAiOpen(true); setAiHelpful(null); setAiFeedbackText(''); setAiLoading(true); setAiTitle(kind === 'selected' ? (mandatory ? 'Mandatory expression check' : 'Expression check') : kind === 'admin' ? 'Saved expression check' : 'Expression check so far'); const base = backendBase(); if (!base) { setAiReview(localReviewFromRows(effectiveRows)); setAiLoading(false); return; } try { const result = await backendFetch(`${base}/workstream/ai/review`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: kind, pm: selectedPM, task_index: currentIndex, submitted_rows: overrideRows || undefined }) }); const json = await result.json(); if (json?.ok) { setAiReview(json.review || null); if (json.data) setData(normaliseWorkstreamData(json.data)); } else setAiReview({ headline: json?.error || 'Review failed.', quality_flags: ['No backend review returned.'], suggestions: ['Continue manually.'] }); } catch { setAiReview(localReviewFromRows(effectiveRows)); } finally { setAiLoading(false); } }
   function localReviewFromRows(rows: any[]): AiReview { const lengths = rows.map(row => wordCount(row.reason || row.ngo_description || '')); const avg = lengths.length ? Math.round(lengths.reduce((a, b) => a + b, 0) / lengths.length) : 0; const veryShort = lengths.filter(length => length <= 2).length; const headline = veryShort && avg < 8 ? 'Type a little more of what went through your head.' : avg >= 18 ? 'Good depth — your thought is captured.' : 'Usable — more raw detail would help.'; return { headline, quality_flags: [`${rows.length} response(s) checked`, `Average length: ${avg} words`], suggestions: ['No proper sentences needed.', 'Hinglish, fragments and messy notes are fine.', 'Write more instinct, not better English.'], pace_comment: `${rows.length} submitted for ${selectedPM}.`, encouragement: 'Expression only. Not checking the rank.', source: 'fallback' }; }
 
   function buildMetricEvidencePayload() {
@@ -545,10 +609,10 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
       deadline: adminDeadline,
       deadline_note: adminDeadlineNote,
       responsibility: adminResponsibility,
-      task_type: target === 'Tanishq' ? 'ngo_details' : 'shortlisting',
+      task_type: 'shortlisting',
       tasks: adminTasks,
-      evidence_task_index: target === 'Tanishq' ? undefined : adminTaskIndex,
-      metric_evidence: target === 'Tanishq' ? undefined : metricEvidence,
+      evidence_task_index: adminTaskIndex,
+      metric_evidence: metricEvidence,
     };
     const base = backendBase();
     if (!base) {
@@ -560,7 +624,7 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
         next.pms[target].deadline_note = adminDeadlineNote;
         next.pms[target].responsibility = adminResponsibility;
         if (adminTasks.length) next.pms[target].tasks = [...(next.pms[target].tasks || []), ...adminTasks];
-        if (target !== 'Tanishq' && next.pms[target].tasks?.[adminTaskIndex]) next.pms[target].tasks[adminTaskIndex].metric_evidence = metricEvidence;
+        if (next.pms[target].tasks?.[adminTaskIndex]) next.pms[target].tasks[adminTaskIndex].metric_evidence = metricEvidence;
         return next;
       });
       setShowAdmin(false);
@@ -571,14 +635,14 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
     try {
       const result = await backendFetch(`${base}/workstream/admin/update`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const json = await result.json();
-      if (json?.ok) { setData(json.data); setShowAdmin(false); setMsg(adminTasks.length ? `${adminTasks.length} task(s) added; evidence updated.` : 'PM view config and metric evidence updated.'); }
+      if (json?.ok) { setData(normaliseWorkstreamData(json.data)); setShowAdmin(false); setMsg(adminTasks.length ? `${adminTasks.length} task(s) added; evidence updated.` : 'PM view config and metric evidence updated.'); }
       else setMsg(json?.error || 'Admin update failed.');
     } catch (errorValue: any) {
       setMsg(errorValue?.message || 'Admin update failed.');
     }
   }
 
-  async function transferShortlistItems() { const base = backendBase(); const start = Number(transferStart); const end = Number(transferEnd || transferStart); if (!adminPassword.trim()) { setMsg('Enter admin password first.'); return; } if (!base) { setMsg('Backend URL missing. Transfer needs backend memory.'); return; } if (!Number.isFinite(start) || start < 1 || !Number.isFinite(end) || end < 1) { setMsg('Enter a valid 1-based shortlist range.'); return; } if (transferFromPm === transferToPm) { setMsg('Pick two different PMs.'); return; } const lo = Math.min(start, end); const hi = Math.max(start, end); const count = hi - lo + 1; if (!window.confirm(`Transfer shortlist item${count > 1 ? 's' : ''} ${lo}${hi !== lo ? `–${hi}` : ''} from ${transferFromPm} to ${transferToPm}?`)) return; setMsg('Transferring shortlist assignment…'); try { const result = await backendFetch(`${base}/workstream/admin/transfer-tasks`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: adminPassword, from_pm: transferFromPm, to_pm: transferToPm, start_index: lo, end_index: hi, move_responses: transferMoveResponses }) }); const json = await result.json(); if (json?.ok) { setData(json.data); setMsg(`Transferred ${json.transferred || count} item(s) from ${transferFromPm} to ${transferToPm}.`); } else setMsg(json?.error || 'Transfer failed.'); } catch (errorValue: any) { setMsg(errorValue?.message || 'Transfer failed.'); } }
+  async function transferShortlistItems() { const base = backendBase(); const start = Number(transferStart); const end = Number(transferEnd || transferStart); if (!adminPassword.trim()) { setMsg('Enter admin password first.'); return; } if (!base) { setMsg('Backend URL missing. Transfer needs backend memory.'); return; } if (!Number.isFinite(start) || start < 1 || !Number.isFinite(end) || end < 1) { setMsg('Enter a valid 1-based shortlist range.'); return; } if (transferFromPm === transferToPm) { setMsg('Pick two different PMs.'); return; } const lo = Math.min(start, end); const hi = Math.max(start, end); const count = hi - lo + 1; const guestCopy = transferToPm === 'Guest'; const verb = guestCopy ? 'Copy' : 'Transfer'; if (!window.confirm(`${verb} shortlist item${count > 1 ? 's' : ''} ${lo}${hi !== lo ? `–${hi}` : ''} from ${transferFromPm} to ${transferToPm}?${guestCopy ? ' The source PM assignment and official ranking will stay unchanged.' : ''}`)) return; setMsg(guestCopy ? 'Creating blind Guest assignment…' : 'Transferring shortlist assignment…'); try { const result = await backendFetch(`${base}/workstream/admin/transfer-tasks`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: adminPassword, from_pm: transferFromPm, to_pm: transferToPm, start_index: lo, end_index: hi, move_responses: guestCopy ? false : transferMoveResponses }) }); const json = await result.json(); if (json?.ok) { setData(normaliseWorkstreamData(json.data)); setMsg(`${json.copied ? 'Copied' : 'Transferred'} ${json.transferred || count} item(s) from ${transferFromPm} to ${transferToPm}.`); } else setMsg(json?.error || 'Transfer failed.'); } catch (errorValue: any) { setMsg(errorValue?.message || 'Transfer failed.'); } }
 
   async function deleteShortlistItems() {
     const base = backendBase();
@@ -606,7 +670,7 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
       });
       const json = await result.json();
       if (json?.ok) {
-        setData(json.data);
+        setData(normaliseWorkstreamData(json.data));
         const remaining = json.data?.pms?.[deletePm]?.tasks?.length || 0;
         if (selectedPM === deletePm) setCurrentIndex(index => Math.max(0, Math.min(index, remaining - 1)));
         setDeleteStart('1');
@@ -633,14 +697,28 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
               <section className="pmu-board-head source-row"><div><h2>PM view</h2><p>{stateName} responsibilities and new-metric shortlisting.</p></div><a className="ghost-btn" href={exportHref()}>Export CSV</a></section>
               <section className="pmu-card-grid" aria-label="PM cards">
                 {PM_NAMES.map(name => {
-                  const cardPm = data.pms?.[name] || makeDefaultData().pms[name];
                   const profile = profileFor(name);
+                  const guestCard = name === 'Guest';
                   return (
-                    <article className="pm-score-card pmu-card" key={name}>
-                      <h3>{name}</h3>
-                      <p>{cardPm.responsibility}</p>
-                      <button className="pmu-primary-action glow-action" onClick={() => { openWorkspace(name); setMode('task'); }}>{taskLabel(name)}</button>
-                      <button onClick={() => setAboutPM(profile)}><span>About PM</span><strong>→</strong></button>
+                    <article className={`pm-score-card pmu-card ${guestCard ? 'pmu-guest-card' : ''}`} key={name}>
+                      <div className="pmu-profile-lockup">
+                        {guestCard ? (
+                          <span className="pmu-guest-logo">
+                            <Image src="/feeding-india-logo.svg" alt="Feeding India by Eternal Foundation" width={200} height={47} priority />
+                          </span>
+                        ) : profile.img ? (
+                          <span className="pmu-profile-photo">
+                            <Image src={profile.img} alt={`${name} profile`} width={96} height={96} />
+                          </span>
+                        ) : (
+                          <span className="pmu-profile-photo pmu-profile-placeholder" aria-hidden="true">
+                            {name.slice(0, 1)}
+                          </span>
+                        )}
+                        <h3>{name}</h3>
+                      </div>
+                      <button className="pmu-primary-action glow-action" onClick={() => { openWorkspace(name); setMode('task'); }}>Shortlist</button>
+                      {!guestCard && <button onClick={() => setAboutPM(profile)}><span>About PM</span><strong>→</strong></button>}
                     </article>
                   );
                 })}
@@ -673,20 +751,20 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
             <div className="workstream-main-card pmu-main-card">
               <div className="workstream-head">
                 <div className="pm-workspace-name">
-                  {selectedPM === 'Tanishq' ? <span className="pm-title-tag">Mr. South India</span> : selectedProfile.img ? <span className="pm-orb pm-photo"><Image src={selectedProfile.img} alt={selectedPM} width={54} height={54} /></span> : <span className="pm-orb">{PM_ICONS[selectedPM] || '◆'}</span>}
-                  <div><span className="workstream-kicker">PM</span><h2>{selectedPM}</h2></div>
+                  {isGuest ? <span className="pm-guest-workspace-logo"><Image src="/feeding-india-logo.svg" alt="Feeding India by Eternal Foundation" width={200} height={47} priority /></span> : selectedProfile.img ? <span className="pm-orb pm-photo"><Image src={selectedProfile.img} alt={selectedPM} width={54} height={54} /></span> : <span className="pm-orb">{PM_ICONS[selectedPM] || '◆'}</span>}
+                  <div><span className="workstream-kicker">{isGuest ? 'Guest review' : 'PM'}</span><h2>{selectedPM}</h2></div>
                 </div>
-                <div className="workstream-deadline fun-deadline"><span>⏳ Time left</span><strong>{time.hours}</strong><em>{time.rest}</em></div>
+                {!isGuest && <div className="workstream-deadline fun-deadline"><span>⏳ Time left</span><strong>{time.hours}</strong><em>{time.rest}</em></div>}
               </div>
-              <div className="deadline-note"><b>Why this deadline matters:</b> {pm.deadline_note || DEFAULT_DEADLINE_NOTE}</div>
-              <div className="progress-toggle workstream-tabs">
+              {!isGuest && <div className="deadline-note"><b>Why this deadline matters:</b> {pm.deadline_note || DEFAULT_DEADLINE_NOTE}</div>}
+              {!isGuest && <div className="progress-toggle workstream-tabs">
                 <button className={mode === 'responsibility' ? 'active' : ''} onClick={() => setMode('responsibility')}>Responsibility</button>
                 <button className={mode === 'task' ? 'active' : ''} onClick={() => setMode('task')}>{taskLabel()}</button>
-              </div>
-              {mode === 'responsibility' && <div className="workstream-task-card"><h3>Responsibility</h3><p>{pm.responsibility}</p></div>}
-              {mode === 'task' && (
+              </div>}
+              {!isGuest && mode === 'responsibility' && <div className="workstream-task-card"><h3>Responsibility</h3><p>{pm.responsibility}</p></div>}
+              {(isGuest || mode === 'task') && (
                 <>
-                  <div className="game-strip"><span>🔥 Streak {streak}</span><span>{lastQuality || 'Quality —'}</span><span>{lastBadge ? `${lastBadge} · ${formatDuration(lastPaceSeconds)}` : 'Pace —'}</span><span>{reviewerMode(pm)}</span></div>
+                  {!isGuest && <div className="game-strip"><span>🔥 Streak {streak}</span><span>{lastQuality || 'Quality —'}</span><span>{lastBadge ? `${lastBadge} · ${formatDuration(lastPaceSeconds)}` : 'Pace —'}</span><span>{reviewerMode(pm)}</span></div>}
                   {task ? (
                     <div className="workstream-task-card pm-ranking-task-card">
                       <div className="task-nav-row"><button className="quiet-btn" onClick={prevTask} disabled={currentIndex === 0}>← Previous</button><span>NGO {currentIndex + 1} of {total}</span><button className="quiet-btn" onClick={nextTask} disabled={currentIndex >= total - 1}>Next →</button></div>
@@ -696,7 +774,7 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
 
                       {!isDetails ? (
                         <>
-                          <section className="legacy-ranking-section legacy-ranking-locked" aria-label="Previous overall ranking">
+                          {!isGuest && <section className="legacy-ranking-section legacy-ranking-locked" aria-label="Previous overall ranking">
                             <div className="legacy-ranking-label">
                               <div><span>Previous overall ranking</span><small>Read-only · preserved exactly as submitted earlier</small></div>
                               <span className="legacy-lock-chip">Locked</span>
@@ -716,20 +794,20 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
                             ) : (
                               <div className="legacy-ranking-missing">No previous overall ranking was found for this NGO. The new three-metric assessment can still be completed.</div>
                             )}
-                          </section>
+                          </section>}
 
-                          <section className="metric-ranking-section" ref={metricSectionRef}>
+                          <section className={`metric-ranking-section ${isGuest ? 'guest-metric-ranking-section' : ''}`} ref={metricSectionRef}>
                             <div className="metric-ranking-intro metric-ranking-intro-v117">
                               <div>
-                                <span className="workstream-kicker">New assessment</span>
-                                <h3>Score the NGO on three separate dimensions</h3>
-                                <p>Open each evidence pack, use the 1–5 slider, and write a rationale of at least 100 characters. For rare exception cases, one separate overall override is available below the three metrics. The old overall score above cannot be changed.</p>
+                                <span className="workstream-kicker">{isGuest ? 'Your assessment' : 'New assessment'}</span>
+                                <h3>{isGuest ? 'Rank this NGO on three dimensions' : 'Score the NGO on three separate dimensions'}</h3>
+                                <p>{isGuest ? 'Use the NGO details and evidence below. Choose a 1–5 score and explain each decision in at least 100 characters. The DFP program manager’s ranking stays hidden until you submit.' : 'Open each evidence pack, use the 1–5 slider, and write a rationale of at least 100 characters. For rare exception cases, one separate overall override is available below the three metrics. The old overall score above cannot be changed.'}</p>
                               </div>
-                              <div className="metric-intro-actions">
+                              {!isGuest && <div className="metric-intro-actions">
                                 <button type="button" className="metric-reference-library-btn" onClick={() => setReferenceLibraryOpen(true)}>Reference examples</button>
-                                <button type="button" className="metric-tutorial-btn" onClick={() => setTutorialOpen(true)}>▶ Kalkeri scoring tutorial</button>
+                                <button type="button" className="metric-tutorial-btn" onClick={() => setTutorialOpen(true)}>Scoring tutorial</button>
                                 {metricComplete && <button type="button" className="metric-rerank-btn" onClick={startRerank}>↻ Edit assessment</button>}
-                              </div>
+                              </div>}
                             </div>
                             <div className="metric-method-strip" aria-label="Scoring steps">
                               <span className="complete"><b>✓</b><em>Open evidence</em></span><i aria-hidden="true"/><span className="complete"><b>✓</b><em>Apply the ceiling</em></span><i aria-hidden="true"/><span className="active"><b>3</b><em>Score and explain</em></span>
@@ -813,20 +891,21 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
                       )}
 
                       <div className="workstream-actions">
-                        <button className="primary-red glow-action" onClick={submitDecision}>{isDetails ? (response.submitted ? 'Update details' : 'Submit') : (metricComplete ? 'Save assessment' : 'Submit assessment')}</button>
-                        {!isDetails && metricComplete && <button className="ghost-btn" type="button" onClick={startRerank}>Edit assessment</button>}
-                        <button className="ghost-btn" onClick={() => runReview('selected')} disabled={isDetails ? !response.submitted : !metricComplete}>Response review</button>
-                        <button className="ghost-btn" onClick={deleteResponse} disabled={isDetails ? !response.submitted : !metricComplete}>{isDetails ? 'Delete response' : 'Clear assessment'}</button>
+                        <button className="primary-red glow-action" onClick={submitDecision}>{metricComplete ? 'Save assessment' : 'Submit assessment'}</button>
+                        {metricComplete && <button className="ghost-btn" type="button" onClick={startRerank}>Edit assessment</button>}
+                        {isGuest && metricComplete && <button className="ghost-btn" type="button" onClick={() => setGuestThanks({ reference: guestReference(task?.guest_reference_review), advance: false })}>View DFP PM ranking</button>}
+                        {!isGuest && <button className="ghost-btn" onClick={() => runReview('selected')} disabled={!metricComplete}>Response review</button>}
+                        {!isGuest && <button className="ghost-btn" onClick={deleteResponse} disabled={!metricComplete}>Clear assessment</button>}
                       </div>
-                      <div className="live-reaction"><b>{isDetails ? 'Saved' : 'Three-metric assessment'}</b><span>{msg || (isDetails ? (response.submitted ? `Saved at ${niceTime(response.submitted_at)}.` : 'Submit to save globally.') : (metricComplete ? `Saved at ${niceTime(response.metric_submitted_at)}. Previous overall ranking remains read-only.` : 'Complete all three scores and rationales to save. The exception override is optional.'))}</span></div>
+                      <div className="live-reaction"><b>Three-metric assessment</b><span>{msg || (metricComplete ? (isGuest ? `Saved at ${niceTime(response.metric_submitted_at)}.` : `Saved at ${niceTime(response.metric_submitted_at)}. Previous overall ranking remains read-only.`) : 'Complete all three scores and rationales to save. The exception override is optional.')}</span></div>
                     </div>
                   ) : <div className="workstream-task-card"><h3>No task added</h3><p>Add tasks from the PM view gear.</p></div>}
-                  {progress >= 100 && <EndSummary pm={pm} name={selectedPM} />}
-                  <div className="workstream-footer-actions"><button className="ghost-btn" onClick={() => runReview('so-far')}>Review responses</button><a className="ghost-btn" href={exportHref()}>Export CSV</a></div>
+                  {!isGuest && progress >= 100 && <EndSummary pm={pm} name={selectedPM} />}
+                  {!isGuest && <div className="workstream-footer-actions"><button className="ghost-btn" onClick={() => runReview('so-far')}>Review responses</button><a className="ghost-btn" href={exportHref()}>Export CSV</a></div>}
                 </>
               )}
             </div>
-            <aside className="workstream-side pmu-compact-side">
+            {!isGuest && <aside className="workstream-side pmu-compact-side">
               <div className="mini-panel pm-workspace-pm-status">
                 <h3>{selectedPM}{selectedPM.endsWith('s') ? '’' : '’s'} progress</h3>
                 <div className="pm-progress-summary"><span>{progress}% complete</span><b>{done} of {total}</b></div>
@@ -835,25 +914,42 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
                 <div className="mini-row"><span>Completed</span><b>{done}</b></div>
                 <div className="mini-row"><span>Left</span><b>{Math.max(0, total - done)}</b></div>
               </div>
-            </aside>
+            </aside>}
           </div>
-          <button className="config-gear workstream-gear" onClick={() => startAdmin(selectedPM)}>⚙</button>
+          {!isGuest && <button className="config-gear workstream-gear" onClick={() => startAdmin(selectedPM)}>⚙</button>}
         </section>
+      )}
+
+      {guestThanks && (
+        <div className="modal-scrim guest-thanks-scrim" onClick={() => { const advance = guestThanks.advance; setGuestThanks(null); if (advance) setCurrentIndex(index => Math.min(total - 1, index + 1)); }}>
+          <section className="guest-thanks-modal" onClick={event => event.stopPropagation()}>
+            <div className="guest-thanks-brand"><Image src="/feeding-india-logo.svg" alt="Feeding India by Eternal Foundation" width={200} height={47} /></div>
+            <span className="workstream-kicker">Assessment received</span>
+            <h2>Thank you</h2>
+            <p>Your ranking has been saved. Here is what the DFP program manager submitted for the same NGO.</p>
+            {guestThanks.reference ? (
+              <section className="guest-pm-reveal">
+                <div className="guest-pm-reveal-head"><span>DFP program manager</span><b>{guestThanks.reference.reviewer || task?.transferred_from || 'Program Manager'}</b></div>
+                {guestThanks.reference.metric_scores ? (
+                  <div className="guest-pm-score-grid">
+                    {METRIC_DEFINITIONS.map(metric => {
+                      const item = normaliseMetricScores(guestThanks.reference?.metric_scores)[metric.key];
+                      return <div key={metric.key}><span>{metric.title}</span><strong>{item.rank}</strong><small>out of 5</small></div>;
+                    })}
+                  </div>
+                ) : (
+                  <div className="guest-pm-legacy-score"><span>Overall ranking</span><strong>{Number(guestThanks.reference.rank || guestThanks.reference.decision || 0)}</strong><b>{guestThanks.reference.rank_label || RANKS[Number(guestThanks.reference.rank || guestThanks.reference.decision || 3)]?.short || ''}</b></div>
+                )}
+              </section>
+            ) : <div className="guest-pm-reveal-empty">The DFP program manager’s ranking is not available yet.</div>}
+            <button className="primary-red glow-action" onClick={() => { const advance = guestThanks.advance; setGuestThanks(null); if (advance) setCurrentIndex(index => Math.min(total - 1, index + 1)); }}>{guestThanks.advance ? 'Continue to next NGO' : 'Close'}</button>
+          </section>
+        </div>
       )}
 
       {referenceMetric && <MetricReferenceModal activeMetric={referenceMetric} documentUrl={data.scoring_reference_url} onClose={() => setReferenceMetric(null)} />}
       {referenceLibraryOpen && <MetricReferenceLibraryModal onClose={() => setReferenceLibraryOpen(false)} />}
-      {tutorialOpen && (
-        <div className="metric-tutorial-scrim" onClick={() => setTutorialOpen(false)}>
-          <section className="metric-tutorial-modal" onClick={event => event.stopPropagation()}>
-            <div className="metric-tutorial-head">
-              <div><span className="workstream-kicker">Practice before scoring</span><h2>Kalkeri · Alumni Outcomes</h2></div>
-              <button type="button" onClick={() => setTutorialOpen(false)}>×</button>
-            </div>
-            <iframe src="/tutorials/kalkeri-alumni-outcomes.html" title="Kalkeri Alumni Outcomes scoring tutorial" />
-          </section>
-        </div>
-      )}
+      {tutorialOpen && <ScoringTutorial onClose={() => setTutorialOpen(false)} />}
       {milestoneOpen && <div className="modal-scrim" onClick={() => setMilestoneOpen(false)}><section className="milestone-modal" onClick={event => event.stopPropagation()}><button className="modal-x" onClick={() => setMilestoneOpen(false)}>×</button><span className="workstream-kicker">Milestone</span><h2>{milestoneCopy}</h2><p>{progress >= 100 ? 'Done. You may now pretend this was easy.' : 'Keep going. Useful judgement beats neat English.'}</p><button className="primary-red" onClick={() => setMilestoneOpen(false)}>OK</button></section></div>}
       {aboutPM && <div className="modal-scrim" onClick={() => setAboutPM(null)}><section className="pm-about-modal" onClick={event => event.stopPropagation()}><button className="modal-x" onClick={() => setAboutPM(null)}>×</button><div className="pm-about-head">{aboutPM.img ? <Image src={aboutPM.img} alt={aboutPM.name} width={104} height={104} /> : null}<div><span>{aboutPM.tagline}</span><h2>{aboutPM.name}</h2><p>{aboutPM.role}</p></div></div><p className="pm-about-copy">{aboutPM.about}</p></section></div>}
       {aiOpen && <div className="modal-scrim" onClick={() => setAiOpen(false)}><section className="ai-review-modal" onClick={event => event.stopPropagation()}><button className="modal-x" onClick={() => setAiOpen(false)}>×</button><span className="workstream-kicker">Response review</span><h2>{aiTitle}</h2>{aiLoading ? <p>Reviewing…</p> : <AiReviewBlock review={aiReview} />}<div className="ai-feedback"><span>Useful?</span><button className={aiHelpful === 'yes' ? 'active' : ''} onClick={() => setAiHelpful('yes')}>Yes</button><button className={aiHelpful === 'no' ? 'active' : ''} onClick={() => setAiHelpful('no')}>No</button></div>{aiHelpful && <textarea className="workstream-textarea ai-feedback-box" value={aiFeedbackText} onChange={event => setAiFeedbackText(event.target.value)} placeholder={aiHelpful === 'yes' ? 'What worked?' : 'What should change?'} />}<div className="workstream-actions"><button className="primary-red" onClick={() => setAiOpen(false)}>OK</button></div><p className="ai-cost-note">First five are automatic. Expression only: length, clarity, thought captured. Hinglish/fragments/no punctuation are fine.</p></section></div>}
@@ -872,7 +968,7 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
               <label className="admin-field"><span>Why deadline matters</span><textarea value={adminDeadlineNote} onChange={event => setAdminDeadlineNote(event.target.value)} /></label>
               <label className="admin-field"><span>Responsibility</span><textarea value={adminResponsibility} onChange={event => setAdminResponsibility(event.target.value)} /></label>
 
-              {adminPm !== 'Tanishq' && (
+              {(
                 <div className="admin-subsection metric-evidence-admin">
                   <b>Evidence shown beside the three metrics</b>
                   <p>Select an assigned NGO, then add evidence and source links. This is shown only on that NGO’s PM scoring card.</p>
@@ -894,7 +990,7 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
               <label className="admin-field"><span>Upload task CSV</span><input type="file" accept=".csv,.txt" onChange={event => handleTaskFile(event.target.files?.[0])} /></label>
               <div className="admin-inline"><button className="ghost-btn" type="button" onClick={csvSample}>Download sample CSV</button><span>{adminTasks.length ? `${adminTasks.length} task(s) ready to add` : 'CSV adds tasks only'}</span></div>
 
-              <div className="admin-subsection"><b>Transfer shortlist assignment</b><p>Move one item or a 1-based range from one PM to another. Example: 15 to 27.</p><div className="admin-mini-grid"><label className="admin-field"><span>From PM</span><select value={transferFromPm} onChange={event => setTransferFromPm(event.target.value)}>{PM_NAMES.map(name => <option key={name} value={name}>{name}</option>)}</select></label><label className="admin-field"><span>To PM</span><select value={transferToPm} onChange={event => setTransferToPm(event.target.value)}>{PM_NAMES.map(name => <option key={name} value={name}>{name}</option>)}</select></label><FieldLike label="Start #" value={transferStart} onChange={setTransferStart} /><FieldLike label="End #" value={transferEnd} onChange={setTransferEnd} /></div><label className="admin-check"><input type="checkbox" checked={transferMoveResponses} onChange={event => setTransferMoveResponses(event.target.checked)} /> Move submitted response also, if any</label><button className="ghost-btn" type="button" onClick={transferShortlistItems}>Transfer range</button></div>
+              <div className="admin-subsection"><b>Transfer shortlist assignment</b><p>{transferToPm === 'Guest' ? 'Create a blind Guest copy. The source PM assignment, progress and official ranking remain unchanged.' : 'Move one item or a 1-based range from one PM to another. Example: 15 to 27.'}</p><div className="admin-mini-grid"><label className="admin-field"><span>From PM</span><select value={transferFromPm} onChange={event => setTransferFromPm(event.target.value)}>{PM_NAMES.map(name => <option key={name} value={name}>{name}</option>)}</select></label><label className="admin-field"><span>To PM</span><select value={transferToPm} onChange={event => setTransferToPm(event.target.value)}>{PM_NAMES.map(name => <option key={name} value={name}>{name}</option>)}</select></label><FieldLike label="Start #" value={transferStart} onChange={setTransferStart} /><FieldLike label="End #" value={transferEnd} onChange={setTransferEnd} /></div>{transferToPm !== 'Guest' && <label className="admin-check"><input type="checkbox" checked={transferMoveResponses} onChange={event => setTransferMoveResponses(event.target.checked)} /> Move submitted response also, if any</label>}<button className="ghost-btn" type="button" onClick={transferShortlistItems}>{transferToPm === 'Guest' ? 'Copy to Guest' : 'Transfer range'}</button></div>
               <div className="admin-subsection admin-delete-shortlist"><b>Delete shortlisted NGO(s)</b><p>Permanently remove one assigned NGO or a 1-based range. Saved metric assessments inside the selected range are deleted too.</p><div className="admin-mini-grid"><label className="admin-field"><span>PM shortlist</span><select value={deletePm} onChange={event => { setDeletePm(event.target.value); setDeleteStart('1'); setDeleteEnd('1'); }}>{SHORTLIST_PM_NAMES.map(name => <option key={name} value={name}>{name} · {data.pms?.[name]?.tasks?.length || 0} NGOs</option>)}</select></label><div/><FieldLike label="Start #" value={deleteStart} onChange={setDeleteStart} /><FieldLike label="End #" value={deleteEnd} onChange={setDeleteEnd} /></div><button className="danger-btn" type="button" onClick={deleteShortlistItems}>Delete selected range</button></div>
               <FieldLike label="Admin password" value={adminPassword} onChange={setAdminPassword} />
               <p className="drawer-msg">{msg}</p>

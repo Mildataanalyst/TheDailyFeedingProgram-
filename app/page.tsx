@@ -293,21 +293,28 @@ export default function Home() {
         <div className="lp-v91-hero-core lp-v95-hero-core">
           <h1 className="lp-v91-title">
             <span className="lp-v91-dfp">DFP</span>
-            <span className="lp-v91-version">
-              <span>2</span>
-              <span className="lp-v94-heart-dot lp-v96-heart-dot lp-v98-heart-dot lp-v100-heart-dot" aria-hidden="true">
-                <svg viewBox="0 0 32 29" focusable="false">
-                  <defs>
-                    <linearGradient id="lp-v94-heart-gradient" x1="5" y1="2" x2="25" y2="27" gradientUnits="userSpaceOnUse">
-                      <stop stopColor="#ff5a70" />
-                      <stop offset="0.48" stopColor="#e53249" />
-                      <stop offset="1" stopColor="#bd1f35" />
-                    </linearGradient>
-                  </defs>
-                  <path fill="url(#lp-v94-heart-gradient)" d="M16 28.2 3.2 16.05C-4.1 9.15 1.18-2.1 10.42.55 12.68 1.2 14.55 2.75 16 4.72 17.45 2.75 19.32 1.2 21.58.55c9.24-2.65 14.52 8.6 7.22 15.5L16 28.2Z" />
-                </svg>
+            <span className="lp-v91-version" aria-label="2.0">
+              <span aria-hidden="true">2.</span>
+              <span className="lp-v143-zero" aria-hidden="true">
+                0
+                <span className="lp-v94-heart-dot lp-v96-heart-dot lp-v98-heart-dot lp-v100-heart-dot lp-v143-heart-in-zero">
+                  <span className="lp-v143-heart-glow" />
+                  <span className="lp-v143-heart-entry">
+                    <span className="lp-v143-heart-beat">
+                      <svg viewBox="0 0 32 29" focusable="false">
+                        <defs>
+                          <linearGradient id="lp-v94-heart-gradient" x1="5" y1="2" x2="25" y2="27" gradientUnits="userSpaceOnUse">
+                            <stop stopColor="#ff5a70" />
+                            <stop offset="0.48" stopColor="#e53249" />
+                            <stop offset="1" stopColor="#bd1f35" />
+                          </linearGradient>
+                        </defs>
+                        <path fill="url(#lp-v94-heart-gradient)" d="M16 28.2 3.2 16.05C-4.1 9.15 1.18-2.1 10.42.55 12.68 1.2 14.55 2.75 16 4.72 17.45 2.75 19.32 1.2 21.58.55c9.24-2.65 14.52 8.6 7.22 15.5L16 28.2Z" />
+                      </svg>
+                    </span>
+                  </span>
+                </span>
               </span>
-              <span>0</span>
             </span>
           </h1>
           <p className="lp-v91-subtitle">Find the best NGOs</p>
