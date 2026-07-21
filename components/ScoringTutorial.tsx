@@ -128,7 +128,6 @@ export default function ScoringTutorial({ onClose, config = ALUMNI_OUTCOMES_TUTO
       5: 320,
       6: 2200,
       8: 420,
-      10: 820,
     };
     const delay = delays[step];
     if (!delay) return;
@@ -357,8 +356,11 @@ export default function ScoringTutorial({ onClose, config = ALUMNI_OUTCOMES_TUTO
 
         {(step === 9 || step === 10) && (
           <section className="st2-judgement">
-            <header><p>Evidence → judgement</p><h1>Now turn this into a score.</h1></header>
-            <div className="st2-judgement-grid">
+            <header>
+              <p>Evidence → judgement</p>
+              <h1>{step === 9 ? 'Now give your score.' : 'Now compare it with the reference.'}</h1>
+            </header>
+            <div className={`st2-judgement-grid ${step === 9 ? 'score-first' : 'reference-revealed'}`}>
               <div className="st2-score-side">
                 <section className="st2-found">
                   <span>What you found</span>
@@ -367,7 +369,7 @@ export default function ScoringTutorial({ onClose, config = ALUMNI_OUTCOMES_TUTO
                 </section>
                 <section className="st2-score-sandbox">
                   <span>Your practice score</span>
-                  <p>Use the evidence and choose any value.</p>
+                  <p>{step === 9 ? 'Use only the evidence above and choose a value.' : 'Your score is recorded. The PM reference is now visible.'}</p>
                   <div className="st2-score-buttons" role="radiogroup" aria-label="Practice Alumni Outcomes score">
                     {SCORE_VALUES.map(value => {
                       const selected = selectedScore === value;
@@ -392,17 +394,26 @@ export default function ScoringTutorial({ onClose, config = ALUMNI_OUTCOMES_TUTO
                 </section>
               </div>
 
-              <section className="st2-reference">
-                <header><span>Reference</span><h2>What each score looks like</h2><p>Program manager calibration examples</p></header>
-                <div>
-                  {metric.guide.rows.map(row => (
-                    <article key={row.score}>
-                      <strong>{row.score}</strong>
-                      <section><span>{row.meaning}</span><b>{row.exampleTitle}</b><p>{row.example}</p></section>
-                    </article>
-                  ))}
-                </div>
-              </section>
+              {step === 10 && (
+                <section className="st2-reference st2-reference-reveal">
+                  <header>
+                    <span>Program manager reference</span>
+                    <h2>What each score looks like</h2>
+                    <p>Compare your judgement with the PM calibration examples only after scoring.</p>
+                  </header>
+                  <div>
+                    {metric.guide.rows.map(row => (
+                      <article key={row.score}>
+                        <strong>{row.score}</strong>
+                        <section><span>{row.meaning}</span><b>{row.exampleTitle}</b><p>{row.example}</p></section>
+                      </article>
+                    ))}
+                  </div>
+                  <footer className="st2-reference-actions">
+                    <button type="button" onClick={() => setStep(11)}>Continue →</button>
+                  </footer>
+                </section>
+              )}
             </div>
           </section>
         )}

@@ -15310,3 +15310,235 @@ body.dfp-v100-theme .lp-v146-heart-dot svg{
 }
 /* During guided evidence steps, only the red-target control accepts input. */
 .st2-site button:not(.st2-target){pointer-events:none!important;}
+
+/* ================================================================
+   V147 — HIGH-CONTRAST LIGHT SCORING TUTORIAL
+   The tutorial is intentionally light so every teaching screen stays
+   legible regardless of global cinematic/gradient text treatments.
+   ================================================================ */
+.st2-overlay{
+  color:#171513!important;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(226,55,68,.055),transparent 31%),
+    radial-gradient(circle at 13% 86%,rgba(166,128,86,.055),transparent 28%),
+    #f8f6f2!important;
+}
+.st2-overlay::after{
+  opacity:.022!important;
+  mix-blend-mode:multiply!important;
+}
+.st2-progress-line{background:rgba(37,29,25,.08)!important}
+.st2-progress-line i{box-shadow:0 0 14px rgba(226,55,68,.18)!important}
+
+.st2-controls button{
+  color:rgba(37,29,25,.58)!important;
+  -webkit-text-fill-color:currentColor!important;
+}
+.st2-controls button:hover{color:#171513!important}
+.st2-controls span{color:rgba(37,29,25,.36)!important}
+.st2-controls .st2-close{
+  border-color:rgba(37,29,25,.13)!important;
+  background:rgba(255,255,255,.72)!important;
+  box-shadow:0 8px 24px rgba(54,38,29,.07)!important;
+}
+
+/* Explicitly neutralise inherited gradient/transparent text rules. */
+.st2-cinematic h1,
+.st2-cinematic h2,
+.st2-judgement h1,
+.st2-reference h2,
+.st2-finish h1,
+.st2-finish h2{
+  background:none!important;
+  background-image:none!important;
+  color:#171513!important;
+  -webkit-background-clip:border-box!important;
+  background-clip:border-box!important;
+  -webkit-text-fill-color:currentColor!important;
+  opacity:1!important;
+  filter:none!important;
+  text-shadow:none!important;
+}
+
+.st2-film-kicker{color:var(--st2-red)!important}
+.st2-intro h1{color:#11100f!important}
+.st2-film-sub{color:rgba(37,29,25,.72)!important}
+.st2-metric-lines{
+  border-color:rgba(37,29,25,.13)!important;
+  background:rgba(255,255,255,.50)!important;
+  box-shadow:0 18px 60px rgba(66,48,37,.055)!important;
+}
+.st2-metric-lines article{border-color:rgba(37,29,25,.10)!important}
+.st2-metric-lines b{
+  color:#171513!important;
+  -webkit-text-fill-color:currentColor!important;
+}
+.st2-metric-lines small{color:rgba(37,29,25,.58)!important}
+.st2-click-cue{color:rgba(37,29,25,.52)!important}
+
+.st2-framing p{color:rgba(37,29,25,.58)!important}
+.st2-framing h1{color:var(--st2-red)!important}
+.st2-framing h2{color:#171513!important}
+.st2-framing small{color:rgba(37,29,25,.58)!important}
+
+.st2-caption{color:#2b2521!important}
+.st2-browser{
+  border-color:rgba(65,48,38,.14)!important;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.95) inset,
+    0 28px 80px rgba(54,38,29,.15),
+    0 0 0 1px rgba(54,38,29,.035)!important;
+}
+
+/* Evidence dock remains part of the page instead of a dark console. */
+.st2-evidence-dock{
+  color:#171513!important;
+  background:linear-gradient(180deg,#fff,#f8f4ee)!important;
+  border-top-color:#e6ddd2!important;
+}
+.st2-evidence-dock>div span{color:#6d6258!important}
+.st2-evidence-dock>div b{color:var(--st2-red)!important}
+.st2-evidence-dock ol{color:#171513!important}
+.st2-evidence-dock li{
+  border-color:#e8dfd5!important;
+  background:#fff!important;
+  box-shadow:0 6px 18px rgba(57,41,31,.045)!important;
+}
+.st2-evidence-dock li>b{color:#b72d3a!important}
+.st2-evidence-dock li>span{color:#5e554d!important}
+.st2-evidence-dock li.empty{color:#8b8179!important}
+
+/* Score screen: white editorial cards with black text. */
+.st2-judgement>header p{color:var(--st2-red)!important}
+.st2-judgement>header h1{color:#171513!important}
+.st2-found,
+.st2-score-sandbox,
+.st2-reference{
+  border-color:rgba(58,42,32,.12)!important;
+  background:linear-gradient(180deg,#fff,#fbf9f5)!important;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.95) inset,
+    0 22px 65px rgba(60,43,32,.09)!important;
+}
+.st2-found>span,
+.st2-score-sandbox>span,
+.st2-reference>header>span{color:#bd3040!important}
+.st2-found article{
+  border:1px solid #eee6dc!important;
+  background:#f8f4ee!important;
+}
+.st2-found article>b{color:#bd3040!important}
+.st2-found article p{color:#5b5149!important}
+.st2-score-sandbox>p{color:#756a61!important}
+.st2-score-buttons button{
+  border-color:#dfd6cc!important;
+  background:linear-gradient(180deg,#fff,#f6f1eb)!important;
+  color:#171513!important;
+  box-shadow:0 8px 20px rgba(54,38,29,.08),inset 0 1px 0 #fff!important;
+}
+.st2-score-buttons button:hover:not(:disabled){
+  border-color:rgba(226,55,68,.52)!important;
+  box-shadow:0 14px 30px rgba(54,38,29,.11),0 0 0 4px rgba(226,55,68,.055)!important;
+}
+.st2-score-buttons span{color:#6a6058!important}
+.st2-score-buttons button.selected{
+  border-color:var(--st2-red)!important;
+  background:linear-gradient(180deg,#ef4654,#cf2938)!important;
+  color:#fff!important;
+  box-shadow:0 13px 32px rgba(226,55,68,.25),inset 0 1px 0 rgba(255,255,255,.28)!important;
+}
+.st2-score-buttons button.selected strong,
+.st2-score-buttons button.selected span{color:#fff!important;-webkit-text-fill-color:currentColor!important}
+.st2-reference>header{border-color:#e9e0d6!important}
+.st2-reference>header h2{color:#171513!important}
+.st2-reference>header p{color:#756a61!important}
+.st2-reference article{
+  border-color:#e9e0d6!important;
+  background:#fff!important;
+}
+.st2-reference article>strong{
+  background:#fbecee!important;
+  border-color:#f1c8cd!important;
+  color:#b92938!important;
+}
+.st2-reference section>span{color:#403934!important}
+.st2-reference section>b{color:#171513!important}
+.st2-reference section>p{color:#6f655d!important}
+
+/* Completion screen. */
+.st2-finish>p{color:var(--st2-red)!important}
+.st2-finish h1{color:#171513!important}
+.st2-finish h2{color:#544b44!important}
+.st2-finish small{color:#80756d!important}
+.st2-finish button{
+  border-color:#d9d0c7!important;
+  color:#25211e!important;
+  background:#fff!important;
+  box-shadow:0 9px 24px rgba(57,41,31,.07)!important;
+}
+.st2-finish button.primary{
+  border-color:#c72b39!important;
+  color:#fff!important;
+  background:linear-gradient(180deg,#ef4654,#cf2938)!important;
+  box-shadow:0 12px 30px rgba(226,55,68,.22)!important;
+}
+
+.st2-stage-dots span{color:rgba(37,29,25,.35)!important}
+.st2-stage-dots i{border-color:rgba(37,29,25,.15)!important;background:rgba(255,255,255,.65)!important}
+.st2-stage-dots span.active{color:#171513!important}
+.st2-stage-dots span.active i{color:#fff!important;background:var(--st2-red)!important;border-color:var(--st2-red)!important}
+.st2-stage-dots span.complete{color:rgba(37,29,25,.55)!important}
+.st2-stage-dots span.complete i{color:#b72d3a!important;border-color:rgba(226,55,68,.34)!important;background:#fff3f4!important}
+
+@media(max-width:1080px){
+  .st2-metric-lines article{border-color:rgba(37,29,25,.10)!important}
+}
+
+/* V148 — reveal PM reference only after the reviewer commits a score. */
+.st2-judgement-grid.score-first{
+  grid-template-columns:minmax(0,980px)!important;
+  justify-content:center;
+}
+.st2-judgement-grid.score-first .st2-score-side{
+  width:100%;
+}
+.st2-reference-reveal{
+  animation:st2ReferenceReveal .22s ease-out both;
+}
+.st2-reference-actions{
+  display:flex;
+  justify-content:flex-end;
+  padding:12px 16px 16px;
+  border-top:1px solid #e9e0d6;
+  background:linear-gradient(180deg,#fff,#fbf8f4);
+}
+.st2-reference-actions button{
+  min-width:150px;
+  border:1px solid #c72b39;
+  border-radius:999px;
+  padding:11px 18px;
+  background:linear-gradient(180deg,#ef4654,#cf2938);
+  color:#fff;
+  font:inherit;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.02em;
+  cursor:pointer;
+  box-shadow:0 10px 26px rgba(226,55,68,.20),inset 0 1px 0 rgba(255,255,255,.28);
+  transition:transform .15s ease,box-shadow .15s ease;
+}
+.st2-reference-actions button:hover{
+  transform:translateY(-1px);
+  box-shadow:0 14px 30px rgba(226,55,68,.24),inset 0 1px 0 rgba(255,255,255,.32);
+}
+.st2-reference-actions button:active{transform:translateY(1px)}
+@keyframes st2ReferenceReveal{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@media(prefers-reduced-motion:reduce){
+  .st2-reference-reveal{animation:none}
+}
+@media(max-width:1080px){
+  .st2-judgement-grid.score-first{grid-template-columns:1fr!important}
+}
