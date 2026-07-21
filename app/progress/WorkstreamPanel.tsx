@@ -92,7 +92,7 @@ type AdminEvidenceDraft = Record<MetricKey, { text: string; linksText: string; c
 
 const PM_NAMES = ['Milan', 'Rachit', 'Ipshita', 'Avika', 'Kamran', 'Piyush', 'Tanishq'];
 const SHORTLIST_PM_NAMES = PM_NAMES.filter(name => name !== 'Tanishq');
-const LEADERBOARD_NAMES = SHORTLIST_PM_NAMES;
+const LEADERBOARD_NAMES = SHORTLIST_PM_NAMES.filter(name => name !== 'Milan');
 const DEFAULT_RULES = 'Review only expression quality: length, clarity, and whether the PM captured their thought process. Do not critique the NGO, the rank, the source, the pathway, or whether the PM is right. Do not ask for contact, referral, POC, source, geography, cohort, operational proof, or extra NGO facts. Hinglish, fragments, spelling mistakes, no punctuation and stream of consciousness are fine. Encourage people to type more of what went through their head.';
 const DEFAULT_DEADLINE_NOTE = 'Once everyone submits, we compare rankings, identify strong cohorts, resolve overlaps, and move to human lead follow-ups. This needs to close by Wednesday so the lead list can be wrapped by the end of the week.';
 const DEFAULT_TASKS: Task[] = [
@@ -200,6 +200,41 @@ function reviewerMode(pm?: PmData) { const rows = submittedRows(pm).map(([, row]
 function milestoneText(name: string, done: number, total: number) { const progress = pct(done, total); if (progress >= 100) return `${name} finished. Task closed.`; if (progress >= 75) return '75% done. Final stretch.'; if (progress >= 50) return PM_HALF_MILESTONE[name] || `${name} is halfway done.`; if (progress >= 25) return '25% done. Momentum exists.'; if (progress >= 10) return '10% done. Engine started.'; return ''; }
 function csvSample() { const sample = 'NGO name,Website/source,Description\nExample NGO,https://example.org,Runs a regular child pathway with useful context.\nSecond NGO,https://source.org,Add the background note PMs need to review.'; const blob = new Blob([sample], { type: 'text/csv' }); const url = URL.createObjectURL(blob); const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'pm_review_tasks_sample.csv'; document.body.appendChild(anchor); anchor.click(); anchor.remove(); URL.revokeObjectURL(url); }
 
+type TaskContextData = { facts: Array<{ label: string; value: string }>; context: string; reviewerNote: string };
+function parseTaskContext(value?: string): TaskContextData {
+  const raw = String(value || '').trim();
+  if (!raw) return { facts: [], context: '', reviewerNote: '' };
+  const segments = raw.split(/\s*\|\s*/).map(item => item.trim()).filter(Boolean);
+  const facts: Array<{ label: string; value: string }> = [];
+  const prose: string[] = [];
+  let reviewerNote = '';
+  const factLabels = new Set(['shortlisted by', 'location', 'source title', 'source', 'lead source', 'type']);
+  for (const segment of segments) {
+    const match = segment.match(/^([^:]{2,42}):\s*(.+)$/);
+    if (!match) { prose.push(segment); continue; }
+    const label = match[1].trim();
+    const key = label.toLowerCase();
+    const text = match[2].trim();
+    if (key === 'reviewer note' || key === 'review note' || key === 'pm note') reviewerNote = text;
+    else if (key === 'context' || key === 'background' || key === 'description') prose.push(text);
+    else if (factLabels.has(key)) facts.push({ label, value: text });
+    else prose.push(segment);
+  }
+  if (segments.length === 1 && facts.length === 0 && !reviewerNote) return { facts: [], context: raw, reviewerNote: '' };
+  return { facts, context: prose.join(' '), reviewerNote };
+}
+function TaskContext({ value }: { value?: string }) {
+  const parsed = parseTaskContext(value);
+  if (!parsed.facts.length && !parsed.context && !parsed.reviewerNote) return null;
+  return (
+    <section className="ngo-context-block" aria-label="NGO context">
+      {parsed.facts.length > 0 && <div className="ngo-context-chips">{parsed.facts.map((fact, index) => <span key={`${fact.label}-${index}`}><b>{fact.label}</b>{fact.value}</span>)}</div>}
+      {parsed.context && <p className="ngo-context-copy">{parsed.context}</p>}
+      {parsed.reviewerNote && <blockquote className="ngo-reviewer-note"><span>Reviewer note</span><p>{parsed.reviewerNote}</p></blockquote>}
+    </section>
+  );
+}
+
 export default function WorkstreamPanel({ stateName }: { stateName: string }) {
   const [data, setData] = useState<WorkstreamData>(() => makeDefaultData());
   const [screen, setScreen] = useState<'board' | 'workspace'>('board');
@@ -267,10 +302,6 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
   const taskEvidence = normaliseMetricEvidence(task?.metric_evidence || EMPTY_METRIC_EVIDENCE);
   const adminTargetPm = data.pms?.[adminPm] || makeDefaultData().pms[adminPm];
   const adminTaskIndex = Math.max(0, Math.min(Number(adminEvidenceTaskIndex) || 0, Math.max(0, (adminTargetPm.tasks?.length || 1) - 1)));
-  const shortlistCohort = Object.values(data.pms || {}).filter(target => target?.task_type !== 'ngo_details') as PmData[];
-  const cohortTotal = shortlistCohort.reduce((sum, target) => sum + (target.tasks?.length || 0), 0);
-  const cohortDone = shortlistCohort.reduce((sum, target) => sum + submittedCount(target), 0);
-  const cohortLeft = Math.max(0, cohortTotal - cohortDone);
 
   useEffect(() => { const id = window.setInterval(() => setTick(value => value + 1), 1000); return () => window.clearInterval(id); }, []);
   useEffect(() => {
@@ -615,17 +646,9 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
                 })}
               </section>
             </div>
-            <aside className="pm-cohort-status" aria-label="Shortlisting new metrics status">
-              <h3>Shortlisting new metrics</h3>
-              <table className="pm-cohort-totals"><tbody>
-                <tr><th>Total to be done</th><td>{cohortTotal}</td></tr>
-                <tr><th>Left in this cohort</th><td>{cohortLeft}</td></tr>
-              </tbody></table>
-              <section className="pm-progress-leaderboard" aria-label="PM shortlisting progress leaderboard">
-                <div className="pm-progress-leaderboard-head">
-                  <h4>PM progress</h4>
-                  <span>Completed</span>
-                </div>
+            <aside className="pm-progress-panel" aria-label="PM progress">
+              <section className="pm-progress-leaderboard">
+                <div className="pm-progress-leaderboard-head"><h3>PM progress</h3></div>
                 <div className="pm-progress-leaderboard-list">
                   {leaderboard.map((row, index) => (
                     <button type="button" key={row.name} onClick={() => { openWorkspace(row.name); setMode('task'); }}>
@@ -669,7 +692,7 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
                       <div className="task-nav-row"><button className="quiet-btn" onClick={prevTask} disabled={currentIndex === 0}>← Previous</button><span>NGO {currentIndex + 1} of {total}</span><button className="quiet-btn" onClick={nextTask} disabled={currentIndex >= total - 1}>Next →</button></div>
                       <h3>{task.ngo_name}</h3>
                       {task.website && <a className="workstream-link" href={safeUrl(task.website)} target="_blank" rel="noreferrer">{task.website}</a>}
-                      <p>{task.background}</p>
+                      <TaskContext value={task.background} />
 
                       {!isDetails ? (
                         <>
@@ -708,8 +731,8 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
                                 {metricComplete && <button type="button" className="metric-rerank-btn" onClick={startRerank}>↻ Edit assessment</button>}
                               </div>
                             </div>
-                            <div className="metric-method-strip">
-                              <span><b>1</b> Open evidence</span><i>→</i><span><b>2</b> Apply the ceiling</span><i>→</i><span><b>3</b> Score and explain</span>
+                            <div className="metric-method-strip" aria-label="Scoring steps">
+                              <span className="complete"><b>✓</b><em>Open evidence</em></span><i aria-hidden="true"/><span className="complete"><b>✓</b><em>Apply the ceiling</em></span><i aria-hidden="true"/><span className="active"><b>3</b><em>Score and explain</em></span>
                             </div>
                             {reranking && <div className="rerank-notice">Editing is open. Change any of the three scores or rationales, then save again.</div>}
                             <div className="metric-score-list">
@@ -806,6 +829,8 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
             <aside className="workstream-side pmu-compact-side">
               <div className="mini-panel pm-workspace-pm-status">
                 <h3>{selectedPM}{selectedPM.endsWith('s') ? '’' : '’s'} progress</h3>
+                <div className="pm-progress-summary"><span>{progress}% complete</span><b>{done} of {total}</b></div>
+                <div className="pm-progress-track" aria-label={`${progress}% complete`}><i style={{ width: `${progress}%` }} /></div>
                 <div className="mini-row"><span>Total assigned</span><b>{total}</b></div>
                 <div className="mini-row"><span>Completed</span><b>{done}</b></div>
                 <div className="mini-row"><span>Left</span><b>{Math.max(0, total - done)}</b></div>

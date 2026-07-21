@@ -282,6 +282,19 @@ export function normaliseMetricEvidence(value: unknown): Record<MetricKey, Metri
   return next;
 }
 
+function MetricIcon({ metricKey }: { metricKey: MetricKey }) {
+  const common = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+  return (
+    <span className="metric-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24">
+        {metricKey === 'child_progression' && <><path {...common} d="M4 18h16"/><path {...common} d="m6 15 4-4 3 2 5-6"/><path {...common} d="M15 7h3v3"/></>}
+        {metricKey === 'learning_model' && <><path {...common} d="M4 6.5c3.3-.9 5.9-.4 8 1.4v10c-2.1-1.8-4.7-2.3-8-1.4Z"/><path {...common} d="M20 6.5c-3.3-.9-5.9-.4-8 1.4v10c2.1-1.8 4.7-2.3 8-1.4Z"/></>}
+        {metricKey === 'development_ecosystem' && <><circle {...common} cx="12" cy="12" r="3"/><circle {...common} cx="12" cy="4.5" r="1.6"/><circle {...common} cx="5.5" cy="15.5" r="1.6"/><circle {...common} cx="18.5" cy="15.5" r="1.6"/><path {...common} d="m11 7-3.8 6.2M13 7l3.8 6.2M8.3 15.5h7.4"/></>}
+      </svg>
+    </span>
+  );
+}
+
 function GuideTable({ metric }: { metric: typeof METRIC_DEFINITIONS[number] }) {
   return (
     <>
@@ -337,7 +350,7 @@ export function MetricScoringCard({
     <article className={`metric-score-card metric-score-${score.rank} ${exceedsCeiling ? 'metric-score-over-ceiling' : ''}`}>
       <div className="metric-score-head">
         <div>
-          <span className="metric-letter">{metric.letter}</span>
+          <span className="metric-identity"><MetricIcon metricKey={metricKey} /><span className="metric-letter">{metric.letter}</span></span>
           <div>
             <h4>{metric.title}</h4>
             <p>{metric.question}</p>
@@ -350,7 +363,7 @@ export function MetricScoringCard({
         <summary>
           <div>
             <span>Evidence pack</span>
-            <small>{hasEvidence ? `${facts.length} fact${facts.length === 1 ? '' : 's'} · ${links.length} source${links.length === 1 ? '' : 's'}` : 'Not added yet'}</small>
+            <small>{hasEvidence ? `${facts.length} fact${facts.length === 1 ? '' : 's'} · ${links.length} source${links.length === 1 ? '' : 's'}` : 'No evidence added'}</small>
           </div>
           <b>Open</b>
         </summary>

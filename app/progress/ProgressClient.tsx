@@ -673,7 +673,7 @@ export default function ProgressClient({ initialData }: { initialData: AnyObj })
       </>}
 
 
-      {state && view === 'pm' && <><div className="source-topline ranking-subtop"><button className="quiet-btn" onClick={() => setView('hub')}>← Back</button><span>PM Shortlists · {state}</span></div><AdminUndoRedo region={state} context="PM shortlisting recovery" onRestored={() => setRestoreTick(x => x + 1)} /><WorkstreamPanel key={restoreTick} stateName={state} /></>}
+      {state && view === 'pm' && <><div className="source-topline ranking-subtop"><button className="quiet-btn" onClick={() => setView('hub')}>← Back</button><span>PM Shortlists · {state}</span></div><WorkstreamPanel key={restoreTick} stateName={state} /></>}
       {state && view === 'combined' && <><div className="source-topline ranking-subtop"><button className="quiet-btn" onClick={() => setView('hub')}>← Back</button><span>Combined Shortlisting · {state}</span></div><AdminUndoRedo region={state} context="Combined shortlisting recovery" onRestored={() => setRestoreTick(x => x + 1)} /><CombinedReviewPanel data={compiledReview} loading={rankingLoading} error={rankingError} /></>}
       {state && view === 'final' && <FinalOutputPanel
         data={finalBoard}
