@@ -105,6 +105,7 @@ type AdminEvidenceDraft = Record<MetricKey, { text: string; linksText: string; c
 
 const PM_NAMES = ['Milan', 'Rachit', 'Ipshita', 'Avika', 'Kamran', 'Piyush', 'Tanishq', 'Guest'];
 const SHORTLIST_PM_NAMES = PM_NAMES;
+const GUEST_SOURCE_PM_NAMES = PM_NAMES.filter(name => name !== 'Guest');
 const LEADERBOARD_NAMES = SHORTLIST_PM_NAMES.filter(name => name !== 'Milan' && name !== 'Guest');
 const DEFAULT_RULES = 'Review only expression quality: length, clarity, and whether the PM captured their thought process. Do not critique the NGO, the rank, the source, the pathway, or whether the PM is right. Do not ask for contact, referral, POC, source, geography, cohort, operational proof, or extra NGO facts. Hinglish, fragments, spelling mistakes, no punctuation and stream of consciousness are fine. Encourage people to type more of what went through their head.';
 const DEFAULT_DEADLINE_NOTE = 'Once everyone submits, we compare rankings, identify strong cohorts, resolve overlaps, and move to human lead follow-ups. This needs to close by Wednesday so the lead list can be wrapped by the end of the week.';
@@ -348,6 +349,12 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
   const [milestoneOpen, setMilestoneOpen] = useState(false);
   const [milestoneCopy, setMilestoneCopy] = useState('');
   const [guestThanks, setGuestThanks] = useState<{ reference: GuestReferenceReview | null; advance: boolean } | null>(null);
+  const [guestGearOpen, setGuestGearOpen] = useState(false);
+  const [guestSourcePm, setGuestSourcePm] = useState('Avika');
+  const [guestTaskIndex, setGuestTaskIndex] = useState('0');
+  const [guestNgoSearch, setGuestNgoSearch] = useState('');
+  const [guestAdminPassword, setGuestAdminPassword] = useState('');
+  const [guestCopying, setGuestCopying] = useState(false);
 
   const pm = data.pms?.[selectedPM] || makeDefaultData().pms[selectedPM];
   const isGuest = selectedPM === 'Guest';
@@ -364,6 +371,19 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
   const taskEvidence = normaliseMetricEvidence(task?.metric_evidence || EMPTY_METRIC_EVIDENCE);
   const adminTargetPm = data.pms?.[adminPm] || makeDefaultData().pms[adminPm];
   const adminTaskIndex = Math.max(0, Math.min(Number(adminEvidenceTaskIndex) || 0, Math.max(0, (adminTargetPm.tasks?.length || 1) - 1)));
+  const guestSourceData = data.pms?.[guestSourcePm] || makeDefaultData().pms[guestSourcePm];
+  const guestSourceTasks = guestSourceData?.tasks || [];
+  const guestFilteredTasks = guestSourceTasks.map((item, index) => ({ item, index })).filter(({ item }) => {
+    const query = guestNgoSearch.trim().toLowerCase();
+    if (!query) return true;
+    return `${item.ngo_name || ''} ${item.background || ''} ${item.website || ''}`.toLowerCase().includes(query);
+  });
+  const selectedGuestSourceIndex = Math.max(0, Math.min(Number(guestTaskIndex) || 0, Math.max(0, guestSourceTasks.length - 1)));
+  const selectedGuestSourceTask = guestSourceTasks[selectedGuestSourceIndex] || null;
+  const guestTaskAlreadyCopied = Boolean((data.pms?.Guest?.tasks || []).some(item =>
+    String(item.guest_reference_source_pm || item.transferred_from || '') === guestSourcePm &&
+    Number(item.guest_reference_source_task_index ?? (Number(item.original_task_index || 0) - 1)) === selectedGuestSourceIndex
+  ));
 
   useEffect(() => { const id = window.setInterval(() => setTick(value => value + 1), 1000); return () => window.clearInterval(id); }, []);
   useEffect(() => {
@@ -421,6 +441,60 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
   function taskLabel(_name = selectedPM) { return 'Shortlist'; }
   function openWorkspace(name: string) { const target = data.pms?.[name]; const idx = latestSubmittedIndex(target); setSelectedPM(name); setCurrentIndex(idx); setMode('task'); setMsg(idx > 0 || target?.responses?.[String(idx)]?.submitted ? `Opened last submitted NGO #${idx + 1}.` : 'Opened first assigned NGO.'); setLastBadge(''); setLastQuality(''); setLastPaceSeconds(null); setStreak(0); setScreen('workspace'); }
   function startAdmin(name = selectedPM) { const shortlistName = SHORTLIST_PM_NAMES.includes(name) ? name : 'Avika'; setAdminPm(name); setTransferFromPm(name); setDeletePm(shortlistName); setDeleteStart(name === selectedPM ? String(currentIndex + 1) : '1'); setDeleteEnd(name === selectedPM ? String(currentIndex + 1) : '1'); if (name === transferToPm) setTransferToPm(PM_NAMES.find(pmName => pmName !== name) || 'Milan'); setAdminPassword(''); setShowAdmin(true); }
+  function openGuestGear() {
+    const currentTask = isGuest ? task : null;
+    const taskSourcePm = String(currentTask?.guest_reference_source_pm || currentTask?.transferred_from || '').trim();
+    const fallbackPm = GUEST_SOURCE_PM_NAMES.find(name => (data.pms?.[name]?.tasks?.length || 0) > 0) || 'Avika';
+    const nextPm = GUEST_SOURCE_PM_NAMES.includes(taskSourcePm) ? taskSourcePm : fallbackPm;
+    const sourceIndex = nextPm === taskSourcePm
+      ? Number(currentTask?.guest_reference_source_task_index ?? (Number(currentTask?.original_task_index || 1) - 1))
+      : 0;
+    setGuestSourcePm(nextPm);
+    setGuestTaskIndex(String(Number.isFinite(sourceIndex) && sourceIndex >= 0 ? sourceIndex : 0));
+    setGuestNgoSearch('');
+    setGuestAdminPassword('');
+    setMsg('');
+    setGuestGearOpen(true);
+  }
+
+  async function copySelectedNgoToGuest() {
+    const base = backendBase();
+    if (!guestAdminPassword.trim()) { setMsg('Enter the admin password to duplicate this NGO.'); return; }
+    if (!base) { setMsg('Backend URL missing. Guest duplication needs backend memory.'); return; }
+    if (!selectedGuestSourceTask) { setMsg('Select an NGO first.'); return; }
+    if (guestTaskAlreadyCopied) { setMsg('This NGO is already in the Guest shortlist.'); return; }
+    setGuestCopying(true);
+    setMsg(`Duplicating ${selectedGuestSourceTask.ngo_name} into Guest…`);
+    try {
+      const result = await backendFetch(`${base}/workstream/admin/transfer-tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          password: guestAdminPassword,
+          from_pm: guestSourcePm,
+          to_pm: 'Guest',
+          start_index: selectedGuestSourceIndex + 1,
+          end_index: selectedGuestSourceIndex + 1,
+          move_responses: false,
+        }),
+      });
+      const json = await result.json();
+      if (!json?.ok) { setMsg(json?.error || 'Guest duplication failed.'); return; }
+      const nextData = normaliseWorkstreamData(json.data);
+      const newIndex = Math.max(0, Number(json?.moved?.[0]?.to_index || nextData.pms?.Guest?.tasks?.length || 1) - 1);
+      setData(nextData);
+      setSelectedPM('Guest');
+      setMode('task');
+      setCurrentIndex(newIndex);
+      setScreen('workspace');
+      setGuestGearOpen(false);
+      setMsg(`${selectedGuestSourceTask.ngo_name} duplicated into Guest. The PM assignment and official ranking remain unchanged.`);
+    } catch (errorValue: any) {
+      setMsg(errorValue?.message || 'Guest duplication failed.');
+    } finally {
+      setGuestCopying(false);
+    }
+  }
   function patchLocalResponse(patch: Partial<ResponseRow>) { setData(old => { const next = JSON.parse(JSON.stringify(old)); next.pms[selectedPM].responses[String(currentIndex)] = { ...(next.pms[selectedPM].responses[String(currentIndex)] || {}), ...patch }; return next; }); }
   function updateMetricScore(metricKey: MetricKey, nextScore: MetricScore) { setMetricScores(old => ({ ...old, [metricKey]: nextScore })); }
   function startRerank() { setReranking(true); window.setTimeout(() => metricSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 20); }
@@ -754,7 +828,7 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
                   {isGuest ? <span className="pm-guest-workspace-logo"><Image src="/feeding-india-logo.svg" alt="Feeding India by Eternal Foundation" width={200} height={47} priority /></span> : selectedProfile.img ? <span className="pm-orb pm-photo"><Image src={selectedProfile.img} alt={selectedPM} width={54} height={54} /></span> : <span className="pm-orb">{PM_ICONS[selectedPM] || '◆'}</span>}
                   <div><span className="workstream-kicker">{isGuest ? 'Guest review' : 'PM'}</span><h2>{selectedPM}</h2></div>
                 </div>
-                {!isGuest && <div className="workstream-deadline fun-deadline"><span>⏳ Time left</span><strong>{time.hours}</strong><em>{time.rest}</em></div>}
+                {isGuest ? <button type="button" className="guest-choose-ngo-btn" onClick={openGuestGear}><span>Guest gearbox</span><b>Choose or duplicate NGO</b></button> : <div className="workstream-deadline fun-deadline"><span>⏳ Time left</span><strong>{time.hours}</strong><em>{time.rest}</em></div>}
               </div>
               {!isGuest && <div className="deadline-note"><b>Why this deadline matters:</b> {pm.deadline_note || DEFAULT_DEADLINE_NOTE}</div>}
               {!isGuest && <div className="progress-toggle workstream-tabs">
@@ -803,11 +877,11 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
                                 <h3>{isGuest ? 'Rank this NGO on three dimensions' : 'Score the NGO on three separate dimensions'}</h3>
                                 <p>{isGuest ? 'Use the NGO details and evidence below. Choose a 1–5 score and explain each decision in at least 100 characters. The DFP program manager’s ranking stays hidden until you submit.' : 'Open each evidence pack, use the 1–5 slider, and write a rationale of at least 100 characters. For rare exception cases, one separate overall override is available below the three metrics. The old overall score above cannot be changed.'}</p>
                               </div>
-                              {!isGuest && <div className="metric-intro-actions">
+                              <div className="metric-intro-actions">
                                 <button type="button" className="metric-reference-library-btn" onClick={() => setReferenceLibraryOpen(true)}>Reference examples</button>
                                 <button type="button" className="metric-tutorial-btn" onClick={() => setTutorialOpen(true)}>Scoring tutorial</button>
                                 {metricComplete && <button type="button" className="metric-rerank-btn" onClick={startRerank}>↻ Edit assessment</button>}
-                              </div>}
+                              </div>
                             </div>
                             <div className="metric-method-strip" aria-label="Scoring steps">
                               <span className="complete"><b>✓</b><em>Open evidence</em></span><i aria-hidden="true"/><span className="complete"><b>✓</b><em>Apply the ceiling</em></span><i aria-hidden="true"/><span className="active"><b>3</b><em>Score and explain</em></span>
@@ -899,7 +973,7 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
                       </div>
                       <div className="live-reaction"><b>Three-metric assessment</b><span>{msg || (metricComplete ? (isGuest ? `Saved at ${niceTime(response.metric_submitted_at)}.` : `Saved at ${niceTime(response.metric_submitted_at)}. Previous overall ranking remains read-only.`) : 'Complete all three scores and rationales to save. The exception override is optional.')}</span></div>
                     </div>
-                  ) : <div className="workstream-task-card"><h3>No task added</h3><p>Add tasks from the PM view gear.</p></div>}
+                  ) : isGuest ? <div className="workstream-task-card guest-empty-workspace"><span className="workstream-kicker">Guest shortlist</span><h3>Choose an NGO to review</h3><p>Open the Guest gearbox, select any NGO from a Program Manager shortlist, and duplicate it here. The original PM assignment and official ranking remain untouched.</p><button type="button" className="primary-red glow-action" onClick={openGuestGear}>Choose an NGO</button></div> : <div className="workstream-task-card"><h3>No task added</h3><p>Add tasks from the PM view gear.</p></div>}
                   {!isGuest && progress >= 100 && <EndSummary pm={pm} name={selectedPM} />}
                   {!isGuest && <div className="workstream-footer-actions"><button className="ghost-btn" onClick={() => runReview('so-far')}>Review responses</button><a className="ghost-btn" href={exportHref()}>Export CSV</a></div>}
                 </>
@@ -916,7 +990,7 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
               </div>
             </aside>}
           </div>
-          {!isGuest && <button className="config-gear workstream-gear" onClick={() => startAdmin(selectedPM)}>⚙</button>}
+          {isGuest ? <button className="config-gear workstream-gear guest-workstream-gear" aria-label="Open Guest gearbox" onClick={openGuestGear}>⚙</button> : <button className="config-gear workstream-gear" onClick={() => startAdmin(selectedPM)}>⚙</button>}
         </section>
       )}
 
@@ -953,6 +1027,37 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
       {milestoneOpen && <div className="modal-scrim" onClick={() => setMilestoneOpen(false)}><section className="milestone-modal" onClick={event => event.stopPropagation()}><button className="modal-x" onClick={() => setMilestoneOpen(false)}>×</button><span className="workstream-kicker">Milestone</span><h2>{milestoneCopy}</h2><p>{progress >= 100 ? 'Done. You may now pretend this was easy.' : 'Keep going. Useful judgement beats neat English.'}</p><button className="primary-red" onClick={() => setMilestoneOpen(false)}>OK</button></section></div>}
       {aboutPM && <div className="modal-scrim" onClick={() => setAboutPM(null)}><section className="pm-about-modal" onClick={event => event.stopPropagation()}><button className="modal-x" onClick={() => setAboutPM(null)}>×</button><div className="pm-about-head">{aboutPM.img ? <Image src={aboutPM.img} alt={aboutPM.name} width={104} height={104} /> : null}<div><span>{aboutPM.tagline}</span><h2>{aboutPM.name}</h2><p>{aboutPM.role}</p></div></div><p className="pm-about-copy">{aboutPM.about}</p></section></div>}
       {aiOpen && <div className="modal-scrim" onClick={() => setAiOpen(false)}><section className="ai-review-modal" onClick={event => event.stopPropagation()}><button className="modal-x" onClick={() => setAiOpen(false)}>×</button><span className="workstream-kicker">Response review</span><h2>{aiTitle}</h2>{aiLoading ? <p>Reviewing…</p> : <AiReviewBlock review={aiReview} />}<div className="ai-feedback"><span>Useful?</span><button className={aiHelpful === 'yes' ? 'active' : ''} onClick={() => setAiHelpful('yes')}>Yes</button><button className={aiHelpful === 'no' ? 'active' : ''} onClick={() => setAiHelpful('no')}>No</button></div>{aiHelpful && <textarea className="workstream-textarea ai-feedback-box" value={aiFeedbackText} onChange={event => setAiFeedbackText(event.target.value)} placeholder={aiHelpful === 'yes' ? 'What worked?' : 'What should change?'} />}<div className="workstream-actions"><button className="primary-red" onClick={() => setAiOpen(false)}>OK</button></div><p className="ai-cost-note">First five are automatic. Expression only: length, clarity, thought captured. Hinglish/fragments/no punctuation are fine.</p></section></div>}
+
+      {guestGearOpen && (
+        <>
+          <div className="drawer-scrim" onClick={() => setGuestGearOpen(false)} />
+          <aside className="config-drawer guest-config-drawer" aria-label="Guest gearbox">
+            <div className="drawer-head"><div><span className="workstream-kicker">Guest setup</span><h2>Duplicate an NGO</h2></div><button onClick={() => setGuestGearOpen(false)}>×</button></div>
+            <div className="drawer-body">
+              <div className="guest-gear-explainer">
+                <Image src="/feeding-india-logo.svg" alt="Feeding India by Eternal Foundation" width={180} height={42} />
+                <p>Select any NGO from a Program Manager shortlist. It is copied into Guest as a blind second review; the source assignment, PM progress and official ranking are not changed.</p>
+              </div>
+              <label className="admin-field"><span>Program Manager shortlist</span><select value={guestSourcePm} onChange={event => { setGuestSourcePm(event.target.value); setGuestTaskIndex('0'); setGuestNgoSearch(''); }}>{GUEST_SOURCE_PM_NAMES.map(name => <option key={name} value={name}>{name} · {data.pms?.[name]?.tasks?.length || 0} NGOs</option>)}</select></label>
+              <label className="admin-field"><span>Find NGO</span><input value={guestNgoSearch} onChange={event => setGuestNgoSearch(event.target.value)} placeholder="Search by NGO name, website or context" /></label>
+              <div className="guest-ngo-picker" role="listbox" aria-label="Choose NGO to duplicate">
+                {guestFilteredTasks.length ? guestFilteredTasks.map(({ item, index }) => {
+                  const alreadyCopied = Boolean((data.pms?.Guest?.tasks || []).some(guestItem =>
+                    String(guestItem.guest_reference_source_pm || guestItem.transferred_from || '') === guestSourcePm &&
+                    Number(guestItem.guest_reference_source_task_index ?? (Number(guestItem.original_task_index || 0) - 1)) === index
+                  ));
+                  const active = index === selectedGuestSourceIndex;
+                  return <button type="button" role="option" aria-selected={active} className={`${active ? 'active' : ''} ${alreadyCopied ? 'copied' : ''}`} key={`${guestSourcePm}-${index}-${item.ngo_name}`} onClick={() => setGuestTaskIndex(String(index))}><span>#{index + 1}</span><div><b>{item.ngo_name || 'Untitled NGO'}</b><small>{item.website || 'No website added'}</small></div>{alreadyCopied && <em>Already in Guest</em>}</button>;
+                }) : <div className="guest-ngo-picker-empty">No NGOs match this search.</div>}
+              </div>
+              {selectedGuestSourceTask && <section className="guest-copy-preview"><span>Selected NGO</span><h3>{selectedGuestSourceTask.ngo_name}</h3>{selectedGuestSourceTask.website && <small>{selectedGuestSourceTask.website}</small>}<p>The Guest reviewer will see the NGO details, evidence, reference examples and scoring tutorial. The source PM ranking stays hidden until Guest submits.</p></section>}
+              <FieldLike label="Admin password" value={guestAdminPassword} onChange={setGuestAdminPassword} type="password" />
+              <p className="drawer-msg">{msg}</p>
+            </div>
+            <div className="drawer-foot"><button className="ghost-btn" onClick={() => setGuestGearOpen(false)}>Cancel</button><button className="primary-red" disabled={!selectedGuestSourceTask || guestTaskAlreadyCopied || guestCopying} onClick={copySelectedNgoToGuest}>{guestCopying ? 'Duplicating…' : guestTaskAlreadyCopied ? 'Already duplicated' : 'Duplicate into Guest'}</button></div>
+          </aside>
+        </>
+      )}
 
       {showAdmin && (
         <>

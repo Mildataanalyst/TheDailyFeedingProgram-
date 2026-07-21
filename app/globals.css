@@ -15542,3 +15542,124 @@ body.dfp-v100-theme .lp-v146-heart-dot svg{
 @media(max-width:1080px){
   .st2-judgement-grid.score-first{grid-template-columns:1fr!important}
 }
+
+/* =========================================================
+   V150 — dedicated Guest gearbox + seamless Guest scoring
+   ========================================================= */
+body.dfp-v111-theme .guest-choose-ngo-btn{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:3px;
+  min-width:210px;
+  padding:12px 16px;
+  border:1px solid rgba(226,55,68,.18);
+  border-radius:14px;
+  background:linear-gradient(180deg,#fff 0%,#fff8f8 100%);
+  box-shadow:0 1px 1px rgba(70,23,28,.08),0 7px 20px rgba(95,36,42,.09),inset 0 1px rgba(255,255,255,.96);
+  color:#151515;
+  cursor:pointer;
+  transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;
+}
+body.dfp-v111-theme .guest-choose-ngo-btn:hover{
+  transform:translateY(-1px);
+  border-color:rgba(226,55,68,.34);
+  box-shadow:0 1px 1px rgba(70,23,28,.08),0 11px 28px rgba(143,39,49,.14),inset 0 1px rgba(255,255,255,.98);
+}
+body.dfp-v111-theme .guest-choose-ngo-btn span{
+  color:#e23744;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+}
+body.dfp-v111-theme .guest-choose-ngo-btn b{font-size:14px;line-height:1.25;}
+body.dfp-v111-theme .guest-workstream-gear{
+  background:linear-gradient(180deg,#ee4a56,#db2433);
+  color:#fff;
+  border-color:rgba(177,22,35,.38);
+  box-shadow:0 2px 3px rgba(105,23,30,.18),0 14px 34px rgba(226,55,68,.25),inset 0 1px rgba(255,255,255,.34);
+}
+body.dfp-v111-theme .guest-empty-workspace{
+  max-width:680px;
+  margin:24px auto;
+  text-align:center;
+  padding:52px 44px!important;
+  background:linear-gradient(180deg,#fff,#fff9f9)!important;
+}
+body.dfp-v111-theme .guest-empty-workspace h3{font-size:30px!important;margin:8px 0 10px!important;}
+body.dfp-v111-theme .guest-empty-workspace p{max-width:560px;margin:0 auto 22px;color:#68605f;line-height:1.65;}
+body.dfp-v111-theme .guest-config-drawer{width:min(520px,94vw);}
+body.dfp-v111-theme .guest-config-drawer .drawer-head>div{display:flex;flex-direction:column;gap:3px;}
+body.dfp-v111-theme .guest-config-drawer .drawer-head h2{margin:0;}
+body.dfp-v111-theme .guest-gear-explainer{
+  padding:18px;
+  border-radius:16px;
+  background:linear-gradient(180deg,#fff,#faf8f6);
+  border:1px solid #ebe5e1;
+  box-shadow:0 1px 1px rgba(58,42,34,.05),0 9px 26px rgba(58,42,34,.07),inset 0 1px rgba(255,255,255,.96);
+}
+body.dfp-v111-theme .guest-gear-explainer img{display:block;max-width:155px;height:auto;margin-bottom:12px;}
+body.dfp-v111-theme .guest-gear-explainer p{margin:0;color:#625b58;font-size:13px;line-height:1.55;}
+body.dfp-v111-theme .guest-ngo-picker{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  max-height:310px;
+  overflow:auto;
+  padding:4px 3px 4px 0;
+}
+body.dfp-v111-theme .guest-ngo-picker>button{
+  width:100%;
+  display:grid;
+  grid-template-columns:38px minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  padding:12px 13px;
+  border:1px solid #e8e3df;
+  border-radius:13px;
+  background:linear-gradient(180deg,#fff,#fcfbfa);
+  color:#1b1918;
+  text-align:left;
+  cursor:pointer;
+  box-shadow:0 1px 1px rgba(53,41,35,.04),0 5px 14px rgba(53,41,35,.04),inset 0 1px rgba(255,255,255,.96);
+  transition:border-color .15s ease,box-shadow .15s ease,transform .15s ease;
+}
+body.dfp-v111-theme .guest-ngo-picker>button:hover{transform:translateY(-1px);border-color:#d9cbc4;box-shadow:0 1px 1px rgba(53,41,35,.05),0 9px 19px rgba(53,41,35,.07);}
+body.dfp-v111-theme .guest-ngo-picker>button.active{border-color:rgba(226,55,68,.72);box-shadow:0 0 0 3px rgba(226,55,68,.10),0 10px 22px rgba(122,35,43,.10);background:linear-gradient(180deg,#fff,#fff6f7);}
+body.dfp-v111-theme .guest-ngo-picker>button.copied:not(.active){opacity:.62;}
+body.dfp-v111-theme .guest-ngo-picker>button>span{
+  display:grid;
+  place-items:center;
+  width:32px;
+  height:32px;
+  border-radius:10px;
+  background:#f2efed;
+  color:#6e6662;
+  font-size:11px;
+  font-weight:800;
+}
+body.dfp-v111-theme .guest-ngo-picker>button.active>span{background:#e23744;color:#fff;box-shadow:0 5px 13px rgba(226,55,68,.2);}
+body.dfp-v111-theme .guest-ngo-picker>button div{min-width:0;display:flex;flex-direction:column;gap:3px;}
+body.dfp-v111-theme .guest-ngo-picker>button b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+body.dfp-v111-theme .guest-ngo-picker>button small{font-size:10px;color:#8b817c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+body.dfp-v111-theme .guest-ngo-picker>button em{font-style:normal;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#746a66;background:#eeebe8;padding:5px 7px;border-radius:999px;white-space:nowrap;}
+body.dfp-v111-theme .guest-ngo-picker-empty{padding:28px 18px;border:1px dashed #d9d1cc;border-radius:13px;color:#817772;text-align:center;font-size:13px;}
+body.dfp-v111-theme .guest-copy-preview{
+  padding:17px 18px;
+  border-left:3px solid #e23744;
+  border-radius:0 14px 14px 0;
+  background:#fff7f8;
+}
+body.dfp-v111-theme .guest-copy-preview>span{display:block;color:#e23744;font-size:9px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;margin-bottom:5px;}
+body.dfp-v111-theme .guest-copy-preview h3{margin:0 0 3px;font-size:18px;}
+body.dfp-v111-theme .guest-copy-preview small{display:block;color:#887d78;overflow-wrap:anywhere;}
+body.dfp-v111-theme .guest-copy-preview p{margin:10px 0 0;color:#625a56;font-size:12px;line-height:1.55;}
+body.dfp-v111-theme .guest-config-drawer .drawer-foot .primary-red:disabled{opacity:.48;cursor:not-allowed;box-shadow:none;transform:none;}
+@media(max-width:760px){
+  body.dfp-v111-theme .workstream-head{align-items:flex-start;gap:14px;}
+  body.dfp-v111-theme .guest-choose-ngo-btn{width:100%;min-width:0;}
+  body.dfp-v111-theme .guest-empty-workspace{padding:36px 22px!important;}
+  body.dfp-v111-theme .guest-ngo-picker>button{grid-template-columns:34px minmax(0,1fr);}
+  body.dfp-v111-theme .guest-ngo-picker>button em{grid-column:2;justify-self:start;}
+}
