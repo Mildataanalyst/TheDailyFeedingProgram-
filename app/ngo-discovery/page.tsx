@@ -525,7 +525,7 @@ export default function NgoDiscoveryPage(){
     const exportUrl = mod === 'discovery' || mod === 'legacy_story'
       ? (STORY_BACKEND ? `${STORY_BACKEND}/discovery/export/${encodeURIComponent(runId)}/leads` : '')
       : mod === 'no_website_recheck'
-        ? (SEARCH_BACKEND ? `${SEARCH_BACKEND}/repository/recheck/export/${encodeURIComponent(runId)}/results` : '')
+        ? (SEARCH_BACKEND ? `${SEARCH_BACKEND}/repository/recheck/export/${encodeURIComponent(runId)}/repository` : '')
         : (SEARCH_BACKEND ? `${SEARCH_BACKEND}/repository/export/${encodeURIComponent(runId)}/repository` : '');
     if(!exportUrl){ setPoolMessage('Worker backend URL is not configured for this run.'); return; }
     setPoolBusy(true); setPoolMessage('');
@@ -957,6 +957,9 @@ export default function NgoDiscoveryPage(){
   const recoveryProgress=finiteNumber(recoveryStatus?.progress_pct);
   const recoveryStrategy=String(recoveryStatus?.strategy||'fast').toLowerCase();
   const recoveryStrategyName=recoveryStrategyLabel(recoveryStrategy);
+  const recoveryProviderPaused=String(recoveryStatus?.stage||'').toLowerCase()==='provider_credit_exhausted';
+  const recoveryPausedProvider=String(recoveryStatus?.paused_provider_label||recoveryStatus?.paused_provider||'Provider');
+  const recoveryPausedKey=String(recoveryStatus?.paused_key||'');
   const deepReviewCount=Math.max(0,Number(recoveryStatus?.deep_review_count??recoveryStatus?.file_counts?.deep_review_input??recoveryStatus?.summary?.deep_review_rows??0)||0);
   const recoveryIsLive=String(recoveryStatus?.process_state||'').toLowerCase()==='running'||activeWord(recoveryStatus?.run_status)||activeWord(recoveryStatus?.stage);
   const recoveryDeepReviewReady=recoveryStrategy==='fast'&&deepReviewCount>0&&deepReviewReady(recoveryStatus);
@@ -1125,9 +1128,11 @@ export default function NgoDiscoveryPage(){
               {recoveryStatus?.can_cancel&&<button className="ghost-btn danger" onClick={cancelRecovery}>Cancel</button>}
               {recoveryStatus?.can_stop&&<button className="ghost-btn danger" onClick={stopRecovery}>End &amp; save</button>}
             </div>
+            {recoveryProviderPaused&&<div className="provider-pause-alert"><b>{recoveryPausedProvider} credits/key need attention</b><span>{recoveryStatus?.message||'The run paused before any further provider work.'}</span><small>{recoveryStatus?.processed||0} completed rows are checkpointed. {recoveryStatus?.remaining??Math.max(0,(recoveryStatus?.total||0)-(recoveryStatus?.processed||0))} rows remain pending.{recoveryPausedKey?` Affected key: ${recoveryPausedKey}.`:''}</small></div>}
             <div className="recovery-downloads">
-              {(recoveryStatus?.partial_outputs_available||recoveryStatus?.downloads?.results)&&<a className="dark-download ready" href={recheckDownload(recoveryRunId,'results')}>Download {recoveryStrategy==='deep'?'Deep':'Fast'} Results</a>}
-              {(recoveryStatus?.partial_outputs_available||recoveryStatus?.downloads?.results)&&<button className="dark-download ready" disabled={poolBusy} onClick={()=>sendRunToLeadPool(recoveryRunId,'no_website_recheck',recoveryStrategyName)}>Send current results to Lead Pool</button>}
+              {recoveryStatus?.downloads?.repository&&<a className="dark-download ready" href={recheckDownload(recoveryRunId,'repository')}>Download Avika-filtered CSV</a>}
+              {(recoveryStatus?.partial_outputs_available||recoveryStatus?.downloads?.results)&&<a className="dark-download ready" href={recheckDownload(recoveryRunId,'results')}>Download raw recovery</a>}
+              {recoveryStatus?.downloads?.repository&&<button className="dark-download ready" disabled={poolBusy} onClick={()=>sendRunToLeadPool(recoveryRunId,'no_website_recheck',recoveryStrategyName)}>Send filtered results to Lead Pool</button>}
               {recoveryStrategy==='fast'&&deepReviewCount>0&&recoveryDeepReviewReady&&<button className="primary-red small-red" disabled={deepReviewBusy||recoveryIsLive} onClick={()=>startDeepReview(recoveryRunId)}>{deepReviewBusy?'Starting Deep Review…':`Send eligible to Deep Review (${deepReviewCount})`}</button>}
               {recoveryStrategy==='fast'&&deepReviewCount>0&&recoveryStatus?.downloads?.deep_review_input&&<a className="dark-download ready" href={recheckDownload(recoveryRunId,'deep_review_input')}>Eligible Deep CSV</a>}
               {recoveryStatus?.downloads?.audit&&<a className="dark-download ready" href={recheckDownload(recoveryRunId,'audit')}>Audit</a>}
@@ -1137,6 +1142,7 @@ export default function NgoDiscoveryPage(){
             </div>
             {recoveryStatus&&<small className="recovery-stat">{recoveryStatus.run_status||recoveryStatus.stage} · {recoveryStatus.processed||0}/{recoveryStatus.total||0} done · {recoveryStatus.remaining??Math.max(0,(recoveryStatus.total||0)-(recoveryStatus.processed||0))} left{recoveryProgress!=null?` · ${recoveryProgress.toFixed(1)}%`:''}</small>}
             {recoveryStatus&&<small className="recovery-stat">Active elapsed: {formatDuration(recoveryActiveElapsed)}{recoveryRate!=null&&recoveryRate>0?` · ${recoveryRate.toFixed(2)} rows/min`:''}{recoveryEtaSeconds!=null?` · about ${formatDuration(recoveryEtaSeconds)} remaining`:''}</small>}
+            {recoveryStatus?.downloads?.repository&&<small className="recovery-stat">Avika-filtered repository: {Number(recoveryStatus?.filtered_repository_rows??recoveryStatus?.avika_filter?.repository_rows??0)} reviewable lead(s). Only this CSV is sent to the Lead Pool.</small>}
             {recoveryStatus?.current_item_started_at_epoch&&<small className="recovery-stat">Current NGO: {recoveryStatus.current_item||'Processing'} · {formatDuration(recoveryStatus.current_item_elapsed_sec)}{recoveryStatus.row_near_deadline&&recoveryStatus.row_deadline_remaining_sec!=null?` · watchdog skips in ≤${Math.ceil(Number(recoveryStatus.row_deadline_remaining_sec))}s`:''}</small>}
             {recoveryStrategy==='fast'&&deepReviewCount>0&&<small className="recovery-stat">{deepReviewCount} NGO{deepReviewCount===1?'':'s'} set aside for optional Deep Review. This does not delay or replace the Fast results.</small>}
             {Number(recoveryStatus?.row_timeouts||0)>0&&<small className="recovery-stat">{recoveryStatus.row_timeouts} slow NGO{Number(recoveryStatus.row_timeouts)===1?'':'s'} safely checkpointed for review.</small>}

@@ -15663,3 +15663,13 @@ body.dfp-v111-theme .guest-config-drawer .drawer-foot .primary-red:disabled{opac
   body.dfp-v111-theme .guest-ngo-picker>button{grid-template-columns:34px minmax(0,1fr);}
   body.dfp-v111-theme .guest-ngo-picker>button em{grid-column:2;justify-self:start;}
 }
+
+
+/* Provider-capacity hard pause */
+.provider-pause-alert{grid-column:1/-1;display:grid;gap:5px;border:1px solid rgba(255,174,67,.55);border-radius:14px;background:rgba(255,174,67,.10);padding:13px 15px;margin:2px 0 4px;color:#2a1b05}
+.provider-pause-alert b{font-size:13px;color:#6e4100}
+.provider-pause-alert span{font-size:12px;line-height:1.45;color:#60451e}
+.provider-pause-alert small{font-size:11px;color:#7a5c2d}
+body:not(.light-theme) .provider-pause-alert{color:#ffe8bd}
+body:not(.light-theme) .provider-pause-alert b{color:#ffd58d}
+body:not(.light-theme) .provider-pause-alert span,body:not(.light-theme) .provider-pause-alert small{color:#e5c899}
