@@ -1,6 +1,6 @@
 {
   "service": "DFP 2.0 frontend",
-  "version": "v159",
+  "version": "v160",
   "release_date": "2026-08-01",
   "railway_ready": true,
   "features": [
@@ -12,7 +12,8 @@
     "ADMIN_PASSWORD server-only same-origin proxy",
     "Node 22 Railway build fix",
     "Karnataka Recovery polling and downloads forced through same-origin search proxy",
-    "visible UI v159 marker for deployment verification"
+    "visible UI v160 marker for deployment verification",
+    "no manual admin-password field for NGO-ID status, backfill or registry export"
   ],
   "tests": {
     "typescript": "22 TypeScript/TSX files parsed successfully",
@@ -20,7 +21,7 @@
     "railway_build_configuration": "npm ci once; build command npm run build"
   },
   "notes": [
-    "Use Core Backend v88 and Search Worker v77.",
+    "Use Core Backend v89 and Search Worker v77.",
     "ADMIN_PASSWORD is server-only and must match both Python services."
   ]
 }

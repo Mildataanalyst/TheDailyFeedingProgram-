@@ -202,7 +202,6 @@ export default function KarnatakaRecoveryPanel({ poolBusy = false, onSendToLeadP
   const [runsBusy, setRunsBusy] = useState(false);
   const [idStatus, setIdStatus] = useState<AnyRow | null>(null);
   const [idBusy, setIdBusy] = useState(false);
-  const [idPassword, setIdPassword] = useState('');
   const [idMessage, setIdMessage] = useState('');
 
   const modeSpec = MODE_SPECS[mode];
@@ -348,13 +347,12 @@ export default function KarnatakaRecoveryPanel({ poolBusy = false, onSendToLeadP
 
   async function backfillNgoIds() {
     if (!BACKEND) { setIdMessage(BACKEND_CONFIG_ERROR); return; }
-    if (!idPassword.trim()) { setIdMessage('Enter the core backend admin password first.'); return; }
     setIdBusy(true);
     setIdMessage('Backfilling IDs across historical shortlisting stores…');
     const response = await safeJSON('/admin/ngo-ids/backfill', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: idPassword }),
+      body: JSON.stringify({}),
     });
     setIdBusy(false);
     if (!response.ok || !response.data?.ok) {
@@ -398,7 +396,7 @@ export default function KarnatakaRecoveryPanel({ poolBusy = false, onSendToLeadP
   return <div id="run-panel-karnataka-recovery" className="karnataka-recovery-panel">
     <div className="karnataka-recovery-head">
       <div>
-        <span className="recovery-mode-kicker">Final source-record recovery system · UI v159</span>
+        <span className="recovery-mode-kicker">Final source-record recovery system · UI v160</span>
         <h3>Karnataka Recovery</h3>
         <p>Start with the known-URL CSV, then run the search queues in order. Every candidate is revalidated under the same ownership rules; historical labels are not trusted, and a name mention alone can never establish an official website.</p>
       </div>
@@ -463,7 +461,7 @@ export default function KarnatakaRecoveryPanel({ poolBusy = false, onSendToLeadP
     <div className="ngo-id-registry-card">
       <div className="ngo-id-registry-copy"><span>Permanent identifier layer</span><b>DFP NGO ID Registry</b><small>Every Lead Pool, PM shortlisting, final-ranking and Contact Tracker record carries one immutable <code>DFP-NGO-XXXXXXXXXXXXXXXX</code> ID. Historical records are backfilled without deleting or deduplicating anything.</small></div>
       <div className="ngo-id-registry-stats"><div><span>Unique IDs</span><b>{idStatus ? formatNumber(idStatus.unique_ngo_ids) : '—'}</b></div><div><span>Shortlist tasks</span><b>{idStatus ? formatNumber(idStatus.workstream_tasks) : '—'}</b></div><div><span>Lead Pool rows</span><b>{idStatus ? formatNumber(idStatus.lead_pool_rows) : '—'}</b></div><div><span>Tracker rows</span><b>{idStatus ? formatNumber(idStatus.contact_tracker_rows) : '—'}</b></div></div>
-      <div className="ngo-id-registry-actions"><input type="password" value={idPassword} onChange={event => setIdPassword(event.target.value)} placeholder="Core backend admin password"/><button className="ghost-btn" disabled={idBusy} onClick={loadIdStatus}>{idBusy ? 'Working…' : 'Refresh ID status'}</button><button className="primary-red small-red" disabled={idBusy || !idPassword.trim()} onClick={backfillNgoIds}>Backfill historical IDs</button>{BACKEND && idPassword.trim() ? <a className="dark-download ready" href={`${BACKEND}/admin/ngo-ids/export.csv?password=${encodeURIComponent(idPassword)}`}>Export ID registry</a> : null}</div>
+      <div className="ngo-id-registry-actions"><small>No password required.</small><button className="ghost-btn" disabled={idBusy} onClick={loadIdStatus}>{idBusy ? 'Working…' : 'Refresh ID status'}</button><button className="primary-red small-red" disabled={idBusy} onClick={backfillNgoIds}>Backfill historical IDs</button>{BACKEND ? <a className="dark-download ready" href="/api/dfp-proxy/core/admin/ngo-ids/export.csv">Export ID registry</a> : null}</div>
       {idMessage && <small className="ngo-id-registry-message">{idMessage}</small>}
     </div>
 

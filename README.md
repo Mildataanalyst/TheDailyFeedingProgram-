@@ -1,4 +1,4 @@
-# DFP 2.0 Frontend v159 — Final Karnataka Recovery UI
+# DFP 2.0 Frontend v160 — Final Karnataka Recovery UI
 
 Complete Next.js frontend for Core Backend v88 and Search Worker v76.
 
