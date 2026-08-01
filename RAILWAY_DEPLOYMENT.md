@@ -1,4 +1,4 @@
-# Frontend v154 — Railway deployment
+# Frontend v155 — Railway deployment
 
 Deploy after both backend URLs are live.
 
@@ -21,3 +21,13 @@ DFP2_ADMIN_TOKEN=<same token>
 `NEXT_PUBLIC_*` values are visible in the browser, so this is suitable only for the existing internal/demo protection model; a public deployment should sit behind proper access control.
 
 After deployment, add the final frontend domain to `FRONTEND_ORIGIN` on both Python services and redeploy those services if needed.
+
+
+Build configuration:
+
+```text
+Node: 22.x
+Install: automatic Nixpacks npm ci
+Build: npm run build
+Start: npm run start -- -p $PORT
+```

@@ -1,19 +1,23 @@
 {
   "service": "DFP 2.0 frontend",
-  "version": "v154",
+  "version": "v155",
   "release_date": "2026-08-01",
   "railway_ready": true,
   "features": [
     "Karnataka Recovery control centre",
     "one-account Serper UI",
     "visible NGO IDs",
-    "historical ID backfill/export controls"
+    "historical ID backfill/export controls",
+    "Railway build fix: npm ci runs once in Nixpacks install phase",
+    "Node 22 runtime pin for current frontend dependency engine requirements"
   ],
   "tests": {
     "typescript_syntax": "21 TypeScript/TSX files parsed successfully",
-    "next_production_build": "Not run locally because the current sandbox could not complete npm dependency installation; Railway uses public npm via .npmrc."
+    "next_production_build": "Not run locally because the current sandbox could not complete npm dependency installation; Railway uses public npm via .npmrc.",
+    "railway_build_configuration": "Validated: custom build command no longer repeats npm ci"
   },
   "notes": [
+    "Replaces frontend v154 only; backend v85 and worker v73 are unchanged.",
     "Deploy after both Python service URLs are live."
   ]
 }
