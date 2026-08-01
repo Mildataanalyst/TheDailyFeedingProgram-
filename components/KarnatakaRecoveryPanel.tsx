@@ -27,21 +27,21 @@ type ModeSpec = {
 
 const MODE_SPECS: Record<ModeKey, ModeSpec> = {
   regression_test: {
-    label: '1. Technical test run',
-    description: 'Run the known recommendation failures first. This checks brand aliases, acronyms, hosted pages, mismatch continuation and fetch recovery before the bulk queues.',
+    label: 'Optional technical audit',
+    description: 'Optional audit lane for the historical 44-NGO cohort. Production stages are not gated by this file; the worker now runs a built-in ownership self-test before every run.',
     maxQueries: 4,
     defaultConcurrency: 4,
     fileHint: 'TEST_05_all_partner_recommendations_44.csv',
-    sequence: 'Always run first',
+    sequence: 'Optional — not required',
     tone: 'test',
   },
   known_url_identity: {
-    label: '2. Verify known URLs / saved candidates',
+    label: '1. Verify known URLs / saved candidates',
     description: 'Zero-query recovery for all retained URLs and saved candidates. It fetches and verifies identity without spending Serper credits.',
     maxQueries: 0,
     defaultConcurrency: 12,
     fileHint: 'RUN_01_zero_query_known_urls_6091.csv',
-    sequence: 'Run after test passes',
+    sequence: 'Start here — zero Serper queries',
     tone: 'zero',
   },
   saved_candidate_fetch: {
@@ -54,7 +54,7 @@ const MODE_SPECS: Record<ModeKey, ModeSpec> = {
     tone: 'zero',
   },
   missing_query_only: {
-    label: '3. Run the missing query only',
+    label: '2. Run the missing query only',
     description: 'Runs exactly one missing logical query per source record. Temporary provider retries do not consume another logical query; exhausted credits pause the run safely.',
     maxQueries: 1,
     defaultConcurrency: 12,
@@ -63,7 +63,7 @@ const MODE_SPECS: Record<ModeKey, ModeSpec> = {
     tone: 'search',
   },
   new_unlinked: {
-    label: '5. New / unlinked Darpan records',
+    label: '4. New / unlinked Darpan records',
     description: 'Full staged discovery for source rows that could not be defensibly linked to a historical run. Every source record remains separate.',
     maxQueries: 4,
     defaultConcurrency: 12,
@@ -72,7 +72,7 @@ const MODE_SPECS: Record<ModeKey, ModeSpec> = {
     tone: 'search',
   },
   enhanced_search: {
-    label: '4. Enhanced historical recovery',
+    label: '3. Enhanced historical recovery',
     description: 'Uses legal name, referral/public name, acronym, spelling variants, address, pincode and project-parent links. Directories remain evidence only.',
     maxQueries: 3,
     defaultConcurrency: 12,
@@ -81,7 +81,7 @@ const MODE_SPECS: Record<ModeKey, ModeSpec> = {
     tone: 'search',
   },
   identity_collision: {
-    label: '6. Same-name identity collisions',
+    label: '5. Same-name identity collisions',
     description: 'Processes same-name and same-district source rows independently. Registration and address evidence are used to distinguish the real entities.',
     maxQueries: 3,
     defaultConcurrency: 6,
@@ -90,7 +90,7 @@ const MODE_SPECS: Record<ModeKey, ModeSpec> = {
     tone: 'review',
   },
   firecrawl_retry: {
-    label: '7. Firecrawl retry — optional',
+    label: '6. Firecrawl retry — optional',
     description: 'No Serper. Direct HTTP is tried first; Firecrawl is spent only on blocked, SSL or JavaScript-heavy candidates. Use the retry CSV produced by a prior run.',
     maxQueries: 0,
     defaultConcurrency: 4,
@@ -101,7 +101,6 @@ const MODE_SPECS: Record<ModeKey, ModeSpec> = {
 };
 
 const MODE_ORDER: ModeKey[] = [
-  'regression_test',
   'known_url_identity',
   'missing_query_only',
   'enhanced_search',
@@ -180,7 +179,7 @@ type Props = {
 export default function KarnatakaRecoveryPanel({ poolBusy = false, onSendToLeadPool }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [mode, setMode] = useState<ModeKey>('regression_test');
+  const [mode, setMode] = useState<ModeKey>('known_url_identity');
   const [file, setFile] = useState<File | null>(null);
   const [runId, setRunId] = useState('');
   const [status, setStatus] = useState<AnyRow | null>(null);
@@ -188,7 +187,7 @@ export default function KarnatakaRecoveryPanel({ poolBusy = false, onSendToLeadP
   const [controlBusy, setControlBusy] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const [concurrency, setConcurrency] = useState(MODE_SPECS.regression_test.defaultConcurrency);
+  const [concurrency, setConcurrency] = useState(MODE_SPECS.known_url_identity.defaultConcurrency);
   const [serperConcurrency, setSerperConcurrency] = useState(4);
   const [serperCreditBudget, setSerperCreditBudget] = useState(59000);
   const [preflight, setPreflight] = useState(true);
@@ -210,7 +209,8 @@ export default function KarnatakaRecoveryPanel({ poolBusy = false, onSendToLeadP
   const forcedFirecrawl = mode === 'firecrawl_retry';
   const firecrawlEnabled = forcedFirecrawl || useFirecrawl;
   const progress = Math.max(0, Math.min(100, n(status?.progress_pct || (n(status?.total) ? (n(status?.processed) / n(status?.total)) * 100 : 0))));
-  const canStart = !!file && !busy && !live(status);
+  const ownershipSelfTest = capacity?.ownership_self_test || status?.summary?.ownership_self_test || status?.ownership_self_test;
+  const canStart = !!file && !busy && !live(status) && ownershipSelfTest?.passed !== false;
   const statusDownloads = status?.downloads && typeof status.downloads === 'object' ? status.downloads : {};
   const queryUsage = `${formatNumber(status?.queries_used)} / ${formatNumber(status?.query_cap || status?.estimated_maximum_queries)}`;
   const elapsed = n(status?.elapsed_seconds || status?.active_elapsed_sec);
@@ -298,7 +298,10 @@ export default function KarnatakaRecoveryPanel({ poolBusy = false, onSendToLeadP
     setCapacity(response.data);
     const funded = n(response.data?.healthy_serper_accounts ?? response.data?.healthy_serper_keys);
     const effective = n(response.data?.recommended_max_concurrency);
-    setMessage(funded ? `The Serper account is healthy. Safe search concurrency: ${effective}.` : 'The Serper account did not pass preflight. Zero-query modes can still run.');
+    const ownershipOk = response.data?.ownership_self_test?.passed === true;
+    setMessage(ownershipOk
+      ? (funded ? `Strict ownership self-test passed. The Serper account is healthy; safe search concurrency: ${effective}.` : 'Strict ownership self-test passed. The Serper account is unavailable, but zero-query modes can still run.')
+      : 'The worker ownership self-test did not pass. The backend will refuse to start a recovery run.');
   }
 
   async function startRun() {
@@ -378,7 +381,9 @@ export default function KarnatakaRecoveryPanel({ poolBusy = false, onSendToLeadP
   }
 
   function exportUrl(kind: string) {
-    return SEARCH_BACKEND && runId ? `${SEARCH_BACKEND}/karnataka-recovery/export/${encodeURIComponent(runId)}/${encodeURIComponent(kind)}` : '#';
+    return SEARCH_BACKEND && runId
+      ? `/api/dfp-proxy/search/karnataka-recovery/export/${encodeURIComponent(runId)}/${encodeURIComponent(kind)}`
+      : '#';
   }
 
   function clearActiveView() {
@@ -393,9 +398,9 @@ export default function KarnatakaRecoveryPanel({ poolBusy = false, onSendToLeadP
   return <div id="run-panel-karnataka-recovery" className="karnataka-recovery-panel">
     <div className="karnataka-recovery-head">
       <div>
-        <span className="recovery-mode-kicker">New source-record recovery system</span>
+        <span className="recovery-mode-kicker">Final source-record recovery system · UI v159</span>
         <h3>Karnataka Recovery</h3>
-        <p>Use the prepared CSVs in sequence. Known URLs are verified without Serper; search queues run only their required stage; directories and articles are never accepted as the NGO website.</p>
+        <p>Start with the known-URL CSV, then run the search queues in order. Every candidate is revalidated under the same ownership rules; historical labels are not trusted, and a name mention alone can never establish an official website.</p>
       </div>
       <div className="karnataka-head-actions">
         <button className="ghost-btn" onClick={() => downloadText('karnataka_recovery_sample.csv', sampleCsv())}>Sample CSV</button>
@@ -416,6 +421,15 @@ export default function KarnatakaRecoveryPanel({ poolBusy = false, onSendToLeadP
       })}
     </div>
 
+    {status?.mode === 'regression_test' && status?.summary && <div className={`karnataka-regression-gate ${status.summary.regression_passed ? 'passed' : 'failed'}`}>
+      <b>{status.summary.regression_passed ? 'Optional audit passed' : 'Optional audit found failures'}</b>
+      <span>{status.summary.regression_passed
+        ? `${formatNumber(status.summary.processed_rows)} audit rows completed with no expected-outcome failures.`
+        : `${formatNumber(status.summary.regression_status_counts?.fail)} expected-outcome failures. Download Results CSV and Summary for review.`}</span>
+      {!status.summary.regression_passed && Array.isArray(status.summary.regression_failures) && status.summary.regression_failures.length > 0 && <small>{status.summary.regression_failures.slice(0, 5).map((row: AnyRow) => `${row.name}: ${row.reason}`).join(' · ')}</small>}
+    </div>}
+
+
     <div className="karnataka-run-builder">
       <div className="karnataka-selected-mode">
         <span>Selected stage</span>
@@ -429,17 +443,18 @@ export default function KarnatakaRecoveryPanel({ poolBusy = false, onSendToLeadP
 
     <div className="karnataka-settings-grid">
       <label><span>Requested row concurrency</span><input type="number" min={1} max={64} value={concurrency} onChange={event => setConcurrency(Math.max(1, Math.min(64, n(event.target.value))))}/><small>Search modes are clamped to the single Serper account limit; zero-query verification can run more rows.</small></label>
-      <label><span>Serper account concurrency</span><input type="number" min={1} max={8} value={serperConcurrency} onChange={event => setSerperConcurrency(Math.max(1, Math.min(8, n(event.target.value))))}/><small>Recommended first run: 4. Raise to 6–8 only after the test batch is stable.</small></label>
+      <label><span>Serper account concurrency</span><input type="number" min={1} max={8} value={serperConcurrency} onChange={event => setSerperConcurrency(Math.max(1, Math.min(8, n(event.target.value))))}/><small>Recommended first run: 4. Raise to 6–8 only after observing stable throughput on the first production batch.</small></label>
       <label><span>Per-row deadline</span><input type="number" min={20} max={240} value={rowDeadline} onChange={event => setRowDeadline(Math.max(20, Math.min(240, n(event.target.value))))}/><small>Checkpointed on timeout; work is retained.</small></label>
       <label className="karnataka-check"><input type="checkbox" checked={preflight} onChange={event => setPreflight(event.target.checked)}/><span><b>Preflight the Serper account</b><small>One low-cost query checks that the configured account is funded before bulk work starts.</small></span></label>
       <label className="karnataka-check"><input type="checkbox" checked={firecrawlEnabled} disabled={forcedFirecrawl} onChange={event => setUseFirecrawl(event.target.checked)}/><span><b>Allow selective Firecrawl</b><small>Off by default. Direct HTTP always runs first.</small></span></label>
-      <label className="karnataka-check"><input type="checkbox" checked={runAvika} onChange={event => setRunAvika(event.target.checked)}/><span><b>Run Avika / DFP-fit filter after discovery</b><small>Keep off until the technical test passes.</small></span></label>
+      <label className="karnataka-check"><input type="checkbox" checked={runAvika} onChange={event => setRunAvika(event.target.checked)}/><span><b>Run Avika / DFP-fit filter after discovery</b><small>Keep off during website recovery; run DFP-fit only on the final verified-site export.</small></span></label>
       <label className="karnataka-credit-field enabled"><span>Serper run-credit ceiling</span><input type="number" min={0} max={1000000} value={serperCreditBudget} onChange={event => setSerperCreditBudget(Math.max(0, n(event.target.value)))}/><small>Set to 59,000 for the current account. One preflight query is kept as headroom.</small></label>
       <label className={`karnataka-credit-field ${firecrawlEnabled ? 'enabled' : ''}`}><span>Firecrawl run-credit ceiling</span><input type="number" min={1} max={100000} disabled={!firecrawlEnabled} value={firecrawlBudget} onChange={event => setFirecrawlBudget(Math.max(1, n(event.target.value)))}/><small>Optional. Direct HTTP runs first; suggested maximum: 5,000.</small></label>
     </div>
 
     {capacity && <div className="karnataka-capacity-strip">
-      <b>Provider preflight</b>
+      <b>Preflight</b>
+      <span>{ownershipSelfTest?.passed ? `Strict ownership self-test passed (${formatNumber(ownershipSelfTest.cases)} cases)` : 'Strict ownership self-test failed'}</span>
       <span>{n(capacity.healthy_serper_accounts ?? capacity.healthy_serper_keys) ? 'Serper account healthy' : 'Serper account unavailable'}</span>
       <span>recommended max concurrency {formatNumber(capacity.recommended_max_concurrency)}</span>
       {capacity.firecrawl_configured ? <span>Firecrawl configured</span> : <span>Firecrawl not configured</span>}
@@ -482,7 +497,7 @@ export default function KarnatakaRecoveryPanel({ poolBusy = false, onSendToLeadP
       <div className="karnataka-provider-head"><b>Recent Karnataka Recovery runs</b><button className="quiet-btn" disabled={runsBusy} onClick={loadRecentRuns}>{runsBusy ? 'Refreshing…' : 'Refresh'}</button></div>
       {recentRuns.length ? <div className="karnataka-run-list">{recentRuns.map((row, index) => {
         const id = String(row.run_id || '');
-        return <div className="karnataka-run-row" key={`${id}-${index}`}><div><b>{String(row.mode_label || row.mode || 'Karnataka Recovery')}</b><small>{id} · {String(row.run_status || row.stage || 'saved')} · {formatNumber(row.processed)}/{formatNumber(row.total)} rows · {formatNumber(row.queries_used)} logical queries</small></div><div><button className="ghost-btn" disabled={!id} onClick={() => { setRunId(id); setStatus(row); if (typeof window !== 'undefined') window.localStorage.setItem('dfp2:last-karnataka-recovery-run-id', id); beginPolling(id); }}>Open</button>{row.downloads?.summary && id ? <a className="dark-download ready" href={`${SEARCH_BACKEND}/karnataka-recovery/export/${encodeURIComponent(id)}/summary`}>Summary</a> : null}</div></div>;
+        return <div className="karnataka-run-row" key={`${id}-${index}`}><div><b>{String(row.mode_label || row.mode || 'Karnataka Recovery')}</b><small>{id} · {String(row.run_status || row.stage || 'saved')} · {formatNumber(row.processed)}/{formatNumber(row.total)} rows · {formatNumber(row.queries_used)} logical queries</small></div><div><button className="ghost-btn" disabled={!id} onClick={() => { setRunId(id); setStatus(row); if (typeof window !== 'undefined') window.localStorage.setItem('dfp2:last-karnataka-recovery-run-id', id); beginPolling(id); }}>Open</button>{row.downloads?.summary && id ? <a className="dark-download ready" href={`/api/dfp-proxy/search/karnataka-recovery/export/${encodeURIComponent(id)}/summary`}>Summary</a> : null}</div></div>;
       })}</div> : <small className="karnataka-safety-note">No saved Karnataka Recovery runs were returned yet.</small>}
     </div>
 
@@ -493,6 +508,6 @@ export default function KarnatakaRecoveryPanel({ poolBusy = false, onSendToLeadP
 
     {message && <div className="pool-message">{message}</div>}
     {error && <div className="error-box">{error}</div>}
-    <small className="karnataka-safety-note">Only one Karnataka Recovery batch runs at a time. Search traffic uses the single SERPER_API_KEY account, completed source records are checkpointed, and refreshing or closing this page does not stop Railway.</small>
+    <small className="karnataka-safety-note">Only one Karnataka Recovery batch runs at a time. The worker runs a deterministic ownership guard before accepting any upload, uses the single SERPER_API_KEY account, checkpoints each completed source record, and continues independently if this browser tab closes.</small>
   </div>;
 }

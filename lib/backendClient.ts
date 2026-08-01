@@ -1,5 +1,7 @@
 export type SafeResponse = { ok: boolean; status: number; data: any; error: string | null };
 
+type BackendService = 'core' | 'search' | 'story';
+
 export const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || '').replace(/\/+$/, '');
 export const SEARCH_BACKEND = (process.env.NEXT_PUBLIC_SEARCH_BACKEND_URL || process.env.NEXT_PUBLIC_WORKER_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || '').replace(/\/+$/, '');
 export const STORY_BACKEND = (process.env.NEXT_PUBLIC_STORY_BACKEND_URL || process.env.NEXT_PUBLIC_AI_BACKEND_URL || process.env.NEXT_PUBLIC_SEARCH_BACKEND_URL || process.env.NEXT_PUBLIC_WORKER_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || '').replace(/\/+$/, '');
@@ -7,36 +9,42 @@ export const BACKEND_CONFIG_ERROR = 'Core backend URL is not configured. Add NEX
 export const SEARCH_BACKEND_CONFIG_ERROR = 'Search worker URL is not configured. Add NEXT_PUBLIC_SEARCH_BACKEND_URL in Railway Variables, then redeploy.';
 export const STORY_BACKEND_CONFIG_ERROR = 'Story/AI worker URL is not configured. Add NEXT_PUBLIC_STORY_BACKEND_URL or NEXT_PUBLIC_SEARCH_BACKEND_URL in Railway Variables, then redeploy.';
 
-// This is an internal-demo convenience header only. NEXT_PUBLIC_* values are visible
-// in browser bundles, so this is not a substitute for SSO/auth proxy protection.
-export const PUBLIC_MUTATION_TOKEN = process.env.NEXT_PUBLIC_DFP2_ADMIN_TOKEN || '';
-
-export function backendHeaders(init?: HeadersInit, method = 'GET'): Headers {
-  const headers = new Headers(init || {});
-  if (PUBLIC_MUTATION_TOKEN && method.toUpperCase() !== 'GET') {
-    headers.set('X-DFP2-ADMIN-TOKEN', PUBLIC_MUTATION_TOKEN);
-  }
-  return headers;
+function inferService(defaultService: BackendService, url: string): BackendService {
+  if (!/^https?:\/\//i.test(url)) return defaultService;
+  const clean = url.replace(/\/+$/, '');
+  if (SEARCH_BACKEND && (clean === SEARCH_BACKEND || clean.startsWith(`${SEARCH_BACKEND}/`))) return 'search';
+  if (STORY_BACKEND && (clean === STORY_BACKEND || clean.startsWith(`${STORY_BACKEND}/`))) return 'story';
+  if (BACKEND && (clean === BACKEND || clean.startsWith(`${BACKEND}/`))) return 'core';
+  return defaultService;
 }
 
-function serviceUrl(base: string, url: string): string {
-  if (/^https?:\/\//i.test(url)) return url;
-  return `${base}/${url.replace(/^\/+/, '')}`;
+function servicePath(url: string): string {
+  if (!/^https?:\/\//i.test(url)) return `/${url.replace(/^\/+/, '')}`;
+  try {
+    const parsed = new URL(url);
+    return `${parsed.pathname || '/'}${parsed.search || ''}`;
+  } catch {
+    return `/${url.replace(/^\/+/, '')}`;
+  }
+}
+
+function proxyUrl(service: BackendService, url: string): string {
+  const path = servicePath(url);
+  return `/api/dfp-proxy/${service}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
 async function safeServiceJSON(
-  base: string,
+  defaultService: BackendService,
   configError: string,
   url: string,
   opts?: RequestInit,
 ): Promise<SafeResponse> {
-  if (!base) return { ok: false, status: 0, data: null, error: configError };
-
-  const method = (opts?.method || 'GET').toUpperCase();
-  const headers = backendHeaders(opts?.headers, method);
+  const service = inferService(defaultService, url);
+  const requiredBase = service === 'core' ? BACKEND : service === 'search' ? SEARCH_BACKEND : STORY_BACKEND;
+  if (!requiredBase) return { ok: false, status: 0, data: null, error: configError };
 
   try {
-    const res = await fetch(serviceUrl(base, url), { ...opts, headers });
+    const res = await fetch(proxyUrl(service, url), { ...opts, cache: opts?.cache || 'no-store' });
     const text = await res.text();
     let data: any = null;
 
@@ -67,25 +75,24 @@ async function safeServiceJSON(
   }
 }
 
-/** Call the core backend safely. `url` may be absolute or a service-relative path. */
+/** Call the core backend through the server-side password proxy. */
 export async function safeJSON(url: string, opts?: RequestInit): Promise<SafeResponse> {
-  return safeServiceJSON(BACKEND, BACKEND_CONFIG_ERROR, url, opts);
+  return safeServiceJSON('core', BACKEND_CONFIG_ERROR, url, opts);
 }
 
-/** Call the search worker safely. `url` may be absolute or a service-relative path. */
+/** Call the search worker through the server-side password proxy. */
 export async function safeSearchJSON(url: string, opts?: RequestInit): Promise<SafeResponse> {
-  return safeServiceJSON(SEARCH_BACKEND, SEARCH_BACKEND_CONFIG_ERROR, url, opts);
+  return safeServiceJSON('search', SEARCH_BACKEND_CONFIG_ERROR, url, opts);
 }
 
-/** Call the story/AI worker safely. `url` may be absolute or a service-relative path. */
+/** Call the story/AI worker through the server-side password proxy. */
 export async function safeStoryJSON(url: string, opts?: RequestInit): Promise<SafeResponse> {
-  return safeServiceJSON(STORY_BACKEND, STORY_BACKEND_CONFIG_ERROR, url, opts);
+  return safeServiceJSON('story', STORY_BACKEND_CONFIG_ERROR, url, opts);
 }
 
 export async function backendFetch(url: string, opts?: RequestInit): Promise<Response> {
-  const method = (opts?.method || 'GET').toUpperCase();
-  const headers = backendHeaders(opts?.headers, method);
-  return fetch(serviceUrl(BACKEND, url), { ...opts, headers });
+  const service = inferService('core', url);
+  return fetch(proxyUrl(service, url), { ...opts, cache: opts?.cache || 'no-store' });
 }
 
 export function isTerminalReady(data: any) {

@@ -1,12 +1,12 @@
-function serverBackendToken() {
-  return (process.env.DFP2_ADMIN_TOKEN || '').trim();
+function serverAdminPassword() {
+  return (process.env.ADMIN_PASSWORD || '').trim();
 }
 
 export function backendServerHeaders(init?: HeadersInit, method = 'GET'): Headers {
   const headers = new Headers(init || {});
-  const token = serverBackendToken();
-  if (token && method.toUpperCase() !== 'GET') {
-    headers.set('X-DFP2-ADMIN-TOKEN', token);
+  const password = serverAdminPassword();
+  if (password && !['GET', 'HEAD', 'OPTIONS'].includes(method.toUpperCase())) {
+    headers.set('X-Admin-Password', password);
   }
   return headers;
 }
@@ -14,5 +14,5 @@ export function backendServerHeaders(init?: HeadersInit, method = 'GET'): Header
 export async function backendServerFetch(url: string, opts?: RequestInit): Promise<Response> {
   const method = (opts?.method || 'GET').toUpperCase();
   const headers = backendServerHeaders(opts?.headers, method);
-  return fetch(url, { ...opts, headers });
+  return fetch(url, { ...opts, headers, cache: opts?.cache || 'no-store' });
 }
