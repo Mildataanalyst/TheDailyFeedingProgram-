@@ -76,7 +76,7 @@ const MODE_SPECS: Record<ModeKey, ModeSpec> = {
     description: 'Uses legal name, referral/public name, acronym, spelling variants, address, pincode and project-parent links. Directories remain evidence only.',
     maxQueries: 3,
     defaultConcurrency: 12,
-    fileHint: 'RUN_03A_enhanced_recovery_part1_10102.csv, then RUN_03B_part2_10102.csv',
+    fileHint: 'RUN_03_NEXT_15000_ENHANCED.csv (up to 20,000 rows supported)',
     sequence: 'Largest search queue',
     tone: 'search',
   },
@@ -172,11 +172,10 @@ function sampleCsv() {
 }
 
 type Props = {
-  poolBusy?: boolean;
-  onSendToLeadPool?: (runId: string) => void;
+  onOpenAvika?: (runId: string, downloadUrl: string, filename: string, label: string) => void;
 };
 
-export default function KarnatakaRecoveryPanel({ poolBusy = false, onSendToLeadPool }: Props) {
+export default function KarnatakaRecoveryPanel({ onOpenAvika }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [mode, setMode] = useState<ModeKey>('known_url_identity');
@@ -193,8 +192,8 @@ export default function KarnatakaRecoveryPanel({ poolBusy = false, onSendToLeadP
   const [preflight, setPreflight] = useState(true);
   const [useFirecrawl, setUseFirecrawl] = useState(false);
   const [firecrawlBudget, setFirecrawlBudget] = useState(5000);
-  const [runAvika, setRunAvika] = useState(false);
   const [rowDeadline, setRowDeadline] = useState(90);
+  const [autoResume, setAutoResume] = useState(true);
   const [capacityBusy, setCapacityBusy] = useState(false);
   const [capacity, setCapacity] = useState<AnyRow | null>(null);
   const [lastContact, setLastContact] = useState<number | null>(null);
@@ -237,7 +236,12 @@ export default function KarnatakaRecoveryPanel({ poolBusy = false, onSendToLeadP
     }
     setStatus(response.data);
     setLastContact(Date.now());
-    if (terminal(response.data) && !live(response.data)) clearPoll();
+    const stage = String(response.data?.stage || '').toLowerCase();
+    const automaticRecoveryPending = Boolean(
+      response.data?.auto_resume_enabled && response.data?.can_resume
+      && !['user_paused', 'pause_requested', 'cancel_requested', 'cancelled_partial_results_saved'].includes(stage)
+    );
+    if (terminal(response.data) && !live(response.data) && !automaticRecoveryPending) clearPoll();
   }, [clearPoll]);
 
   const beginPolling = useCallback((id: string) => {
@@ -278,7 +282,6 @@ export default function KarnatakaRecoveryPanel({ poolBusy = false, onSendToLeadP
     setMode(next);
     setConcurrency(MODE_SPECS[next].defaultConcurrency);
     setUseFirecrawl(next === 'firecrawl_retry');
-    setRunAvika(false);
     setFile(null);
     setError('');
     setMessage('');
@@ -301,6 +304,17 @@ export default function KarnatakaRecoveryPanel({ poolBusy = false, onSendToLeadP
     setMessage(ownershipOk
       ? (funded ? `Strict ownership self-test passed. The Serper account is healthy; safe search concurrency: ${effective}.` : 'Strict ownership self-test passed. The Serper account is unavailable, but zero-query modes can still run.')
       : 'The worker ownership self-test did not pass. The backend will refuse to start a recovery run.');
+  }
+
+  function chooseFile(next: File | null) {
+    if (next && next.size > 100_000_000) {
+      setFile(null);
+      setError('CSV exceeds the 100 MB safety limit. A 15,000-row recovery file is supported.');
+      if (inputRef.current) inputRef.current.value = '';
+      return;
+    }
+    setError('');
+    setFile(next);
   }
 
   async function startRun() {
@@ -327,8 +341,9 @@ export default function KarnatakaRecoveryPanel({ poolBusy = false, onSendToLeadP
       use_firecrawl: String(firecrawlEnabled),
       firecrawl_budget: String(firecrawlEnabled ? Math.max(1, firecrawlBudget) : 0),
       firecrawl_proxy: 'basic',
-      run_avika: String(runAvika),
+      run_avika: 'false',
       row_deadline_seconds: String(Math.max(20, Math.min(240, rowDeadline))),
+      auto_resume: String(autoResume),
     });
     const response = await safeSearchJSON(`/karnataka-recovery/start?${query.toString()}`, { method: 'POST', body: form });
     setBusy(false);
@@ -396,9 +411,9 @@ export default function KarnatakaRecoveryPanel({ poolBusy = false, onSendToLeadP
   return <div id="run-panel-karnataka-recovery" className="karnataka-recovery-panel">
     <div className="karnataka-recovery-head">
       <div>
-        <span className="recovery-mode-kicker">Final source-record recovery system · UI v160</span>
+        <span className="recovery-mode-kicker">Large-batch recovery · auto-resume enabled · UI v163</span>
         <h3>Karnataka Recovery</h3>
-        <p>Start with the known-URL CSV, then run the search queues in order. Every candidate is revalidated under the same ownership rules; historical labels are not trusted, and a name mention alone can never establish an official website.</p>
+        <p>Run up to 20,000 source records in one batch. Every completed row is checkpointed, and interrupted Railway/network/provider runs automatically resume without the browser remaining open.</p>
       </div>
       <div className="karnataka-head-actions">
         <button className="ghost-btn" onClick={() => downloadText('karnataka_recovery_sample.csv', sampleCsv())}>Sample CSV</button>
@@ -434,7 +449,7 @@ export default function KarnatakaRecoveryPanel({ poolBusy = false, onSendToLeadP
         <b>{modeSpec.label}</b>
         <small>Upload: {modeSpec.fileHint}</small>
       </div>
-      <input ref={inputRef} type="file" accept=".csv,text/csv" hidden onChange={event => setFile(event.target.files?.[0] || null)} />
+      <input ref={inputRef} type="file" accept=".csv,text/csv" hidden onChange={event => chooseFile(event.target.files?.[0] || null)} />
       <button className="ghost-btn karnataka-file-button" onClick={() => inputRef.current?.click()}>{file ? file.name : 'Choose prepared CSV'}</button>
       <button className="primary-red small-red" disabled={!canStart} onClick={startRun}>{busy ? 'Starting…' : `Start ${modeSpec.label.replace(/^\d+\.\s*/, '')}`}</button>
     </div>
@@ -444,8 +459,9 @@ export default function KarnatakaRecoveryPanel({ poolBusy = false, onSendToLeadP
       <label><span>Serper account concurrency</span><input type="number" min={1} max={8} value={serperConcurrency} onChange={event => setSerperConcurrency(Math.max(1, Math.min(8, n(event.target.value))))}/><small>Recommended first run: 4. Raise to 6–8 only after observing stable throughput on the first production batch.</small></label>
       <label><span>Per-row deadline</span><input type="number" min={20} max={240} value={rowDeadline} onChange={event => setRowDeadline(Math.max(20, Math.min(240, n(event.target.value))))}/><small>Checkpointed on timeout; work is retained.</small></label>
       <label className="karnataka-check"><input type="checkbox" checked={preflight} onChange={event => setPreflight(event.target.checked)}/><span><b>Preflight the Serper account</b><small>One low-cost query checks that the configured account is funded before bulk work starts.</small></span></label>
+      <label className="karnataka-check"><input type="checkbox" checked={autoResume} onChange={event => setAutoResume(event.target.checked)}/><span><b>Automatically resume checkpoints</b><small>Recommended for overnight runs. Railway restarts, transient provider pauses and unexpected worker interruptions resume automatically; an explicit user pause stays paused.</small></span></label>
       <label className="karnataka-check"><input type="checkbox" checked={firecrawlEnabled} disabled={forcedFirecrawl} onChange={event => setUseFirecrawl(event.target.checked)}/><span><b>Allow selective Firecrawl</b><small>Off by default. Direct HTTP always runs first.</small></span></label>
-      <label className="karnataka-check"><input type="checkbox" checked={runAvika} onChange={event => setRunAvika(event.target.checked)}/><span><b>Run Avika / DFP-fit filter after discovery</b><small>Keep off during website recovery; run DFP-fit only on the final verified-site export.</small></span></label>
+      <div className="karnataka-avika-note"><b>DFP fit is reviewed separately.</b><small>Finish website recovery first, then open the verified-site CSV in Avika Fit Review. Recovery never auto-sends NGOs to shortlisting.</small></div>
       <label className="karnataka-credit-field enabled"><span>Serper run-credit ceiling</span><input type="number" min={0} max={1000000} value={serperCreditBudget} onChange={event => setSerperCreditBudget(Math.max(0, n(event.target.value)))}/><small>Set to 59,000 for the current account. One preflight query is kept as headroom.</small></label>
       <label className={`karnataka-credit-field ${firecrawlEnabled ? 'enabled' : ''}`}><span>Firecrawl run-credit ceiling</span><input type="number" min={1} max={100000} disabled={!firecrawlEnabled} value={firecrawlBudget} onChange={event => setFirecrawlBudget(Math.max(1, n(event.target.value)))}/><small>Optional. Direct HTTP runs first; suggested maximum: 5,000.</small></label>
     </div>
@@ -470,7 +486,7 @@ export default function KarnatakaRecoveryPanel({ poolBusy = false, onSendToLeadP
         <div><span>{status?.mode_label || modeSpec.label}</span><code>{runId}</code></div>
         <div className="karnataka-live-actions">
           {status?.can_pause && <button className="ghost-btn" disabled={controlBusy} onClick={() => control('pause')}>Pause after in-flight rows</button>}
-          {status?.can_resume && <button className="primary-red small-red" disabled={controlBusy} onClick={() => control('resume')}>Resume checkpoints</button>}
+          {status?.can_resume && <button className="primary-red small-red" disabled={controlBusy} onClick={() => control('resume')}>Resume now</button>}
           {status?.can_cancel && <button className="ghost-btn danger" disabled={controlBusy} onClick={() => control('cancel')}>End &amp; save</button>}
           {!live(status) && <button className="ghost-btn" onClick={clearActiveView}>Clear view</button>}
         </div>
@@ -485,9 +501,10 @@ export default function KarnatakaRecoveryPanel({ poolBusy = false, onSendToLeadP
         <div><span>Elapsed</span><b>{formatDuration(elapsed)}</b><small>{lastContact ? `updated ${Math.max(0, Math.floor((Date.now() - lastContact) / 1000))}s ago` : 'waiting for worker'}</small></div>
       </div>
       {status?.message && <div className="karnataka-run-message">{String(status.message)}</div>}
+      {status?.auto_resume_enabled && <div className="karnataka-auto-resume-strip"><b>Automatic checkpoint recovery is on.</b><span>{status?.auto_resume_scheduled ? `Retry scheduled${n(status?.auto_resume_next_in_seconds) ? ` in about ${formatNumber(status.auto_resume_next_in_seconds)}s` : ''}.` : live(status) ? 'The worker is running independently of this browser.' : 'No automatic retry is currently waiting.'}</span><small>Automatic attempts: {formatNumber(status?.auto_resume_attempts)} / {formatNumber(status?.auto_resume_max_attempts || 50)}</small></div>}
       <div className="karnataka-downloads">
         {DOWNLOADS.map(item => statusDownloads[item.kind] ? <a key={item.kind} className="dark-download ready" href={exportUrl(item.kind)}>{item.label}</a> : null)}
-        {statusDownloads.repository && onSendToLeadPool && <button className="dark-download ready" disabled={poolBusy} onClick={() => onSendToLeadPool(runId)}>Send verified output to Lead Pool</button>}
+        {(statusDownloads.avika_input || statusDownloads.repository) && onOpenAvika && <button className="primary-red small-red" onClick={() => onOpenAvika(runId, exportUrl(statusDownloads.avika_input ? 'avika_input' : 'repository'), statusDownloads.avika_input ? 'dfp2_recovered_websites_for_avika_filter.csv' : 'karnataka_recovery_verified.csv', `${modeSpec.label} · ${runId.slice(-10)}`)}>Open in Avika Fit Review</button>}
       </div>
     </div>}
 
@@ -506,6 +523,6 @@ export default function KarnatakaRecoveryPanel({ poolBusy = false, onSendToLeadP
 
     {message && <div className="pool-message">{message}</div>}
     {error && <div className="error-box">{error}</div>}
-    <small className="karnataka-safety-note">Only one Karnataka Recovery batch runs at a time. The worker runs a deterministic ownership guard before accepting any upload, uses the single SERPER_API_KEY account, checkpoints each completed source record, and continues independently if this browser tab closes.</small>
+    <small className="karnataka-safety-note">Only one Karnataka Recovery batch runs at a time. This release accepts CSVs up to 100 MB and 20,000 source records, checkpoints every completed record, and automatically resumes eligible interrupted runs even when this browser is closed.</small>
   </div>;
 }

@@ -50,16 +50,23 @@ async function proxy(request: NextRequest, context: RouteContext): Promise<Respo
   const segments = context.params.path || [];
   const upstreamUrl = `${base}/${segments.map(encodeURIComponent).join('/')}${request.nextUrl.search}`;
   const method = request.method.toUpperCase();
-  const body = ['GET', 'HEAD', 'OPTIONS'].includes(method) ? undefined : await request.arrayBuffer();
+  const hasBody = !['GET', 'HEAD', 'OPTIONS'].includes(method);
+  const init: RequestInit & { duplex?: 'half' } = {
+    method,
+    headers: copyRequestHeaders(request),
+    redirect: 'follow',
+    cache: 'no-store',
+  };
+  if (hasBody && request.body) {
+    // Stream large multipart CSV uploads directly to the worker. Buffering the
+    // entire request in the Next.js process made 10k–15k runs unnecessarily
+    // memory-heavy and exposed them to proxy interruptions.
+    init.body = request.body as any;
+    init.duplex = 'half';
+  }
 
   try {
-    const upstream = await fetch(upstreamUrl, {
-      method,
-      headers: copyRequestHeaders(request),
-      body,
-      redirect: 'follow',
-      cache: 'no-store',
-    });
+    const upstream = await fetch(upstreamUrl, init);
     const responseHeaders = new Headers();
     for (const name of ['content-type', 'content-disposition', 'cache-control', 'etag', 'last-modified', 'accept-ranges']) {
       const value = upstream.headers.get(name);

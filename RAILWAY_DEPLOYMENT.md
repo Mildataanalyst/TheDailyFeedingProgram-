@@ -1,6 +1,8 @@
-# Frontend v160 — Railway deployment
+# Frontend v162 — Railway deployment
 
-Deploy after the core-backend and search-worker domains are live.
+Deploy this repository to the existing frontend Railway service.
+
+## Variables
 
 ```text
 NEXT_PUBLIC_BACKEND_URL=https://<core-backend>.up.railway.app
@@ -9,19 +11,24 @@ NEXT_PUBLIC_STORY_BACKEND_URL=https://<search-worker>.up.railway.app
 BACKEND_URL=https://<core-backend>.up.railway.app
 SEARCH_BACKEND_URL=https://<search-worker>.up.railway.app
 STORY_BACKEND_URL=https://<search-worker>.up.railway.app
-ADMIN_PASSWORD=<same existing password as both Python services>
+ADMIN_PASSWORD=<existing password>
 NIXPACKS_NODE_VERSION=22
 ```
 
-`ADMIN_PASSWORD` is server-only. Do not create `NEXT_PUBLIC_ADMIN_PASSWORD`, `NEXT_PUBLIC_DFP2_ADMIN_TOKEN` or any other public credential.
+`ADMIN_PASSWORD` is server-only and is used only by unrelated protected proxy actions. Avika Fit Review, Shortlisting Pool curation, PM dispatch, Karnataka Recovery and NGO-ID backfill do not show a password prompt.
 
-Build configuration:
+## Build
+
+Nixpacks installs dependencies. The configured build command is only:
 
 ```text
-Node: 22.x
-Install: automatic Nixpacks npm ci
-Build: npm run build
-Start: npm run start -- -p $PORT
+npm run build
 ```
 
-After deployment, set the final frontend domain as `FRONTEND_ORIGIN` on both Python services.
+Start command:
+
+```text
+npm run start -- -p $PORT
+```
+
+After deployment, hard-refresh and verify the Karnataka Recovery heading shows `UI v162`.

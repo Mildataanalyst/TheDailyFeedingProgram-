@@ -5,11 +5,13 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import AdminUndoRedo from '@/components/AdminUndoRedo';
 import KarnatakaRecoveryPanel from '@/components/KarnatakaRecoveryPanel';
+import AvikaFilterWorkspace, { type AvikaSeed } from '@/components/AvikaFilterWorkspace';
+import ShortlistingPool from '@/components/ShortlistingPool';
 import { safeExternalUrl } from '@/lib/urlSafety';
 import { BACKEND, SEARCH_BACKEND, STORY_BACKEND, BACKEND_CONFIG_ERROR, SEARCH_BACKEND_CONFIG_ERROR, STORY_BACKEND_CONFIG_ERROR, safeJSON, safeSearchJSON, safeStoryJSON, isFailureStatus, isTerminalReady } from '@/lib/backendClient';
 
 type AnyRow = Record<string, any>;
-type View = 'source' | 'internet' | 'referrals' | 'leadpool';
+type View = 'source' | 'internet' | 'referrals' | 'avika' | 'leadpool';
 type Tab = 'general' | 'bulk';
 type RunModule = 'discovery' | 'repository' | 'recovery' | 'presence';
 type ActiveRun = {
@@ -144,6 +146,9 @@ function discoveryDownload(runId: string, kind: string) { return STORY_BACKEND ?
 function repositoryDownload(runId: string, kind: string) { return SEARCH_BACKEND ? `${SEARCH_BACKEND}/repository/export/${encodeURIComponent(runId)}/${kind}` : '#'; }
 function recheckDownload(runId: string, kind: string) { return SEARCH_BACKEND ? `${SEARCH_BACKEND}/repository/recheck/export/${encodeURIComponent(runId)}/${kind}` : '#'; }
 function presenceDownload(runId: string, kind: string) { return SEARCH_BACKEND ? `${SEARCH_BACKEND}/repository/presence/export/${encodeURIComponent(runId)}/${kind}` : '#'; }
+function proxyDiscoveryDownload(runId: string, kind: string) { return `/api/dfp-proxy/story/discovery/export/${encodeURIComponent(runId)}/${kind}`; }
+function proxyRepositoryDownload(runId: string, kind: string) { return `/api/dfp-proxy/search/repository/export/${encodeURIComponent(runId)}/${kind}`; }
+function proxyRecheckDownload(runId: string, kind: string) { return `/api/dfp-proxy/search/repository/recheck/export/${encodeURIComponent(runId)}/${kind}`; }
 function archiveDownload(row: AnyRow, kind: string) { const id=String(row?.run_id||''); const moduleName=String(row?.module||''); return moduleName === 'ngo_presence_check' ? presenceDownload(id, kind) : moduleName === 'no_website_recheck' ? recheckDownload(id, kind) : repositoryDownload(id, kind); }
 function statusText(data: any) { return String(data?.run_status || data?.process_state || data?.stage || '').toLowerCase(); }
 function jobModule(job: AnyRow): RunModule | null {
@@ -152,12 +157,12 @@ function jobModule(job: AnyRow): RunModule | null {
   if(id.startsWith('recheck_')||kind==='no_website_recheck')return 'recovery';
   if(id.startsWith('presence_')||kind==='ngo_presence_check')return 'presence';
   if(id.startsWith('discovery')||id.startsWith('story')||kind==='discovery'||kind==='story')return 'discovery';
-  if(id.startsWith('run_')||kind==='repository'||kind==='dedupe_recheck')return 'repository';
+  if(id.startsWith('run_')||kind==='repository'||kind==='dedupe_recheck'||kind==='avika_filter')return 'repository';
   return null;
 }
 function recoveryStrategyLabel(value: unknown){ const strategy=String(value||'').toLowerCase(); return strategy==='fast'?'Fast Recovery':strategy==='deep'?'Deep Review':strategy==='firecrawl'?'Firecrawl Review':'Smart Recovery'; }
-function runLabel(module: RunModule, status?:AnyRow){ return module==='recovery'?recoveryStrategyLabel(status?.strategy):module==='presence'?'NGO Presence Check':module==='discovery'?'General Discovery':'Bulk Discovery'; }
-function runLocation(module: RunModule, status?:AnyRow){ return module==='recovery'?`NGO Discovery › Advanced › ${recoveryStrategyLabel(status?.strategy)}`:module==='presence'?'NGO Discovery › Advanced › Presence Check':module==='discovery'?'NGO Discovery › General Discovery':'NGO Discovery › Bulk Discovery'; }
+function runLabel(module: RunModule, status?:AnyRow){ const avika=String(status?.run_type||status?.module||'').toLowerCase()==='avika_filter'; return avika?'Avika Fit Review':module==='recovery'?recoveryStrategyLabel(status?.strategy):module==='presence'?'NGO Presence Check':module==='discovery'?'General Discovery':'Bulk Discovery'; }
+function runLocation(module: RunModule, status?:AnyRow){ const avika=String(status?.run_type||status?.module||'').toLowerCase()==='avika_filter'; return avika?'NGO Discovery › Avika Fit Review':module==='recovery'?`NGO Discovery › Advanced › ${recoveryStrategyLabel(status?.strategy)}`:module==='presence'?'NGO Discovery › Advanced › Presence Check':module==='discovery'?'NGO Discovery › General Discovery':'NGO Discovery › Bulk Discovery'; }
 function activeWord(value: unknown){ return ['queued','starting','running','resuming','pause_requested','stop_requested','cancel_requested','cancelling','searching','fetching','reading_articles','ai_batch_running','resume_started'].includes(String(value||'').toLowerCase()); }
 function pausedWord(value: unknown){ return ['paused','pause_requested'].includes(String(value||'').toLowerCase()); }
 function terminalWord(value: unknown){ return ['complete','completed','done','finished','success','succeeded','partial','error','failed','fatal_error','cancelled','canceled','cancelled_partial','stopped','stopped_partial','results_ready','partial_results_ready'].includes(String(value||'').toLowerCase()); }
@@ -275,6 +280,7 @@ export default function NgoDiscoveryPage(){
   const [budget,setBudget]=useState(200);
   const [pathways,setPathways]=useState<string[]>(defaultPathways);
   const [advancedOpen,setAdvancedOpen]=useState(false);
+  const [avikaSeed,setAvikaSeed]=useState<AvikaSeed|null>(null);
 
   const [discRunId,setDiscRunId]=useState('');
   const [discPolling,setDiscPolling]=useState(false);
@@ -352,6 +358,26 @@ export default function NgoDiscoveryPage(){
   const shortlistImportRef=useRef<HTMLInputElement|null>(null);
   const [rankingTarget,setRankingTarget]=useState('everyone');
   const [rankingPassword,setRankingPassword]=useState('');
+
+  function openAvikaFromUrl(url:string, filename:string, label:string){
+    if(!url||url==='#'){ setPoolMessage('This run does not have a CSV ready for Avika yet.'); return; }
+    setAvikaSeed({key:`url:${url}:${Date.now()}`,url,filename,label});
+    setView('avika');
+  }
+  function openAvikaFromFile(file:File,label:string){
+    setAvikaSeed({key:`file:${file.name}:${file.size}:${Date.now()}`,file,filename:file.name,label});
+    setView('avika');
+  }
+  function openAvikaRun(runId:string,label:string){
+    setAvikaSeed({key:`run:${runId}:${Date.now()}`,runId,label});
+    setView('avika');
+  }
+  function selectedReferralFile(){
+    const chosen=referralRows.filter((_,index)=>referralSelected[index]!==false);
+    if(!chosen.length){ setReferralError('Select at least one referral.'); return null; }
+    const csv=referralRowsToCsv(chosen,state);
+    return new File([csv],`referrals_for_avika_${Date.now()}.csv`,{type:'text/csv'});
+  }
 
   function onModeChange(modeKey:string){ setRunMode(modeKey); const m=runModes.find(x=>x.key===modeKey); if(m && modeKey!=='custom') setBudget(m.budget); }
   function togglePathway(key:string){ setPathways(prev=>prev.includes(key)?prev.filter(x=>x!==key):[...prev,key]); }
@@ -754,6 +780,8 @@ export default function NgoDiscoveryPage(){
 
 
   function goToRun(run:ActiveRun){
+    const isAvika=String(run.status?.run_type||run.job?.run_type||run.status?.module||run.job?.module||'').toLowerCase()==='avika_filter';
+    if(isAvika){openAvikaRun(run.run_id,`Avika Fit Review · ${run.run_id.slice(-10)}`);setRunsOpen(false);return;}
     setView('internet');
     if(run.module==='discovery'){setTab('general');setDiscRunId(run.run_id);setDiscStatus(run.status);if(runIsLive(run))setDiscPolling(true);}
     if(run.module==='repository'){setTab('bulk');setRepoRunId(run.run_id);setRepoStatus(run.status);if(runIsLive(run))setRepoPolling(true);}
@@ -991,7 +1019,7 @@ export default function NgoDiscoveryPage(){
           {!discArchiveLoaded&&<div className="muted-empty">Loading discovery runs…</div>}
           {discArchiveError&&<div className="muted-empty">Could not load discovery runs: {discArchiveError}</div>}
           {discArchiveLoaded&&!discArchiveError&&discArchive.length===0&&<div className="muted-empty">No discovery runs found yet.</div>}
-          {discArchive.slice(0,100).map((raw,i)=>{const r=isRecord(raw)?raw:{}; const id=displayScalar(r.run_id,''); const dl=isRecord(r.downloads)?r.downloads:{}; const legacy=r.module==='legacy_story'; return <div className="archive-row" key={`${id||'discovery'}-${i}`}><div><b>{sentRunIds[id]&&<span className="sent-star" title="Sent to Lead Pool">★</span>}{legacy?'Legacy Story Discovery':'General Discovery'} — {displayScalar(r.state,'Statewide')}</b><small>{displayScalar(r.updated_at)} · {displayScalar(r.run_mode,'run')} · {displayScalar(r.processed,'0')}/{displayScalar(r.total,'0')} queries · surfaced {displayScalar(r.stories_found,'0')}</small></div><div className="archive-links">{!!dl.stories&&id&&<a href={discoveryDownload(id,'leads')}>{legacy?'Output':'Clean output'}</a>}<button disabled={poolBusy||!id} onClick={()=>id&&sendRunToLeadPool(id,legacy?'legacy_story':'discovery','Archive Import')}>Send to Lead Pool</button>{!!dl.audit&&id&&<a href={discoveryDownload(id,'audit')}>Audit</a>}{!!dl.rejected&&id&&<a href={discoveryDownload(id,'rejected')}>Rejected</a>}{!!dl.candidates&&id&&<a href={discoveryDownload(id,'candidates')}>Reviewed</a>}{!!dl.raw_candidates&&id&&<a href={discoveryDownload(id,'raw_candidates')}>Raw</a>}{!!dl.queries&&id&&<a href={discoveryDownload(id,'queries')}>Queries</a>}{!!dl.errors&&id&&<a href={discoveryDownload(id,'errors')}>Errors</a>}{(r.stage==='paused'||r.run_status==='paused')&&id&&<button onClick={()=>resumeDiscovery(id)}>Resume</button>}<button className="archive-del" title="Delete run to free disk" disabled={!id} onClick={()=>id&&deleteRun(id)}>Delete</button></div></div>;})}
+          {discArchive.slice(0,100).map((raw,i)=>{const r=isRecord(raw)?raw:{}; const id=displayScalar(r.run_id,''); const dl=isRecord(r.downloads)?r.downloads:{}; const legacy=r.module==='legacy_story'; return <div className="archive-row" key={`${id||'discovery'}-${i}`}><div><b>{sentRunIds[id]&&<span className="sent-star" title="Sent to Lead Pool">★</span>}{legacy?'Legacy Story Discovery':'General Discovery'} — {displayScalar(r.state,'Statewide')}</b><small>{displayScalar(r.updated_at)} · {displayScalar(r.run_mode,'run')} · {displayScalar(r.processed,'0')}/{displayScalar(r.total,'0')} queries · surfaced {displayScalar(r.stories_found,'0')}</small></div><div className="archive-links">{!!dl.stories&&id&&<a href={discoveryDownload(id,'leads')}>{legacy?'Output':'Clean output'}</a>}{!!dl.stories&&id&&<button onClick={()=>openAvikaFromUrl(proxyDiscoveryDownload(id,'leads'),`discovery_${id}_for_avika.csv`,`${legacy?'Legacy Story Discovery':'General Discovery'} · ${id.slice(-10)}`)}>Open in Avika</button>}{!!dl.audit&&id&&<a href={discoveryDownload(id,'audit')}>Audit</a>}{!!dl.rejected&&id&&<a href={discoveryDownload(id,'rejected')}>Rejected</a>}{!!dl.candidates&&id&&<a href={discoveryDownload(id,'candidates')}>Reviewed</a>}{!!dl.raw_candidates&&id&&<a href={discoveryDownload(id,'raw_candidates')}>Raw</a>}{!!dl.queries&&id&&<a href={discoveryDownload(id,'queries')}>Queries</a>}{!!dl.errors&&id&&<a href={discoveryDownload(id,'errors')}>Errors</a>}{(r.stage==='paused'||r.run_status==='paused')&&id&&<button onClick={()=>resumeDiscovery(id)}>Resume</button>}<button className="archive-del" title="Delete run to free disk" disabled={!id} onClick={()=>id&&deleteRun(id)}>Delete</button></div></div>;})}
         </div>
       </ArchiveListBoundary>
       <div className="history-subtitle">Bulk / Recovery</div>
@@ -1008,13 +1036,13 @@ export default function NgoDiscoveryPage(){
             const isPresence=moduleName==='ngo_presence_check';
             const isRecovery=moduleName==='no_website_recheck';
             const archivedDeepCount=Math.max(0,Number(r.deep_review_count||0)||0);
-            const title=isPresence?'NGO Presence Check':isRecovery?recoveryStrategyLabel(r.strategy):(r.run_type==='dedupe_recheck'?'Deduped NGO re-check':'Bulk Discovery');
+            const title=String(r.run_type||r.module||'').toLowerCase()==='avika_filter'?'Avika Fit Review':isPresence?'NGO Presence Check':isRecovery?recoveryStrategyLabel(r.strategy):(r.run_type==='dedupe_recheck'?'Deduped NGO re-check':'Bulk Discovery');
             return <div className="archive-row" key={`${id||'repository'}-${i}`}>
               <div><b>{sentRunIds[id]&&<span className="sent-star" title="Sent to Lead Pool">★</span>}{title}</b><small>{displayScalar(r.updated_at)} · {id||'unknown run'} · {displayScalar(r.stage||r.run_status)} · rows {displayScalar(r.results_count||r.repository_count,'0')} · audit {displayScalar(r.audit_count,'0')}{isRecovery&&archivedDeepCount>0?` · deep review ${archivedDeepCount}`:''}</small></div>
               <div className="archive-links">
                 {!!dl.repository&&id&&<a href={archiveDownload(r,'repository')}>Shortlist</a>}
                 {!!dl.results&&id&&<a href={archiveDownload(r,'results')}>{isPresence?'Presence CSV':isRecovery?(String(r.strategy||'').toLowerCase()==='deep'?'Deep Results':'Fast Results'):'Results'}</a>}
-                {!isPresence&&<button disabled={poolBusy||!id} onClick={()=>id&&sendRunToLeadPool(id,isRecovery?'no_website_recheck':'repository','Archive Import')}>Send to Lead Pool</button>}
+                {!isPresence&&id&&(dl.avika_input||dl.repository)&&<button onClick={()=>openAvikaFromUrl(isRecovery?proxyRecheckDownload(id,dl.avika_input?'avika_input':'repository'):proxyRepositoryDownload(id,'repository'),`run_${id}_for_avika.csv`,`${title} · ${id.slice(-10)}`)}>Open in Avika</button>}
                 {isRecovery&&String(r.strategy||'').toLowerCase()==='fast'&&archivedDeepCount>0&&id&&<button disabled={deepReviewBusy||recoveryIsLive||!deepReviewReady(r)} title={!deepReviewReady(r)?'Finish or end the Fast Recovery pass first':recoveryIsLive?'Wait for the active recovery run to finish':''} onClick={()=>startDeepReview(id)}>Send to Deep Review ({archivedDeepCount})</button>}
                 {isRecovery&&String(r.strategy||'').toLowerCase()==='fast'&&archivedDeepCount>0&&!!dl.deep_review_input&&id&&<a href={archiveDownload(r,'deep_review_input')}>Deep queue</a>}
                 {!!dl.summary&&id&&<a href={archiveDownload(r,'summary')}>Summary</a>}
@@ -1082,10 +1110,11 @@ export default function NgoDiscoveryPage(){
           </select>
         </label>
       </section>
-      <section className="source-choice-grid three-choice">
-        <button className="source-choice-card" onClick={()=>setView('internet')}><span>01</span><b>Internet Leads</b><small>General Discovery, Bulk Discovery, History</small></button>
-        <button className="source-choice-card" onClick={()=>setView('referrals')}><span>02</span><b>Referrals</b><small>Upload referral CSV, enrich, comment, save selected</small></button>
-        <button className="source-choice-card leadpool-entry" onClick={()=>setView('leadpool')}><span>03</span><b>Go to Lead Pool</b><small>Approve leads, follow-ups, and send approved leads to ranking</small></button>
+      <section className="source-choice-grid workflow-choice-grid">
+        <button className="source-choice-card" onClick={()=>setView('internet')}><span>01</span><b>Discover & verify websites</b><small>General discovery, bulk discovery, Karnataka Recovery, and saved run history</small></button>
+        <button className="source-choice-card" onClick={()=>setView('referrals')}><span>02</span><b>Referrals</b><small>Upload or enrich referred NGOs, then move the selected CSV into Avika review</small></button>
+        <button className="source-choice-card avika-entry" onClick={()=>setView('avika')}><span>03</span><b>Avika Fit Review</b><small>Upload verified websites, run low-cost Haiku fit classification, and select what moves forward</small></button>
+        <button className="source-choice-card leadpool-entry" onClick={()=>setView('leadpool')}><span>04</span><b>Shortlisting Pool</b><small>Open source batches, bulk-select NGOs, approve them, and assign them to PMs</small></button>
       </section>
     </>}
 
@@ -1106,7 +1135,7 @@ export default function NgoDiscoveryPage(){
       </section>
 
       {advancedOpen&&<section className="advanced-shell"><div className="advanced-head"><b>Advanced settings</b><button className="quiet-btn" onClick={()=>setHistoryOpen(!historyOpen)}>{historyOpen?'Hide History':'History'}</button></div>
-        <KarnatakaRecoveryPanel poolBusy={poolBusy} onSendToLeadPool={(id)=>sendRunToLeadPool(id,'karnataka_recovery','Karnataka Recovery')} />
+        <KarnatakaRecoveryPanel onOpenAvika={(id,url,filename,label)=>openAvikaFromUrl(url,filename,label)} />
         <div className="legacy-recovery-divider"><span>Legacy recovery tools</span><small>Retained for old Fast / Deep run compatibility. Use Karnataka Recovery for the prepared source-record queues.</small></div>
         <div id="run-panel-recovery" className="recovery-panel recovery-workspace">
           <div className="recovery-workspace-head"><div><b>Website Recovery</b><span className="advanced-help">Choose Fast or Deep before uploading. Each run is independent, checkpointed, pausable, resumable and immediately downloadable.</span></div>{recoveryRunId&&<span className="tag">Active view: {recoveryStrategyName}</span>}</div>
@@ -1136,9 +1165,9 @@ export default function NgoDiscoveryPage(){
             </div>
             {recoveryProviderPaused&&<div className="provider-pause-alert"><b>{recoveryPausedProvider} credits/key need attention</b><span>{recoveryStatus?.message||'The run paused before any further provider work.'}</span><small>{recoveryStatus?.processed||0} completed rows are checkpointed. {recoveryStatus?.remaining??Math.max(0,(recoveryStatus?.total||0)-(recoveryStatus?.processed||0))} rows remain pending.{recoveryPausedKey?` Affected key: ${recoveryPausedKey}.`:''}</small></div>}
             <div className="recovery-downloads">
-              {recoveryStatus?.downloads?.repository&&<a className="dark-download ready" href={recheckDownload(recoveryRunId,'repository')}>Download Avika-filtered CSV</a>}
+              {recoveryStatus?.downloads?.repository&&<a className="dark-download ready" href={recheckDownload(recoveryRunId,'repository')}>Download recovered websites CSV</a>}
               {(recoveryStatus?.partial_outputs_available||recoveryStatus?.downloads?.results)&&<a className="dark-download ready" href={recheckDownload(recoveryRunId,'results')}>Download raw recovery</a>}
-              {recoveryStatus?.downloads?.repository&&<button className="dark-download ready" disabled={poolBusy} onClick={()=>sendRunToLeadPool(recoveryRunId,'no_website_recheck',recoveryStrategyName)}>Send filtered results to Lead Pool</button>}
+              {recoveryStatus?.downloads?.repository&&<button className="primary-red small-red" onClick={()=>openAvikaFromUrl(proxyRecheckDownload(recoveryRunId,recoveryStatus?.downloads?.avika_input?'avika_input':'repository'),`recovery_${recoveryRunId}_for_avika.csv`,`${recoveryStrategyName} · ${recoveryRunId.slice(-10)}`)}>Review recovered websites in Avika</button>}
               {recoveryStrategy==='fast'&&deepReviewCount>0&&recoveryDeepReviewReady&&<button className="primary-red small-red" disabled={deepReviewBusy||recoveryIsLive} onClick={()=>startDeepReview(recoveryRunId)}>{deepReviewBusy?'Starting Deep Review…':`Send eligible to Deep Review (${deepReviewCount})`}</button>}
               {recoveryStrategy==='fast'&&deepReviewCount>0&&recoveryStatus?.downloads?.deep_review_input&&<a className="dark-download ready" href={recheckDownload(recoveryRunId,'deep_review_input')}>Eligible Deep CSV</a>}
               {recoveryStatus?.downloads?.audit&&<a className="dark-download ready" href={recheckDownload(recoveryRunId,'audit')}>Audit</a>}
@@ -1148,7 +1177,7 @@ export default function NgoDiscoveryPage(){
             </div>
             {recoveryStatus&&<small className="recovery-stat">{recoveryStatus.run_status||recoveryStatus.stage} · {recoveryStatus.processed||0}/{recoveryStatus.total||0} done · {recoveryStatus.remaining??Math.max(0,(recoveryStatus.total||0)-(recoveryStatus.processed||0))} left{recoveryProgress!=null?` · ${recoveryProgress.toFixed(1)}%`:''}</small>}
             {recoveryStatus&&<small className="recovery-stat">Active elapsed: {formatDuration(recoveryActiveElapsed)}{recoveryRate!=null&&recoveryRate>0?` · ${recoveryRate.toFixed(2)} rows/min`:''}{recoveryEtaSeconds!=null?` · about ${formatDuration(recoveryEtaSeconds)} remaining`:''}</small>}
-            {recoveryStatus?.downloads?.repository&&<small className="recovery-stat">Avika-filtered repository: {Number(recoveryStatus?.filtered_repository_rows??recoveryStatus?.avika_filter?.repository_rows??0)} reviewable lead(s). Only this CSV is sent to the Lead Pool.</small>}
+            {recoveryStatus?.downloads?.repository&&<small className="recovery-stat">Recovered websites are kept separate until you run Avika Fit Review and explicitly select the NGOs that should enter the Shortlisting Pool.</small>}
             {recoveryStatus?.current_item_started_at_epoch&&<small className="recovery-stat">Current NGO: {recoveryStatus.current_item||'Processing'} · {formatDuration(recoveryStatus.current_item_elapsed_sec)}{recoveryStatus.row_near_deadline&&recoveryStatus.row_deadline_remaining_sec!=null?` · watchdog skips in ≤${Math.ceil(Number(recoveryStatus.row_deadline_remaining_sec))}s`:''}</small>}
             {recoveryStrategy==='fast'&&deepReviewCount>0&&<small className="recovery-stat">{deepReviewCount} NGO{deepReviewCount===1?'':'s'} set aside for optional Deep Review. This does not delay or replace the Fast results.</small>}
             {Number(recoveryStatus?.row_timeouts||0)>0&&<small className="recovery-stat">{recoveryStatus.row_timeouts} slow NGO{Number(recoveryStatus.row_timeouts)===1?'':'s'} safely checkpointed for review.</small>}
@@ -1166,8 +1195,8 @@ export default function NgoDiscoveryPage(){
 
       {(discStatus||discPolling)&&tab==='general'&&<section id="run-panel-discovery" className="status-card"><div className="status-dot"/><div><b>{discStatus?.stage||(discPolling?'Starting…':'Waiting')}</b><p>{currentDisc}</p></div><div className="status-grid"><StatBox label="State" value={state}/><StatBox label="Queries used" value={discStatus?.processed??0}/><StatBox label="Budget" value={discStatus?.total??budget}/><StatBox label="Sources" value={discStatus?.links_found??'—'}/><StatBox label="Organisations" value={discStatus?.stories_found??discRows.length}/></div></section>}
       {(repoStatus||repoPolling)&&tab==='bulk'&&<section id="run-panel-repository" className="status-card"><div className="status-dot"/><div><b>{repoStatus?.stage||(repoPolling?'Starting…':'Waiting')}</b><p>{currentRepo}</p></div><div className="status-grid"><StatBox label="Mode" value="bulk"/><StatBox label="Processed" value={repoStatus?.processed??0}/><StatBox label="Total" value={repoStatus?.total??'—'}/><StatBox label="Ready for AI" value={repoStatus?.ready_for_ai??'—'}/><StatBox label="Errors" value={repoStatus?.errors??'—'}/></div></section>}
-      {tab==='general'&&discRunId&&<div className="download-row"><DownloadButton ready={!!discDownloads.stories||!!discDownloads.story_csv} href={discoveryDownload(discRunId,'leads')}>Clean output CSV</DownloadButton><button className="dark-download ready" disabled={poolBusy} onClick={()=>sendRunToLeadPool(discRunId,'discovery','Internet Discovery')}>Send to Lead Pool</button><DownloadButton ready={!!discDownloads.audit} href={discoveryDownload(discRunId,'audit')}>Audit</DownloadButton><DownloadButton ready={!!discDownloads.rejected} href={discoveryDownload(discRunId,'rejected')}>Rejected</DownloadButton><DownloadButton ready={!!discDownloads.queries} href={discoveryDownload(discRunId,'queries')}>Query plan</DownloadButton></div>}
-      {tab==='bulk'&&repoRunId&&<div className="download-row"><DownloadButton ready={!!repoDownloads.repository} href={repositoryDownload(repoRunId,'repository')}>Verified CSV</DownloadButton><button className="dark-download ready" disabled={poolBusy} onClick={()=>sendRunToLeadPool(repoRunId,'repository','Bulk Discovery')}>Send to Lead Pool</button><DownloadButton ready={!!repoDownloads.audit} href={repositoryDownload(repoRunId,'audit')}>Audit</DownloadButton><DownloadButton ready={!!repoDownloads.rejected} href={repositoryDownload(repoRunId,'rejected')}>Rejected</DownloadButton><DownloadButton ready={!!repoDownloads.errors} href={repositoryDownload(repoRunId,'errors')}>Errors</DownloadButton></div>}
+      {tab==='general'&&discRunId&&<div className="download-row"><DownloadButton ready={!!discDownloads.stories||!!discDownloads.story_csv} href={discoveryDownload(discRunId,'leads')}>Clean output CSV</DownloadButton><button className="primary-red small-red" onClick={()=>openAvikaFromUrl(proxyDiscoveryDownload(discRunId,'leads'),`discovery_${discRunId}_for_avika.csv`,`Internet Discovery · ${discRunId.slice(-10)}`)}>Review in Avika</button><DownloadButton ready={!!discDownloads.audit} href={discoveryDownload(discRunId,'audit')}>Audit</DownloadButton><DownloadButton ready={!!discDownloads.rejected} href={discoveryDownload(discRunId,'rejected')}>Rejected</DownloadButton><DownloadButton ready={!!discDownloads.queries} href={discoveryDownload(discRunId,'queries')}>Query plan</DownloadButton></div>}
+      {tab==='bulk'&&repoRunId&&<div className="download-row"><DownloadButton ready={!!repoDownloads.repository} href={repositoryDownload(repoRunId,'repository')}>Verified CSV</DownloadButton><button className="primary-red small-red" onClick={()=>openAvikaFromUrl(proxyRepositoryDownload(repoRunId,'repository'),`bulk_${repoRunId}_for_avika.csv`,`Bulk Discovery · ${repoRunId.slice(-10)}`)}>Review in Avika</button><DownloadButton ready={!!repoDownloads.audit} href={repositoryDownload(repoRunId,'audit')}>Audit</DownloadButton><DownloadButton ready={!!repoDownloads.rejected} href={repositoryDownload(repoRunId,'rejected')}>Rejected</DownloadButton><DownloadButton ready={!!repoDownloads.errors} href={repositoryDownload(repoRunId,'errors')}>Errors</DownloadButton></div>}
       {tab==='general'&&!!discRows.length&&<section className="table-card"><div className="table-title"><b>General Discovery output</b><span>{discRows.length} surfaced leads</span></div><div className="scroll-table"><table><thead><tr><th>Organisation</th><th>Source</th><th>Location</th><th>Pathway</th><th>Why it belongs</th><th>Status</th><th>Confidence</th></tr></thead><tbody>{discRows.slice(0,120).map((r,i)=><DiscoveryRow row={r} key={i}/>)}</tbody></table></div></section>}
       {tab==='bulk'&&!!repoRows.length&&<section className="table-card"><div className="table-title"><b>Bulk Discovery output</b><span>{repoRows.length} rows</span></div><div className="scroll-table"><table><thead><tr><th>Input / NGO</th><th>Website</th><th>Location</th><th>Confidence</th><th>Match</th><th>Note</th></tr></thead><tbody>{repoRows.slice(0,80).map((r,i)=><VerifyRow row={r} key={i}/>)}</tbody></table></div></section>}
     </>}
@@ -1177,14 +1206,19 @@ export default function NgoDiscoveryPage(){
       <section className="discover-card referral-card">
         <div className="form-card minimal-upload"><label>Upload Referral CSV</label><div className="upload-box" onClick={()=>referralRef.current?.click()}><strong>{referralFile?referralFile.name:'Upload Referral CSV'}</strong><span>Required: ngo_name, contact_number, referred_by</span><small>Optional: district, website, comments</small></div><input ref={referralRef} type="file" accept=".csv" hidden onChange={e=>{const file=e.target.files?.[0]; if(file)handleReferralFile(file);}}/><button className="sample-btn" onClick={()=>downloadText('referral_sample.csv','ngo_name,contact_number,referred_by,district,website,comments\nExample NGO,9876543210,Avika,Bengaluru,,Spoken to founder\n')}>Sample Human Leads CSV</button></div>
         {referralError&&<div className="error-box">{referralError}</div>}
-        {referralRows.length>0&&<><div className="referral-actions"><button className="primary-red" disabled={poolBusy} onClick={saveReferrals}>Save selected</button><button className="ghost-btn" disabled={referralSearching} onClick={searchReferralWebsites}>{referralSearching?'Starting…':'Run enrichment'}</button><button className="dark-download ready" onClick={()=>downloadText('referral_clean_preview.csv', referralRowsToCsv(referralRows, state))}>Export clean CSV</button></div>{referralMessage&&<div className="pool-message">{referralMessage}</div>}<div className="scroll-table referral-preview-table"><table><thead><tr><th>Send</th><th>NGO</th><th>District</th><th>Website</th><th>Contact</th><th>Referred by</th><th>Comment</th><th>Status</th></tr></thead><tbody>{referralRows.map((r,i)=><tr key={i}><td><input type="checkbox" checked={referralSelected[i] !== false} onChange={e=>setReferralSelected(old=>({...old,[i]:e.target.checked}))}/></td><td>{rowName(r)}</td><td>{rowLocation(r)||'—'}</td><td><ExternalLink value={rowWebsite(r)}>open</ExternalLink></td><td>{rowContact(r)||'—'}</td><td>{rowReferredBy(r)||'—'}</td><td><input className="mini-comment-input" value={String(rowNote(r)||'')} onChange={e=>updateReferralRow(i,{comments:e.target.value,notes:e.target.value})} placeholder="Add context"/></td><td><span className="tag">{rowStatus(r)||'preview'}</span></td></tr>)}</tbody></table></div></>}
+        {referralRows.length>0&&<><div className="referral-actions"><button className="primary-red" onClick={()=>{const prepared=selectedReferralFile();if(prepared)openAvikaFromFile(prepared,`Referrals · ${prepared.name.replace(/\.csv$/i,'')}`);}}>Review selected in Avika</button><button className="ghost-btn" disabled={referralSearching} onClick={searchReferralWebsites}>{referralSearching?'Starting…':'Find missing websites first'}</button><button className="dark-download ready" onClick={()=>downloadText('referral_clean_preview.csv', referralRowsToCsv(referralRows, state))}>Export clean CSV</button></div>{referralMessage&&<div className="pool-message">{referralMessage}</div>}<div className="scroll-table referral-preview-table"><table><thead><tr><th>Send</th><th>NGO</th><th>District</th><th>Website</th><th>Contact</th><th>Referred by</th><th>Comment</th><th>Status</th></tr></thead><tbody>{referralRows.map((r,i)=><tr key={i}><td><input type="checkbox" checked={referralSelected[i] !== false} onChange={e=>setReferralSelected(old=>({...old,[i]:e.target.checked}))}/></td><td>{rowName(r)}</td><td>{rowLocation(r)||'—'}</td><td><ExternalLink value={rowWebsite(r)}>open</ExternalLink></td><td>{rowContact(r)||'—'}</td><td>{rowReferredBy(r)||'—'}</td><td><input className="mini-comment-input" value={String(rowNote(r)||'')} onChange={e=>updateReferralRow(i,{comments:e.target.value,notes:e.target.value})} placeholder="Add context"/></td><td><span className="tag">{rowStatus(r)||'preview'}</span></td></tr>)}</tbody></table></div></>}
       </section>
     </>}
 
 
+    {view==='avika'&&<>
+      <div className="source-topline"><button className="quiet-btn" onClick={()=>setView('source')}>← Back</button><span>Avika Fit Review</span><div className="topline-actions"><button className="quiet-btn" onClick={()=>setView('leadpool')}>Open Shortlisting Pool</button><Link className="primary-red small-red nav-action-link" href="/progress">Go to Rankings</Link></div></div>
+      <AvikaFilterWorkspace region={state} seed={avikaSeed} onSeedConsumed={()=>setAvikaSeed(null)} onOpenPool={()=>setView('leadpool')} />
+    </>}
+
     {view==='leadpool'&&<>
-      <div className="source-topline"><button className="quiet-btn" onClick={()=>setView('source')}>← Back</button><span>Lead Pool</span><div className="topline-actions"><button className="quiet-btn" onClick={loadLeadPool}>Refresh</button><Link className="primary-red small-red nav-action-link" href="/progress">Go to Rankings</Link></div></div>
-      {renderLeadPool()}
+      <div className="source-topline"><button className="quiet-btn" onClick={()=>setView('source')}>← Back</button><span>Shortlisting Pool</span><div className="topline-actions"><button className="quiet-btn" onClick={()=>setView('avika')}>Open Avika Fit Review</button><Link className="primary-red small-red nav-action-link" href="/progress">Go to Rankings</Link></div></div>
+      <ShortlistingPool region={state} />
     </>}
 
     <button className={`active-runs-fab ${activeRuns.some(runIsLive)?'live':''}`} onClick={()=>{setRunsOpen(true);loadActiveRuns(false);}} aria-label="Show active runs">

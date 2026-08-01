@@ -1,27 +1,26 @@
 {
   "service": "DFP 2.0 frontend",
-  "version": "v160",
+  "version": "v163",
   "release_date": "2026-08-01",
   "railway_ready": true,
   "features": [
-    "production-first Karnataka Recovery UI beginning at RUN_01",
-    "worker built-in ownership guard and capacity display",
-    "no external technical-test gate",
-    "one-account Serper controls",
-    "visible permanent NGO IDs",
-    "ADMIN_PASSWORD server-only same-origin proxy",
-    "Node 22 Railway build fix",
-    "Karnataka Recovery polling and downloads forced through same-origin search proxy",
-    "visible UI v160 marker for deployment verification",
-    "no manual admin-password field for NGO-ID status, backfill or registry export"
+    "all v162 Avika Fit Review and grouped Shortlisting Pool features retained",
+    "100 MB Karnataka Recovery and Avika CSV support",
+    "streamed same-origin multipart upload proxy for large batches",
+    "default-on automatic checkpoint resume setting for overnight runs",
+    "automatic-resume countdown and attempt status in the Karnataka Recovery UI",
+    "polling stays active while an interrupted run waits for automatic restart",
+    "explicit user pauses remain paused",
+    "visible UI v163 marker and 15000-row enhanced-batch guidance"
   ],
   "tests": {
-    "typescript": "22 TypeScript/TSX files parsed successfully",
-    "next_production_build": "Not run locally because the sandbox npm mirror returned 404 for yocto-queue; package-lock and .npmrc point to public npm for Railway.",
-    "railway_build_configuration": "npm ci once; build command npm run build"
+    "typescript_syntax_transpile": "24 TypeScript/TSX files passed",
+    "local_imports": "all resolved",
+    "proxy_streaming": "passed by source inspection",
+    "next_production_build": "Railway build required; repository pins Node 22"
   },
-  "notes": [
-    "Use Core Backend v89 and Search Worker v77.",
-    "ADMIN_PASSWORD is server-only and must match both Python services."
+  "compatible_with": [
+    "Core Backend v92",
+    "Search Worker v83"
   ]
 }
