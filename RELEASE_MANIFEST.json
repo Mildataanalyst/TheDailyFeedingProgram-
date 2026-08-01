@@ -1,0 +1,19 @@
+{
+  "service": "DFP 2.0 frontend",
+  "version": "v154",
+  "release_date": "2026-08-01",
+  "railway_ready": true,
+  "features": [
+    "Karnataka Recovery control centre",
+    "one-account Serper UI",
+    "visible NGO IDs",
+    "historical ID backfill/export controls"
+  ],
+  "tests": {
+    "typescript_syntax": "21 TypeScript/TSX files parsed successfully",
+    "next_production_build": "Not run locally because the current sandbox could not complete npm dependency installation; Railway uses public npm via .npmrc."
+  },
+  "notes": [
+    "Deploy after both Python service URLs are live."
+  ]
+}

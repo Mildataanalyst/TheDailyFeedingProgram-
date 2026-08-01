@@ -3,9 +3,9 @@ export type SafeResponse = { ok: boolean; status: number; data: any; error: stri
 export const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL || '').replace(/\/+$/, '');
 export const SEARCH_BACKEND = (process.env.NEXT_PUBLIC_SEARCH_BACKEND_URL || process.env.NEXT_PUBLIC_WORKER_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || '').replace(/\/+$/, '');
 export const STORY_BACKEND = (process.env.NEXT_PUBLIC_STORY_BACKEND_URL || process.env.NEXT_PUBLIC_AI_BACKEND_URL || process.env.NEXT_PUBLIC_SEARCH_BACKEND_URL || process.env.NEXT_PUBLIC_WORKER_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || '').replace(/\/+$/, '');
-export const BACKEND_CONFIG_ERROR = 'Core backend URL is not configured. Add NEXT_PUBLIC_BACKEND_URL in Vercel Settings → Environment Variables, then redeploy.';
-export const SEARCH_BACKEND_CONFIG_ERROR = 'Search worker URL is not configured. Add NEXT_PUBLIC_SEARCH_BACKEND_URL in Vercel Settings → Environment Variables, then redeploy.';
-export const STORY_BACKEND_CONFIG_ERROR = 'Story/AI worker URL is not configured. Add NEXT_PUBLIC_STORY_BACKEND_URL or NEXT_PUBLIC_SEARCH_BACKEND_URL in Vercel Settings → Environment Variables, then redeploy.';
+export const BACKEND_CONFIG_ERROR = 'Core backend URL is not configured. Add NEXT_PUBLIC_BACKEND_URL in Railway Variables, then redeploy.';
+export const SEARCH_BACKEND_CONFIG_ERROR = 'Search worker URL is not configured. Add NEXT_PUBLIC_SEARCH_BACKEND_URL in Railway Variables, then redeploy.';
+export const STORY_BACKEND_CONFIG_ERROR = 'Story/AI worker URL is not configured. Add NEXT_PUBLIC_STORY_BACKEND_URL or NEXT_PUBLIC_SEARCH_BACKEND_URL in Railway Variables, then redeploy.';
 
 // This is an internal-demo convenience header only. NEXT_PUBLIC_* values are visible
 // in browser bundles, so this is not a substitute for SSO/auth proxy protection.

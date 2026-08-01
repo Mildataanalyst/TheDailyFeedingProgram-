@@ -4,6 +4,7 @@ import { Component, useCallback, useEffect, useRef, useState, type ReactNode } f
 import Link from 'next/link';
 import Header from '@/components/Header';
 import AdminUndoRedo from '@/components/AdminUndoRedo';
+import KarnatakaRecoveryPanel from '@/components/KarnatakaRecoveryPanel';
 import { safeExternalUrl } from '@/lib/urlSafety';
 import { BACKEND, SEARCH_BACKEND, STORY_BACKEND, BACKEND_CONFIG_ERROR, SEARCH_BACKEND_CONFIG_ERROR, STORY_BACKEND_CONFIG_ERROR, safeJSON, safeSearchJSON, safeStoryJSON, isFailureStatus, isTerminalReady } from '@/lib/backendClient';
 
@@ -114,6 +115,7 @@ function field(row: AnyRow, ...keys: string[]) {
   return '';
 }
 const rowName = (r: AnyRow) => field(r, 'ngo_name', 'NGO Name', 'Organisation', 'organization', 'name', 'input_name');
+const rowNgoId = (r: AnyRow) => field(r, 'ngo_id', 'NGO ID', 'DFP NGO ID', 'dfp_ngo_id');
 const rowWebsite = (r: AnyRow) => field(r, 'website', 'Website', 'url', 'Website / Source', 'Source URL');
 const rowSource = (r: AnyRow) => field(r, 'source_type', 'Source', 'module', 'Website / Source', 'Source URL', 'Article URL');
 const rowLocation = (r: AnyRow) => field(r, 'district', 'District', 'Location', 'Traced Place', 'state', 'State', 'location');
@@ -526,7 +528,9 @@ export default function NgoDiscoveryPage(){
       ? (STORY_BACKEND ? `${STORY_BACKEND}/discovery/export/${encodeURIComponent(runId)}/leads` : '')
       : mod === 'no_website_recheck'
         ? (SEARCH_BACKEND ? `${SEARCH_BACKEND}/repository/recheck/export/${encodeURIComponent(runId)}/repository` : '')
-        : (SEARCH_BACKEND ? `${SEARCH_BACKEND}/repository/export/${encodeURIComponent(runId)}/repository` : '');
+        : mod === 'karnataka_recovery'
+          ? (SEARCH_BACKEND ? `${SEARCH_BACKEND}/karnataka-recovery/export/${encodeURIComponent(runId)}/repository` : '')
+          : (SEARCH_BACKEND ? `${SEARCH_BACKEND}/repository/export/${encodeURIComponent(runId)}/repository` : '');
     if(!exportUrl){ setPoolMessage('Worker backend URL is not configured for this run.'); return; }
     setPoolBusy(true); setPoolMessage('');
     try {
@@ -1058,7 +1062,7 @@ export default function NgoDiscoveryPage(){
       <AdminUndoRedo region={state} context="Lead Pool recovery" onRestored={loadLeadPool} />
       <div className="pool-helper">Old PM shortlist work is protected. Tags and shortlisting comments are required only for new leads moving forward; already assigned or reviewed NGOs are skipped, not overwritten. Use undo if a lead is sent forward, deleted, or imported by mistake.</div>
       {poolMessage&&<div className="pool-message">{poolMessage}</div>}
-      <div className="scroll-table compact-pool"><table><thead><tr><th>NGO</th><th>Source</th><th>Source tag</th><th>Status</th><th>Website</th><th>Understanding</th><th>Contact</th><th>Shortlisting comment</th><th>Actions</th></tr></thead><tbody>{visibleLeads.length?visibleLeads.slice(0,120).map((r,i)=><tr key={r.lead_id||i}><td><b>{rowName(r)}</b><small>{rowLocation(r)||'—'}</small></td><td><span className="tag">{field(r,'source_mix','source_type','Source')||'—'}</span></td><td><span className="tag">{rowSourceTag(r)||'—'}</span></td><td><span className="tag">{rowStatus(r)||'pending_review'}</span><small>{rowInfoStatus(r)||''}</small></td><td><ExternalLink value={rowWebsite(r)}>open</ExternalLink></td><td>{rowOneLine(r)||'—'}</td><td>{rowContact(r)||'—'}</td><td>{rowShortlistingComment(r)||'—'}</td><td className="lead-actions"><button onClick={()=>sendForShortlisting(r)}>Send for shortlisting</button><button onClick={()=>curateLead(r,'needs_follow_up',true)}>Follow-up</button><button onClick={()=>curateLead(r,'sent_back_to_pool',true)}>Send back</button><button onClick={()=>editLead(r)}>Edit</button><button onClick={()=>{const comments=window.prompt('Add shortlisting comment', rowShortlistingComment(r)||rowNote(r)||''); if(comments!==null)updateLead(r,{shortlisting_comment:comments, curation_comment:comments,reviewer_comments:comments, notes: comments});}}>Comment</button><button onClick={()=>deleteLeads({lead_ids:[r.lead_id]})}>Delete</button></td></tr>):<tr><td colSpan={9}>No leads in this bucket.</td></tr>}</tbody></table></div>
+      <div className="scroll-table compact-pool"><table><thead><tr><th>NGO</th><th>Source</th><th>Source tag</th><th>Status</th><th>Website</th><th>Understanding</th><th>Contact</th><th>Shortlisting comment</th><th>Actions</th></tr></thead><tbody>{visibleLeads.length?visibleLeads.slice(0,120).map((r,i)=><tr key={r.lead_id||i}><td><b>{rowName(r)}</b>{rowNgoId(r)&&<code className="ngo-id-chip">{rowNgoId(r)}</code>}<small>{rowLocation(r)||'—'}</small></td><td><span className="tag">{field(r,'source_mix','source_type','Source')||'—'}</span></td><td><span className="tag">{rowSourceTag(r)||'—'}</span></td><td><span className="tag">{rowStatus(r)||'pending_review'}</span><small>{rowInfoStatus(r)||''}</small></td><td><ExternalLink value={rowWebsite(r)}>open</ExternalLink></td><td>{rowOneLine(r)||'—'}</td><td>{rowContact(r)||'—'}</td><td>{rowShortlistingComment(r)||'—'}</td><td className="lead-actions"><button onClick={()=>sendForShortlisting(r)}>Send for shortlisting</button><button onClick={()=>curateLead(r,'needs_follow_up',true)}>Follow-up</button><button onClick={()=>curateLead(r,'sent_back_to_pool',true)}>Send back</button><button onClick={()=>editLead(r)}>Edit</button><button onClick={()=>{const comments=window.prompt('Add shortlisting comment', rowShortlistingComment(r)||rowNote(r)||''); if(comments!==null)updateLead(r,{shortlisting_comment:comments, curation_comment:comments,reviewer_comments:comments, notes: comments});}}>Comment</button><button onClick={()=>deleteLeads({lead_ids:[r.lead_id]})}>Delete</button></td></tr>):<tr><td colSpan={9}>No leads in this bucket.</td></tr>}</tbody></table></div>
     </section>;
   }
 
@@ -1102,6 +1106,8 @@ export default function NgoDiscoveryPage(){
       </section>
 
       {advancedOpen&&<section className="advanced-shell"><div className="advanced-head"><b>Advanced settings</b><button className="quiet-btn" onClick={()=>setHistoryOpen(!historyOpen)}>{historyOpen?'Hide History':'History'}</button></div>
+        <KarnatakaRecoveryPanel poolBusy={poolBusy} onSendToLeadPool={(id)=>sendRunToLeadPool(id,'karnataka_recovery','Karnataka Recovery')} />
+        <div className="legacy-recovery-divider"><span>Legacy recovery tools</span><small>Retained for old Fast / Deep run compatibility. Use Karnataka Recovery for the prepared source-record queues.</small></div>
         <div id="run-panel-recovery" className="recovery-panel recovery-workspace">
           <div className="recovery-workspace-head"><div><b>Website Recovery</b><span className="advanced-help">Choose Fast or Deep before uploading. Each run is independent, checkpointed, pausable, resumable and immediately downloadable.</span></div>{recoveryRunId&&<span className="tag">Active view: {recoveryStrategyName}</span>}</div>
           <div className="recovery-mode-grid">

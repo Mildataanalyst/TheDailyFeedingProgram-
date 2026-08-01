@@ -382,7 +382,7 @@ export default function ContactTrackerPage() {
             const url = safeUrl(row.website);
             const firstWave = [row.selected_to_emails, row.selected_cc_emails].filter(Boolean).join(' cc ');
             return <tr key={row.tracker_id} className={isReady(row) ? 'row-ready' : isTrue(row.manual_review_needed) ? 'row-review' : ''}>
-              <td><b>{row.ngo_name || '—'}</b><small>{url ? <a href={url} target="_blank" rel="noreferrer">website</a> : 'Needs website/contact'} {isTrue(row.outreach_locked) ? ' · locked' : ''}</small></td>
+              <td><b>{row.ngo_name || '—'}</b>{row.ngo_id && <code className="ngo-id-chip">{row.ngo_id}</code>}<small>{url ? <a href={url} target="_blank" rel="noreferrer">website</a> : 'Needs website/contact'} {isTrue(row.outreach_locked) ? ' · locked' : ''}</small></td>
               <td><ContactChips row={row} /></td>
               <td><small className="contact-route-text">{firstWave || row.selected_phone || row.linkedin_org_urls || row.linkedin_people_urls || '—'}</small></td>
               <td><b className="contact-subject">{row.email_subject || '—'}</b><small>{row.best_contact_route || '—'}</small></td>

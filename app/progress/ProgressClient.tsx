@@ -260,9 +260,9 @@ function CombinedReviewPanel({ data, loading, error }: { data: any; loading: boo
             const reviewers = Array.isArray(row.reviewers) ? row.reviewers.join(', ') : String(row.reviewer || '');
             const points = n(row.combined_points);
             const combined = n(row.combined_score);
-            return <tr key={pick(row, 'ngo_ref', 'id', 'ngo_name', 'name') || index}>
+            return <tr key={pick(row, 'ngo_id', 'NGO ID', 'ngo_ref', 'id', 'ngo_name', 'name') || index}>
               <td className="combined-rank-cell">{index + 1}</td>
-              <td><b>{pick(row, 'ngo_name', 'NGO Name', 'name') || 'Untitled NGO'}</b><small>{reviewers ? `Reviewed by ${reviewers}` : 'New metric assessment'}{n(row.assessment_count) > 1 ? ` · ${n(row.assessment_count)} assessments averaged` : ''}</small></td>
+              <td><b>{pick(row, 'ngo_name', 'NGO Name', 'name') || 'Untitled NGO'}</b>{pick(row, 'ngo_id', 'NGO ID') && <code className="ngo-id-chip">{pick(row, 'ngo_id', 'NGO ID')}</code>}<small>{reviewers ? `Reviewed by ${reviewers}` : 'New metric assessment'}{n(row.assessment_count) > 1 ? ` · ${n(row.assessment_count)} assessments averaged` : ''}</small></td>
               <td><strong>{n(row.child_progression).toFixed(2)}</strong><small>/ 5</small></td>
               <td><strong>{n(row.learning_model).toFixed(2)}</strong><small>/ 5</small></td>
               <td><strong>{n(row.development_ecosystem).toFixed(2)}</strong><small>/ 5</small></td>
@@ -405,10 +405,10 @@ function FinalOutputPanel({
               const website = safeExternalUrl(pick(row,'website','Website'));
               const understanding = compactPreview(pick(row,'one_line_understanding','background','summary','district','source'), 430);
               const finalComment = compactPreview(pick(row,'final_comment','pm_comment','comment','reason'), 280);
-              return <article className="final-rank-card final-rank-card-clean" key={pick(row,'ngo_ref','id','ngo_name','name') || i}>
+              return <article className="final-rank-card final-rank-card-clean" key={pick(row,'ngo_id','NGO ID','ngo_ref','id','ngo_name','name') || i}>
                 <div className="final-rank-main">
                   <div className="final-rank-name-row">
-                    <h4>{pick(row,'ngo_name','NGO Name','name') || 'Untitled NGO'}</h4>
+                    <div><h4>{pick(row,'ngo_name','NGO Name','name') || 'Untitled NGO'}</h4>{pick(row,'ngo_id','NGO ID') && <code className="ngo-id-chip">{pick(row,'ngo_id','NGO ID')}</code>}</div>
                     <span className="final-row-number">{String(i + 1).padStart(2, '0')}</span>
                   </div>
 

@@ -34,6 +34,7 @@ type GuestReferenceReview = {
 
 type Task = {
   ngo_name: string;
+  ngo_id?: string;
   website?: string;
   background?: string;
   metric_evidence?: Partial<Record<MetricKey, MetricEvidence>>;
@@ -843,6 +844,7 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
                     <div className="workstream-task-card pm-ranking-task-card">
                       <div className="task-nav-row"><button className="quiet-btn" onClick={prevTask} disabled={currentIndex === 0}>← Previous</button><span>NGO {currentIndex + 1} of {total}</span><button className="quiet-btn" onClick={nextTask} disabled={currentIndex >= total - 1}>Next →</button></div>
                       <h3>{task.ngo_name}</h3>
+                      {task.ngo_id && <code className="ngo-id-chip ngo-id-chip-large">{task.ngo_id}</code>}
                       {task.website && <a className="workstream-link" href={safeUrl(task.website)} target="_blank" rel="noreferrer">{task.website}</a>}
                       <TaskContext value={task.background} />
 
@@ -1047,10 +1049,10 @@ export default function WorkstreamPanel({ stateName }: { stateName: string }) {
                     Number(guestItem.guest_reference_source_task_index ?? (Number(guestItem.original_task_index || 0) - 1)) === index
                   ));
                   const active = index === selectedGuestSourceIndex;
-                  return <button type="button" role="option" aria-selected={active} className={`${active ? 'active' : ''} ${alreadyCopied ? 'copied' : ''}`} key={`${guestSourcePm}-${index}-${item.ngo_name}`} onClick={() => setGuestTaskIndex(String(index))}><span>#{index + 1}</span><div><b>{item.ngo_name || 'Untitled NGO'}</b><small>{item.website || 'No website added'}</small></div>{alreadyCopied && <em>Already in Guest</em>}</button>;
+                  return <button type="button" role="option" aria-selected={active} className={`${active ? 'active' : ''} ${alreadyCopied ? 'copied' : ''}`} key={`${guestSourcePm}-${index}-${item.ngo_name}`} onClick={() => setGuestTaskIndex(String(index))}><span>#{index + 1}</span><div><b>{item.ngo_name || 'Untitled NGO'}</b><small>{item.ngo_id || item.website || 'No website added'}</small></div>{alreadyCopied && <em>Already in Guest</em>}</button>;
                 }) : <div className="guest-ngo-picker-empty">No NGOs match this search.</div>}
               </div>
-              {selectedGuestSourceTask && <section className="guest-copy-preview"><span>Selected NGO</span><h3>{selectedGuestSourceTask.ngo_name}</h3>{selectedGuestSourceTask.website && <small>{selectedGuestSourceTask.website}</small>}<p>The Guest reviewer will see the NGO details, evidence, reference examples and scoring tutorial. The source PM ranking stays hidden until Guest submits.</p></section>}
+              {selectedGuestSourceTask && <section className="guest-copy-preview"><span>Selected NGO</span><h3>{selectedGuestSourceTask.ngo_name}</h3>{selectedGuestSourceTask.ngo_id && <code className="ngo-id-chip">{selectedGuestSourceTask.ngo_id}</code>}{selectedGuestSourceTask.website && <small>{selectedGuestSourceTask.website}</small>}<p>The Guest reviewer will see the NGO details, evidence, reference examples and scoring tutorial. The source PM ranking stays hidden until Guest submits.</p></section>}
               <FieldLike label="Admin password" value={guestAdminPassword} onChange={setGuestAdminPassword} type="password" />
               <p className="drawer-msg">{msg}</p>
             </div>

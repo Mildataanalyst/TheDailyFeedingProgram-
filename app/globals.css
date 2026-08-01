@@ -15673,3 +15673,150 @@ body.dfp-v111-theme .guest-config-drawer .drawer-foot .primary-red:disabled{opac
 body:not(.light-theme) .provider-pause-alert{color:#ffe8bd}
 body:not(.light-theme) .provider-pause-alert b{color:#ffd58d}
 body:not(.light-theme) .provider-pause-alert span,body:not(.light-theme) .provider-pause-alert small{color:#e5c899}
+
+/* v153 — source-record Karnataka Recovery control centre */
+.karnataka-recovery-panel{
+  display:grid;
+  gap:18px;
+  padding:20px;
+  border:1px solid rgba(226,55,68,.28);
+  border-radius:24px;
+  background:
+    radial-gradient(circle at 12% 0%,rgba(226,55,68,.12),transparent 30%),
+    linear-gradient(160deg,rgba(255,255,255,.055),rgba(255,255,255,.018));
+  box-shadow:0 24px 80px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.06);
+}
+.karnataka-recovery-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;}
+.karnataka-recovery-head h3{margin:5px 0 8px;color:#fff;font-size:25px;letter-spacing:-.045em;}
+.karnataka-recovery-head p{max-width:820px;margin:0;color:rgba(238,242,249,.68);font-size:13px;line-height:1.55;}
+.karnataka-head-actions{display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end;}
+.karnataka-mode-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;}
+.karnataka-mode-card{
+  position:relative;
+  min-height:210px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  text-align:left;
+  gap:8px;
+  padding:16px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:18px;
+  background:rgba(0,0,0,.18);
+  color:#fff;
+  cursor:pointer;
+  transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease;
+}
+.karnataka-mode-card:hover{transform:translateY(-2px);border-color:rgba(226,55,68,.36);background:rgba(255,255,255,.05);}
+.karnataka-mode-card.active{border-color:rgba(226,55,68,.72);background:rgba(226,55,68,.10);box-shadow:0 0 0 1px rgba(226,55,68,.14),0 18px 46px rgba(0,0,0,.28);}
+.karnataka-mode-card>span{font-size:9px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.42);}
+.karnataka-mode-card>b{font-size:15px;line-height:1.25;letter-spacing:-.025em;}
+.karnataka-mode-card>small{font-size:11px;line-height:1.45;color:rgba(238,242,249,.59);flex:1;}
+.karnataka-mode-card>code{width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:7px 8px;border-radius:9px;background:rgba(0,0,0,.26);color:#ffd1d5;font-size:9px;}
+.karnataka-mode-card>em{font-style:normal;font-size:10px;font-weight:850;color:rgba(255,255,255,.72);}
+.karnataka-mode-card.zero.active{border-color:rgba(75,214,141,.62);background:rgba(75,214,141,.08);}
+.karnataka-mode-card.test.active{border-color:rgba(255,185,79,.7);background:rgba(255,185,79,.08);}
+.karnataka-mode-card.firecrawl.active{border-color:rgba(111,154,255,.7);background:rgba(111,154,255,.08);}
+.karnataka-mode-card.review.active{border-color:rgba(198,126,255,.65);background:rgba(198,126,255,.08);}
+.karnataka-run-builder{display:grid;grid-template-columns:minmax(230px,1fr) minmax(220px,1.1fr) auto;align-items:center;gap:12px;padding:14px;border:1px solid rgba(255,255,255,.10);border-radius:18px;background:rgba(0,0,0,.18);}
+.karnataka-selected-mode{display:grid;gap:3px;}
+.karnataka-selected-mode>span{font-size:9px;text-transform:uppercase;letter-spacing:.13em;color:rgba(255,255,255,.42);font-weight:900;}
+.karnataka-selected-mode>b{color:#fff;font-size:15px;}
+.karnataka-selected-mode>small{color:rgba(255,255,255,.52);font-size:11px;}
+.karnataka-file-button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.karnataka-settings-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;}
+.karnataka-settings-grid>label{min-height:105px;display:flex;flex-direction:column;gap:7px;padding:12px;border:1px solid rgba(255,255,255,.09);border-radius:16px;background:rgba(255,255,255,.025);}
+.karnataka-settings-grid>label>span{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.53);font-weight:850;}
+.karnataka-settings-grid input[type="number"]{width:100%;min-height:38px;padding:0 10px;border:1px solid rgba(255,255,255,.13);border-radius:11px;background:rgba(0,0,0,.26);color:#fff;outline:none;}
+.karnataka-settings-grid label>small{margin-top:auto;color:rgba(238,242,249,.5);font-size:10px;line-height:1.35;}
+.karnataka-settings-grid .karnataka-check{display:flex;flex-direction:row;align-items:flex-start;gap:10px;}
+.karnataka-check input{margin-top:3px;accent-color:#e23744;}
+.karnataka-check>span{display:grid!important;gap:4px;text-transform:none!important;letter-spacing:0!important;}
+.karnataka-check>span>b{font-size:12px;color:#fff;}
+.karnataka-check>span>small{font-size:10px;color:rgba(238,242,249,.5);line-height:1.35;}
+.karnataka-credit-field:not(.enabled){opacity:.52;}
+.karnataka-capacity-strip{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:11px 13px;border:1px solid rgba(75,214,141,.20);border-radius:14px;background:rgba(75,214,141,.055);font-size:11px;color:rgba(232,255,241,.76);}
+.karnataka-capacity-strip>b{color:#bff4d4;margin-right:4px;}
+.karnataka-capacity-strip>span{padding:5px 8px;border-radius:999px;background:rgba(255,255,255,.05);}
+.karnataka-live-run{display:grid;gap:13px;padding:15px;border:1px solid rgba(255,255,255,.11);border-radius:18px;background:rgba(0,0,0,.22);}
+.karnataka-live-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;}
+.karnataka-live-head>div:first-child{display:grid;gap:4px;}
+.karnataka-live-head span{font-size:15px;font-weight:900;color:#fff;}
+.karnataka-live-head code{font-size:10px;color:rgba(255,255,255,.48);}
+.karnataka-live-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+.karnataka-progress-track{height:7px;overflow:hidden;border-radius:999px;background:rgba(255,255,255,.07);}
+.karnataka-progress-track i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#e23744,#ff7180);transition:width .35s ease;}
+.karnataka-stat-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;}
+.karnataka-stat-grid>div{min-height:84px;padding:11px;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(255,255,255,.025);}
+.karnataka-stat-grid span{display:block;color:rgba(255,255,255,.43);font-size:9px;text-transform:uppercase;letter-spacing:.08em;font-weight:850;}
+.karnataka-stat-grid b{display:block;margin-top:7px;color:#fff;font-size:15px;line-height:1.1;word-break:break-word;}
+.karnataka-stat-grid small{display:block;margin-top:6px;color:rgba(255,255,255,.5);font-size:10px;}
+.karnataka-run-message{padding:10px 12px;border-left:3px solid #e23744;border-radius:8px;background:rgba(226,55,68,.065);color:rgba(255,255,255,.72);font-size:11px;line-height:1.4;}
+.karnataka-downloads{display:flex;gap:8px;flex-wrap:wrap;}
+.karnataka-provider-table{display:grid;gap:9px;padding:12px;border:1px solid rgba(255,255,255,.08);border-radius:16px;background:rgba(0,0,0,.14);}
+.karnataka-provider-head{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.karnataka-provider-head small{color:rgba(255,255,255,.48);font-size:10px;}
+.karnataka-provider-table table{min-width:920px;}
+.karnataka-provider-table th,.karnataka-provider-table td{font-size:10px!important;padding:9px 10px!important;}
+.karnataka-key-state{display:inline-flex;padding:5px 7px;border-radius:999px;background:rgba(255,255,255,.06);font-size:9px;font-weight:900;text-transform:uppercase;}
+.karnataka-key-state.healthy{background:rgba(75,214,141,.10);color:#bff4d4;}
+.karnataka-key-state.exhausted,.karnataka-key-state.invalid,.karnataka-key-state.disabled{background:rgba(226,55,68,.12);color:#ffc9ce;}
+.karnataka-key-state.cooling_down,.karnataka-key-state.temporarily_unavailable{background:rgba(255,185,79,.12);color:#ffe0aa;}
+.karnataka-safety-note{color:rgba(238,242,249,.50);font-size:10px;line-height:1.45;}
+.legacy-recovery-divider{display:flex;align-items:center;gap:10px;padding:7px 2px 0;border-top:1px solid rgba(255,255,255,.08);}
+.legacy-recovery-divider>span{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.42);}
+.legacy-recovery-divider>small{font-size:10px;color:rgba(255,255,255,.38);}
+@media(max-width:1180px){.karnataka-mode-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.karnataka-settings-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.karnataka-stat-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
+@media(max-width:760px){.karnataka-recovery-head,.karnataka-live-head{flex-direction:column;}.karnataka-head-actions,.karnataka-live-actions{justify-content:flex-start;}.karnataka-mode-grid,.karnataka-settings-grid,.karnataka-stat-grid,.karnataka-run-builder{grid-template-columns:1fr;}.karnataka-mode-card{min-height:185px;}.legacy-recovery-divider{align-items:flex-start;flex-direction:column;}.karnataka-recovery-panel{padding:14px;}}
+.karnataka-recent-runs{display:grid;gap:9px;padding:12px;border:1px solid rgba(255,255,255,.08);border-radius:16px;background:rgba(0,0,0,.12);}
+.karnataka-run-list{display:grid;gap:7px;}
+.karnataka-run-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 11px;border:1px solid rgba(255,255,255,.07);border-radius:13px;background:rgba(255,255,255,.025);}
+.karnataka-run-row>div:first-child{display:grid;gap:4px;min-width:0;}
+.karnataka-run-row b{font-size:12px;color:#fff;}
+.karnataka-run-row small{font-size:10px;color:rgba(255,255,255,.48);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.karnataka-run-row>div:last-child{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;}
+@media(max-width:760px){.karnataka-run-row{align-items:flex-start;flex-direction:column}.karnataka-run-row>div:last-child{justify-content:flex-start}.karnataka-run-row small{white-space:normal}}
+
+/* v154 — permanent NGO IDs and one-account recovery controls */
+.ngo-id-chip{
+  display:block;
+  width:max-content;
+  max-width:100%;
+  margin-top:5px;
+  padding:4px 7px;
+  border:1px solid rgba(226,55,68,.22);
+  border-radius:7px;
+  background:rgba(226,55,68,.065);
+  color:#d84a55;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+  font-size:9px;
+  line-height:1.15;
+  letter-spacing:.035em;
+  overflow-wrap:anywhere;
+}
+.ngo-id-chip-large{margin:0 0 7px;font-size:10px;padding:5px 8px;}
+body:not(.light-theme) .ngo-id-chip{border-color:rgba(255,113,128,.28);background:rgba(226,55,68,.10);color:#ffc3c9;}
+.ngo-id-registry-card{
+  display:grid;
+  grid-template-columns:minmax(260px,1.35fr) minmax(320px,1fr);
+  gap:13px 18px;
+  padding:15px;
+  border:1px solid rgba(126,176,255,.22);
+  border-radius:18px;
+  background:linear-gradient(145deg,rgba(78,126,219,.085),rgba(0,0,0,.16));
+}
+.ngo-id-registry-copy{display:grid;gap:5px;align-content:start;}
+.ngo-id-registry-copy>span{font-size:9px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#9ebeff;}
+.ngo-id-registry-copy>b{font-size:15px;color:#fff;}
+.ngo-id-registry-copy>small{font-size:10px;line-height:1.5;color:rgba(238,242,249,.56);}
+.ngo-id-registry-copy code{color:#c9d9ff;}
+.ngo-id-registry-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;}
+.ngo-id-registry-stats>div{display:grid;gap:6px;padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(255,255,255,.025);}
+.ngo-id-registry-stats span{font-size:8px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.43);font-weight:850;}
+.ngo-id-registry-stats b{font-size:14px;color:#fff;}
+.ngo-id-registry-actions{grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.ngo-id-registry-actions input{min-width:230px;min-height:38px;padding:0 11px;border:1px solid rgba(255,255,255,.13);border-radius:11px;background:rgba(0,0,0,.26);color:#fff;outline:none;}
+.ngo-id-registry-message{grid-column:1/-1;padding:8px 10px;border-left:3px solid #7eaaff;border-radius:7px;background:rgba(92,142,236,.07);color:rgba(230,239,255,.74);font-size:10px;line-height:1.45;}
+.final-rank-name-row>div{min-width:0;}
+@media(max-width:900px){.ngo-id-registry-card{grid-template-columns:1fr}.ngo-id-registry-stats{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:560px){.ngo-id-registry-stats{grid-template-columns:1fr 1fr}.ngo-id-registry-actions input{min-width:100%;width:100%;}}

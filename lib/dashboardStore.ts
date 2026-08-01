@@ -40,7 +40,7 @@ export async function getDashboardData() {
 
   const redis = getRedis();
   if (!redis) {
-    return withWarning('Progress storage is not connected yet. Set NEXT_PUBLIC_BACKEND_URL/BACKEND_URL for Render backend storage, or configure Upstash Redis.');
+    return withWarning('Progress storage is not connected yet. Set NEXT_PUBLIC_BACKEND_URL/BACKEND_URL for core backend storage, or configure Upstash Redis.');
   }
 
   try {
@@ -68,7 +68,7 @@ export async function setDashboardData(data: any, password?: string) {
 
   const redis = getRedis();
   if (!redis) {
-    throw new Error('Progress storage is not connected. Add NEXT_PUBLIC_BACKEND_URL/BACKEND_URL for Render backend storage, or add UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in Vercel before publishing.');
+    throw new Error('Progress storage is not connected. Add NEXT_PUBLIC_BACKEND_URL/BACKEND_URL for core backend storage, or add UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in Railway before publishing.');
   }
   await redis.set(DASHBOARD_KEY, data);
   return data;
