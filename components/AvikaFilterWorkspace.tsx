@@ -232,7 +232,10 @@ export default function AvikaFilterWorkspace({ region, onOpenPool, seed, onSeedC
     const response = await safeSearchJSON('/repository/start?mode=avika&run_type=avika_filter', { method: 'POST', body: fd });
     setStarting(false);
     if (!response.ok || !response.data?.run_id) {
-      setError(response.error || 'Could not start Avika filter.');
+      const rawError = response.error || 'Could not start Avika filter.';
+      setError(response.status === 401
+        ? 'Avika reached the wrong or outdated backend service. Deploy Worker v85 and Frontend v164; no password is required.'
+        : rawError);
       return;
     }
     setRunId(String(response.data.run_id));
@@ -331,7 +334,7 @@ export default function AvikaFilterWorkspace({ region, onOpenPool, seed, onSeedC
         <h2>Avika Fit Review</h2>
         <p>Upload verified-website CSVs. The worker fetches each supplied site, removes obvious non-fits with deterministic rules, and uses compact Haiku classification for DFP fit plus one brief description.</p>
       </div>
-      <div className="avika-cost-card"><b>Low-cost mode</b><span>YES / MAYBE / NO</span><small>20–35 word description · no partner/story enrichment</small></div>
+      <div className="avika-cost-card"><b>Low-cost mode · routing v164</b><span>YES / MAYBE / NO</span><small>20–35 word description · no partner/story enrichment</small></div>
     </div>
 
     <div className="avika-upload-card">

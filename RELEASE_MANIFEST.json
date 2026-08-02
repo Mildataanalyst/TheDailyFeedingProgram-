@@ -1,6 +1,6 @@
 {
   "service": "DFP 2.0 frontend",
-  "version": "v163",
+  "version": "v164",
   "release_date": "2026-08-01",
   "railway_ready": true,
   "features": [
@@ -22,5 +22,6 @@
   "compatible_with": [
     "Core Backend v92",
     "Search Worker v83"
-  ]
+  ],
+  "release": "search-worker-routing"
 }
